@@ -2,8 +2,8 @@
 #define VRB_GVR_UTIL_DOT_H
 
 #include "vr/gvr/capi/include/gvr_types.h"
-#include "Matrix.h"
-#include "Vector.h"
+#include "vrb/Matrix.h"
+#include "vrb/Vector.h"
 
 namespace vrb {
 

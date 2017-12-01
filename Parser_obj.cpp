@@ -1,4 +1,5 @@
-#include "OBJParser.h"
+#include "vrb/Parser_obj.h"
+#include <string>
 #include <vector>
 #include <iostream>
 
@@ -92,15 +93,15 @@ TokenizeDelimiter(const std::string& aStr, const std::string& aDelimiter, std::v
 
 class LineParser {
 public:
-  virtual void Parse(const std::vector<std::string>& aTokens, vrb::OBJParserObserver& aObserver) = 0;
+  virtual void Parse(const std::vector<std::string>& aTokens, vrb::ParserObserver_obj& aObserver) = 0;
 };
 
 class VectorParser : public LineParser {
 public:
-  void Parse(const std::vector<std::string>& aTokens, vrb::OBJParserObserver& aObserver) override;
+  void Parse(const std::vector<std::string>& aTokens, vrb::ParserObserver_obj& aObserver) override;
 protected:
   VectorParser(const float aDefaultValue) : mDefaultValue(aDefaultValue) {}
-  virtual void SetVector(const vrb::Vector& aVector, const float aW, vrb::OBJParserObserver& aObserver) = 0;
+  virtual void SetVector(const vrb::Vector& aVector, const float aW, vrb::ParserObserver_obj& aObserver) = 0;
   float GetValue(const std::vector<std::string>& aTokens, const size_t place);
   float mDefaultValue;
 
@@ -115,7 +116,7 @@ public:
   VertexParser() : VectorParser(0.0f) {}
   ~VertexParser() {}
 protected:
-  void SetVector(const vrb::Vector& aVector, const float aW, vrb::OBJParserObserver& aObserver) override {
+  void SetVector(const vrb::Vector& aVector, const float aW, vrb::ParserObserver_obj& aObserver) override {
     aObserver.AddVertex(aVector, aW);
   }
 };
@@ -125,7 +126,7 @@ public:
   NormalParser() : VectorParser(0.0f) {}
   ~NormalParser() {}
 protected:
-  void SetVector(const vrb::Vector& aVector, const float aW, vrb::OBJParserObserver& aObserver) override {
+  void SetVector(const vrb::Vector& aVector, const float aW, vrb::ParserObserver_obj& aObserver) override {
     aObserver.AddNormal(aVector);
   }
 };
@@ -135,7 +136,7 @@ public:
   UVParser() : VectorParser(1.0f) {}
   ~UVParser() {}
 protected:
-  void SetVector(const vrb::Vector& aVector, const float aW, vrb::OBJParserObserver& aObserver) override {
+  void SetVector(const vrb::Vector& aVector, const float aW, vrb::ParserObserver_obj& aObserver) override {
     aObserver.AddUV(aVector.x(), aVector.y(), aVector.z());
   }
 };
@@ -144,11 +145,11 @@ class FaceParser : public LineParser {
 public:
   FaceParser() {}
   ~FaceParser() {}
-  void Parse(const std::vector<std::string>& aTokens, vrb::OBJParserObserver& aObserver) override;
+  void Parse(const std::vector<std::string>& aTokens, vrb::ParserObserver_obj& aObserver) override;
 };
 
 void
-VectorParser::Parse(const std::vector<std::string>& aTokens, vrb::OBJParserObserver& aObserver) {
+VectorParser::Parse(const std::vector<std::string>& aTokens, vrb::ParserObserver_obj& aObserver) {
   SetVector(vrb::Vector(GetValue(aTokens, 0), GetValue(aTokens, 1), GetValue(aTokens, 2)), GetValue(aTokens, 3), aObserver);
 }
 
@@ -158,9 +159,11 @@ VectorParser::GetValue(const std::vector<std::string>& aTokens, const size_t pla
 }
 
 void
-FaceParser::Parse(const std::vector<std::string>& aTokens, vrb::OBJParserObserver& aObserver) {
-  aObserver.StartFace();
+FaceParser::Parse(const std::vector<std::string>& aTokens, vrb::ParserObserver_obj& aObserver) {
   const size_t tokensSize = aTokens.size();
+  std::vector<int> vertices;
+  std::vector<int> uvs;
+  std::vector<int> normals;
   for (size_t ix = 0; ix < tokensSize; ix++) {
     std::vector<std::string> vertexTokens;
     size_t vertexSize = TokenizeDelimiter(aTokens[ix], "/", vertexTokens);
@@ -168,16 +171,19 @@ FaceParser::Parse(const std::vector<std::string>& aTokens, vrb::OBJParserObserve
     for (size_t jy = 0; jy < vertexSize; jy++) {
       if ((jy < 3) && !vertexTokens[jy].empty()) { index[jy] = LocalStoi(vertexTokens[jy]); }
     }
-    aObserver.AddFaceVertex(index[0], index[1], index[2]);
+    vertices.push_back(index[0]);
+    uvs.push_back(index[1]);
+    normals.push_back(index[2]);
   }
+  aObserver.AddFace(vertices, uvs, normals);
 }
 
 } // namespace
 
 namespace vrb {
 
-struct OBJParser::State {
-  OBJParserObserver *observer;
+struct Parser_obj::State {
+  ParserObserver_obj *observer;
   std::string lineBuffer;
   VertexParser vertexParser;
   NormalParser normalParser;
@@ -189,26 +195,26 @@ struct OBJParser::State {
     {}
 };
 
-OBJParser::OBJParser() : m(*(new State)) {
+Parser_obj::Parser_obj() : m(*(new State)) {
 
 }
 
-OBJParser::~OBJParser() {
+Parser_obj::~Parser_obj() {
   delete &m;
 }
 
 void
-OBJParser::SetObserver(OBJParserObserver* aObserver) {
+Parser_obj::SetObserver(ParserObserver_obj* aObserver) {
   m.observer = aObserver;
 }
 
 void
-OBJParser::Start() {
+Parser_obj::Start() {
   m.lineBuffer.clear();
 }
 
 void
-OBJParser::ParseChunk(const char* aChunk, const size_t aSize) {
+Parser_obj::ParseChunk(const char* aChunk, const size_t aSize) {
   size_t place = 0;
   size_t start = 0;
   while(place < aSize) {
@@ -228,7 +234,7 @@ OBJParser::ParseChunk(const char* aChunk, const size_t aSize) {
 }
 
 void
-OBJParser::Finish() {
+Parser_obj::Finish() {
   if (!m.lineBuffer.empty() && m.observer) {
 std::cout << "line: " << m.lineBuffer << std::endl;
     size_t end = m.lineBuffer.find("#");

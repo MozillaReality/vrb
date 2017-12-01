@@ -1,7 +1,7 @@
 #ifndef VRB_MATRIX_DOT_H
 #define VRB_MATRIX_DOT_H
 
-#include "Vector.h"
+#include "vrb/Vector.h"
 
 #include <cmath>
 
