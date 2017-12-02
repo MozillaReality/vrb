@@ -1,8 +1,9 @@
 #ifndef VRB_RENDER_OBJECT_FACTORY_OBJ_DOT_H
 #define VRB_RENDER_OBJECT_FACTORY_OBJ_DOT_H
 
-#include "vrb/Parser_obj.h"
 #include "vrb/Mutex.h"
+#include "vrb/Parser_obj.h"
+#include "vrb/RenderObject.h"
 #include "vrb/Vector.h"
 
 #include <vector>
@@ -20,7 +21,7 @@ public:
   void CreateRenderObject(const std::string& aName);
   void FinishRenderObject();
   // Function is thread safe
-  void GetLoadedRenderObjects(std::vector<RenderObject*>& aObjects);
+  void GetLoadedRenderObjects(std::vector<RenderObjectPtr>& aObjects);
 
   // OBJParserObserver interface
   void LoadMaterialLibrary(const std::string& aFile) override;
@@ -38,8 +39,8 @@ public:
 
 protected:
   Mutex mMutex;
-  std::vector<RenderObject*> mLoadedObjects;
-  RenderObject* mObject;
+  std::vector<RenderObjectPtr> mLoadedObjects;
+  RenderObjectPtr mObject;
   int mGroup;
 };
 

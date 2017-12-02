@@ -4,8 +4,7 @@
 namespace vrb {
 
 RenderObjectFactory_obj::RenderObjectFactory_obj()
-    : mObject(nullptr)
-    , mGroup(0) {
+    : mGroup(0) {
 
 }
 
@@ -16,8 +15,7 @@ RenderObjectFactory_obj::~RenderObjectFactory_obj() {
 void
 RenderObjectFactory_obj::CreateRenderObject(const std::string& aName) {
   FinishRenderObject();
-
-  mObject = new RenderObject(aName);
+  mObject = RenderObject::Create(aName);
 }
 
 void
@@ -27,12 +25,12 @@ RenderObjectFactory_obj::FinishRenderObject() {
   }
   mMutex.Lock();
   mLoadedObjects.push_back(mObject);
-  mObject = nullptr;
+  mObject.reset();
   mMutex.Unlock();
 }
 
 void
-RenderObjectFactory_obj::GetLoadedRenderObjects(std::vector<RenderObject*>& aObjects) {
+RenderObjectFactory_obj::GetLoadedRenderObjects(std::vector<RenderObjectPtr>& aObjects) {
   mMutex.Lock();
   aObjects = mLoadedObjects;
   mLoadedObjects.clear();

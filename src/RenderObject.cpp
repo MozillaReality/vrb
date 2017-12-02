@@ -38,6 +38,12 @@ struct Group {
   std::vector<Face> faces;
 };
 
+class RenderObjectAlloc : public RenderObject {
+public:
+  RenderObjectAlloc(const std::string &aName) : RenderObject(aName) {}
+  ~RenderObjectAlloc() {};
+};
+
 }
 
 namespace vrb {
@@ -50,8 +56,9 @@ struct RenderObject::State {
   std::vector<Vector> normals;
 };
 
-RenderObject::RenderObject() : m(*(new State)) {
-
+RenderObjectPtr
+RenderObject::Create(const std::string &aName) {
+  return std::make_shared<RenderObjectAlloc>(aName);
 }
 
 RenderObject::RenderObject(const std::string& aName) : m(*(new State)) {
@@ -59,6 +66,7 @@ RenderObject::RenderObject(const std::string& aName) : m(*(new State)) {
 }
 
 RenderObject::~RenderObject() {
+  VRLOG("DESTROY RenderObject:%p", (void*)this);
   delete &m;
 }
 

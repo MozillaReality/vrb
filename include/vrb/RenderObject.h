@@ -2,16 +2,19 @@
 #define VRB_RENDER_OBJECT_DOT_H
 
 #include "vrb/Vector.h"
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace vrb {
 
+class RenderObject;
+typedef std::shared_ptr<RenderObject> RenderObjectPtr;
+
 class RenderObject {
 public:
-  RenderObject();
-  RenderObject(const std::string& aName);
-  ~RenderObject();
+  static RenderObjectPtr Create(const std::string &Name);
+
   std::string GetName() const;
   void Draw();
 
@@ -28,6 +31,10 @@ public:
   void Dump();
 
 protected:
+  RenderObject() = delete;
+  RenderObject(const std::string& aName);
+  ~RenderObject();
+
   struct State;
   State &m;
 };
