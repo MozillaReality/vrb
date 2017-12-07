@@ -8,6 +8,7 @@
 
 namespace vrb {
 
+class Matrix;
 class RenderObject;
 typedef std::shared_ptr<RenderObject> RenderObjectPtr;
 
@@ -16,7 +17,8 @@ public:
   static RenderObjectPtr Create(const std::string &Name);
 
   std::string GetName() const;
-  void Draw();
+  void Init();
+  void Draw(const Matrix& aProjection);
 
   int AddVertex(const Vector& aVertex);
   int AddNormal(const Vector& aNormal);
@@ -27,6 +29,7 @@ public:
       const std::vector<int>& aVerticies,
       const std::vector<int>& aUVs,
       const std::vector<int>& aNormals);
+
 
   void Dump();
 

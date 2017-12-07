@@ -2,10 +2,13 @@
 #define VRB_MATRIX_DOT_H
 
 #include "vrb/Vector.h"
+#include "vrb/Logger.h"
 
 #include <cmath>
 
 namespace vrb {
+
+const float PI_FLOAT = float(M_PI);
 
 class Matrix {
 public:
@@ -27,10 +30,10 @@ public:
     const float x = normalized.x();
     const float y = normalized.y();
     const float z = normalized.z();
-    const float angleSin = sin(aRotation);
-    const float angleCos = cos(aRotation);
-    const float oneMinusAngleCos(1.0 - angleCos);
-
+    const float angleSin = std::sinf(aRotation);
+    const float angleCos = std::cosf(aRotation);
+    const float oneMinusAngleCos(1.0f - angleCos);
+//VRLOG("x=%f y=%f z=%f angleSin=%f angleCos=%f oneMinusAngleCos=%f", x, y, z, angleSin, angleCos, oneMinusAngleCos);
     result.mData.m[0][0] =      (angleCos) + (x * x * oneMinusAngleCos);
     result.mData.m[1][0] = (-z * angleSin) + (x * y * oneMinusAngleCos);
     result.mData.m[2][0] =  (y * angleSin) + (x * z * oneMinusAngleCos);
@@ -51,10 +54,11 @@ public:
 
     Matrix result;
 
-    const float left = -std::tan(aLeft * M_PI / 180.0f) * aNear;
-    const float right = std::tan(aRight * M_PI / 180.0f) * aNear;
-    const float bottom = -std::tan(aBottom * M_PI / 180.0f) * aNear;
-    const float top = std::tan(aTop * M_PI / 180.0f) * aNear;
+    const float left = -std::tanf(aLeft) * aNear;
+    const float right = std::tanf(aRight) * aNear;
+    const float bottom = -std::tanf(aBottom) * aNear;
+    const float top = std::tanf(aTop) * aNear;
+    VRLOG("left=%f right=%f bottom=%f top=%f",left,right,bottom,top);
 
     if ((left < right) && (bottom < top) &&
         (aNear < aFar) && (aNear > 0.0f) && (aFar > 0.0f)) {
@@ -72,7 +76,21 @@ public:
       result.mData.m[2][1] = a21;
       result.mData.m[2][2] = a22;
       result.mData.m[3][2] = a32;
-      result.mData.m[3][2] = -1;
+      result.mData.m[2][3] = -1;
+
+//      const float X = (2 * z_near) / (x_right - x_left);
+//      const float Y = (2 * z_near) / (y_top - y_bottom);
+//      const float A = (x_right + x_left) / (x_right - x_left);
+//      const float B = (y_top + y_bottom) / (y_top - y_bottom);
+//      const float C = (z_near + z_far) / (z_near - z_far);
+//      const float D = (2 * z_near * z_far) / (z_near - z_far);
+//      result.m[0][0] = X - > a00;
+//      result.m[0][2] = A -> a20;
+//      result.m[1][1] = Y -> a11;
+//      result.m[1][2] = B -> a21;
+//      result.m[2][2] = C -> a22;
+//      result.m[2][3] = D -> a32;
+//      result.m[3][2] = -1 -> 23;
     }
 
     return result;
@@ -82,8 +100,8 @@ public:
       const float aLeft, const float aRight, const float aTop, const float aBottom,
       const float aNear, const float aFar) {
     return PerspectiveMatrix(
-        aLeft * M_PI / 180.0f, aRight * M_PI / 180.0f,
-        aTop * M_PI / 180.0f, aBottom * M_PI / 180.0f,
+        aLeft * PI_FLOAT / 180.0f, aRight * PI_FLOAT / 180.0f,
+        aTop * PI_FLOAT / 180.0f, aBottom * PI_FLOAT / 180.0f,
         aNear, aFar);
   }
 
@@ -97,12 +115,13 @@ public:
       else { fovY = 60.0f; }
     }
     if (fovY <= 0.0f) {
-      const float fovY = 2 * atan(tan(fovX * 0.5) * (aHeight / aWidth));
+      fovY = 2.0f * std::atanf(std::tanf(fovX * 0.5f) * (aHeight / aWidth));
     } else if (fovX <= 0.0f) {
-      const float fovX = 2 * atan(tan(fovY * 0.5) * (aWidth / aHeight));
+      fovX = 2.0f * std::atanf(std::tanf(fovY * 0.5f) * (aWidth / aHeight));
     }
     fovX *= 0.5f;
     fovY *= 0.5f;
+    VRLOG("fovX=%f fovX=%f fovY=%f fovY=%f aNear=%f aFar=%f", fovX, fovX, fovY, fovY, aNear, aFar);
     return PerspectiveMatrix(fovX, fovX, fovY, fovY, aNear, aFar);
   }
 
@@ -112,8 +131,8 @@ public:
       const float aNear, const float aFar) {
     return PerspectiveMatrixWithResolution(
         aWidth, aHeight,
-        aFovX <= 0.0f ? aFovX * M_PI / 180.0f : aFovX,
-        aFovY <= 0.0f ? aFovY * M_PI / 180.0f : aFovY,
+        aFovX > 0.0f ? aFovX * PI_FLOAT / 180.0f : aFovX,
+        aFovY > 0.0f ? aFovY * PI_FLOAT / 180.0f : aFovY,
         aNear, aFar);
   }
 
@@ -202,7 +221,7 @@ public:
     return *this;
   }
 
-  Matrix& PosteMultiplyInPlace(const Matrix& aMatrix) {
+  Matrix& PostMultiplyInPlace(const Matrix& aMatrix) {
     *this = PostMultiply(aMatrix);
     return *this;
   }
@@ -230,6 +249,21 @@ public:
   }
 
   float* Data() { return reinterpret_cast<float*>(&(mData.m)); }
+  const float* Data () const { return reinterpret_cast<const float*>(&(mData.m)); }
+
+  std::string ToString() const {
+    std::string result;
+    for(int ix = 0; ix < 4; ix++) {
+      result += "[";
+      for(int jy = 0; jy < 4; jy++) {
+        if (jy != 0) { result += ", "; }
+        result += std::to_string(mData.m[ix][jy]);
+
+      }
+      result += "]";
+    }
+    return result;
+  }
 
 protected:
   typedef union data {

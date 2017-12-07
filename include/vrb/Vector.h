@@ -1,7 +1,10 @@
 #ifndef VRB_VECTOR_DOT_H
 #define VRB_VECTOR_DOT_H
 
+#include "vrb/Logger.h"
+
 #include <cmath>
+#include <string>
 
 namespace vrb {
 
@@ -25,7 +28,7 @@ public:
   }
 
   Vector& operator/=(const float aValue) {
-    if (aValue != 0) {
+    if (aValue != 0.0f) {
       mData.mX /= aValue;
       mData.mY /= aValue;
       mData.mZ /= aValue;
@@ -41,13 +44,22 @@ public:
   }
 
   Vector Normalize() const {
-    Vector result;
+    Vector result(*this);
     const float magnitude (Magnitude());
-    if (magnitude > 0.0) { result *= 1.0 / magnitude; }
+    if (magnitude > 0.0f) { result *= 1.0f / magnitude; }
     return result;
   }
 
-  float* Data() { return reinterpret_cast<float*>(&mData.mV[0]); }
+  float* Data() { return &mData.mV[0]; }
+  const float* Data() const { return &mData.mV[0]; }
+
+  std::string ToString() const {
+    std::string result("(");
+    result += std::to_string(mData.mX) + ", "
+        + std::to_string(mData.mY) + ", "
+        + std::to_string(mData.mZ) + ")";
+    return result;
+  }
 
 protected:
   typedef union data {
