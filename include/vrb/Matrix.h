@@ -24,6 +24,10 @@ public:
     return Identity().TranslateInPlace(aPosition);
   }
 
+  static Matrix Translation(const Vector& aTranslation) {
+    return Identity().TranslateInPlace(aTranslation);
+  }
+
   static Matrix Rotation(const Vector& aAxis, const float aRotation) {
     Matrix result;
     Vector normalized(aAxis.Normalize());
@@ -246,6 +250,33 @@ public:
     mData.m[1][1] *= aScale.y();
     mData.m[2][2] *= aScale.z();
     return *this;
+  }
+
+  Matrix Inverse() const {
+    const float m00 = mData.m00,  m10 = mData.m10,  m20 = mData.m20,  m30 = mData.m30;
+    const float m01 = mData.m01,  m11 = mData.m11,  m21 = mData.m21,  m31 = mData.m31;
+    const float m02 = mData.m02,  m12 = mData.m12,  m22 = mData.m22,  m32 = mData.m32;
+
+    const float c00 =   m11*m22 - m12*m21,   c10 = -(m01*m22 - m02*m21),  c20 =   m01*m12 - m02*m11;
+    const float c01 = -(m10*m22 - m12*m20),  c11 =   m00*m22 - m02*m20,   c21 = -(m00*m12 - m02*m10);
+    const float c02 =   m10*m21 - m11*m20,   c12 = -(m00*m21 - m01*m20),  c22 =   m00*m11 - m01*m10;
+
+    const float det = m00*c00 + m10*c10 + m20 * c20;
+    if (std::fabsf(det) < 0.00001) {
+      return Matrix::Identity();
+   }
+    const float i00 = c00 / det,  i10 = c01 / det,  i20 = c02 / det;
+    const float i01 = c10 / det,  i11 = c11 / det,  i21 = c12 / det;
+    const float i02 = c20 / det,  i12 = c21 / det,  i22 = c22 / det;
+
+    return Matrix(
+        i00, i01, i02, 0.0f,
+        i10, i11, i12, 0.0f,
+        i20, i21, i22, 0.0f,
+        -(i00*m30 + i10*m31 + i20*m32),
+        -(i01*m30 + i11*m31 + i21*m32),
+        -(i02*m30 + i12*m31 + i22*m32),
+        1);
   }
 
   float* Data() { return reinterpret_cast<float*>(&(mData.m)); }
