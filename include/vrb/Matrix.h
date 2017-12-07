@@ -81,20 +81,6 @@ public:
       result.mData.m[2][2] = a22;
       result.mData.m[3][2] = a32;
       result.mData.m[2][3] = -1;
-
-//      const float X = (2 * z_near) / (x_right - x_left);
-//      const float Y = (2 * z_near) / (y_top - y_bottom);
-//      const float A = (x_right + x_left) / (x_right - x_left);
-//      const float B = (y_top + y_bottom) / (y_top - y_bottom);
-//      const float C = (z_near + z_far) / (z_near - z_far);
-//      const float D = (2 * z_near * z_far) / (z_near - z_far);
-//      result.m[0][0] = X - > a00;
-//      result.m[0][2] = A -> a20;
-//      result.m[1][1] = Y -> a11;
-//      result.m[1][2] = B -> a21;
-//      result.m[2][2] = C -> a22;
-//      result.m[2][3] = D -> a32;
-//      result.m[3][2] = -1 -> 23;
     }
 
     return result;
