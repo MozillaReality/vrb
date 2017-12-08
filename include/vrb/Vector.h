@@ -11,36 +11,50 @@ namespace vrb {
 class Vector {
 public:
   Vector() {}
-  Vector(const float aX, const float aY, const float aZ) : mData(aX, aY, aZ) {}
-  Vector(const Vector& aValue) : mData(aValue.mData) {}
-  float& x() { return mData.mX; }
-  float& y() { return mData.mY; }
-  float& z() { return mData.mZ; }
-  float x() const { return mData.mX; }
-  float y() const { return mData.mY; }
-  float z() const { return mData.mZ; }
+  Vector(const float aX, const float aY, const float aZ) : m(aX, aY, aZ) {}
+  Vector(const Vector& aValue) : m(aValue.m) {}
+  float& x() { return m.mX; }
+  float& y() { return m.mY; }
+  float& z() { return m.mZ; }
+  float x() const { return m.mX; }
+  float y() const { return m.mY; }
+  float z() const { return m.mZ; }
+
+  Vector operator+(const Vector& aValue) {
+    return Vector(
+        m.mX + aValue.m.mX,
+        m.mY + aValue.m.mY,
+        m.mZ + aValue.m.mZ);
+  }
+
+  Vector operator-(const Vector& aValue) {
+    return Vector(
+        m.mX - aValue.m.mX,
+        m.mY - aValue.m.mY,
+        m.mZ - aValue.m.mZ);
+  }
 
   Vector& operator*=(const float aValue) {
-    mData.mX *= aValue;
-    mData.mY *= aValue;
-    mData.mZ *= aValue;
+    m.mX *= aValue;
+    m.mY *= aValue;
+    m.mZ *= aValue;
     return *this;
   }
 
   Vector& operator/=(const float aValue) {
     if (aValue != 0.0f) {
-      mData.mX /= aValue;
-      mData.mY /= aValue;
-      mData.mZ /= aValue;
+      m.mX /= aValue;
+      m.mY /= aValue;
+      m.mZ /= aValue;
     }
     return *this;
   }
 
   float Magnitude() const {
     return std::sqrt(
-        (mData.mX * mData.mX) +
-        (mData.mY * mData.mY) +
-        (mData.mZ * mData.mZ));
+        (m.mX * m.mX) +
+        (m.mY * m.mY) +
+        (m.mZ * m.mZ));
   }
 
   Vector Normalize() const {
@@ -50,14 +64,26 @@ public:
     return result;
   }
 
-  float* Data() { return &mData.mV[0]; }
-  const float* Data() const { return &mData.mV[0]; }
+  float Dot(const Vector &aValue) const {
+    return (m.mX * aValue.m.mX) + (m.mY * aValue.m.mY) + (m.mZ * aValue.m.mZ);
+  }
+
+
+  Vector Cross(const Vector &aValue) const {
+    return Vector(
+        (m.mY * aValue.m.mZ) - (m.mZ * aValue.m.mY),
+        (m.mZ * aValue.m.mX) - (m.mX * aValue.m.mZ),
+        (m.mX * aValue.m.mY) - (m.mY * aValue.m.mX));
+  }
+
+  float* Data() { return &m.mV[0]; }
+  const float* Data() const { return &m.mV[0]; }
 
   std::string ToString() const {
     std::string result("(");
-    result += std::to_string(mData.mX) + ", "
-        + std::to_string(mData.mY) + ", "
-        + std::to_string(mData.mZ) + ")";
+    result += std::to_string(m.mX) + ", "
+        + std::to_string(m.mY) + ", "
+        + std::to_string(m.mZ) + ")";
     return result;
   }
 
@@ -72,7 +98,7 @@ protected:
     data(const data& aData) : mX(aData.mX), mY(aData.mY), mZ(aData.mZ) {}
   } data_t;
 
-  data_t mData;
+  data_t m;
 };
 
 }

@@ -37,17 +37,16 @@ public:
     const float angleSin = std::sinf(aRotation);
     const float angleCos = std::cosf(aRotation);
     const float oneMinusAngleCos(1.0f - angleCos);
-//VRLOG("x=%f y=%f z=%f angleSin=%f angleCos=%f oneMinusAngleCos=%f", x, y, z, angleSin, angleCos, oneMinusAngleCos);
-    result.mData.m[0][0] =      (angleCos) + (x * x * oneMinusAngleCos);
-    result.mData.m[1][0] = (-z * angleSin) + (x * y * oneMinusAngleCos);
-    result.mData.m[2][0] =  (y * angleSin) + (x * z * oneMinusAngleCos);
-    result.mData.m[0][1] =  (z * angleSin) + (y * x * oneMinusAngleCos);
-    result.mData.m[1][1] =      (angleCos) + (y * y * oneMinusAngleCos);
-    result.mData.m[2][1] = (-x * angleSin) + (y * z * oneMinusAngleCos);
-    result.mData.m[0][2] = (-y * angleSin) + (z * x * oneMinusAngleCos);
-    result.mData.m[1][2] =  (x * angleSin) + (z * y * oneMinusAngleCos);
-    result.mData.m[2][2] =      (angleCos) + (z * z * oneMinusAngleCos);
-    result.mData.m[3][3] = 1;
+    result.m.m[0][0] =      (angleCos) + (x * x * oneMinusAngleCos);
+    result.m.m[1][0] = (-z * angleSin) + (x * y * oneMinusAngleCos);
+    result.m.m[2][0] =  (y * angleSin) + (x * z * oneMinusAngleCos);
+    result.m.m[0][1] =  (z * angleSin) + (y * x * oneMinusAngleCos);
+    result.m.m[1][1] =      (angleCos) + (y * y * oneMinusAngleCos);
+    result.m.m[2][1] = (-x * angleSin) + (y * z * oneMinusAngleCos);
+    result.m.m[0][2] = (-y * angleSin) + (z * x * oneMinusAngleCos);
+    result.m.m[1][2] =  (x * angleSin) + (z * y * oneMinusAngleCos);
+    result.m.m[2][2] =      (angleCos) + (z * z * oneMinusAngleCos);
+    result.m.m[3][3] = 1;
 
     return result;
   }
@@ -74,13 +73,13 @@ public:
       const float a22 = (aNear + aFar) / (aNear - aFar);
       const float a32 = (2 * aNear * aFar) / (aNear - aFar);
 
-      result.mData.m[0][0] = a00;
-      result.mData.m[2][0] = a20;
-      result.mData.m[1][1] = a11;
-      result.mData.m[2][1] = a21;
-      result.mData.m[2][2] = a22;
-      result.mData.m[3][2] = a32;
-      result.mData.m[2][3] = -1;
+      result.m.m[0][0] = a00;
+      result.m.m[2][0] = a20;
+      result.m.m[1][1] = a11;
+      result.m.m[2][1] = a21;
+      result.m.m[2][2] = a22;
+      result.m.m[3][2] = a32;
+      result.m.m[2][3] = -1;
     }
 
     return result;
@@ -111,7 +110,6 @@ public:
     }
     fovX *= 0.5f;
     fovY *= 0.5f;
-    VRLOG("fovX=%f fovX=%f fovY=%f fovY=%f aNear=%f aFar=%f", fovX, fovX, fovY, fovY, aNear, aFar);
     return PerspectiveMatrix(fovX, fovX, fovY, fovY, aNear, aFar);
   }
 
@@ -126,7 +124,7 @@ public:
         aNear, aFar);
   }
 
-  Matrix() : mData(
+  Matrix() : m(
       0.0f, 0.0f, 0.0f, 0.0f,
       0.0f, 0.0f, 0.0f, 0.0f,
       0.0f, 0.0f, 0.0f, 0.0f,
@@ -137,25 +135,25 @@ public:
       float a10, float a11, float a12, float a13,
       float a20, float a21, float a22, float a23,
       float a30, float a31, float a32, float a33) :
-      mData(
+      m(
       a00, a01, a02, a03,
       a10, a11, a12, a13,
       a20, a21, a22, a23,
       a30, a31, a32, a33) {}
 
-  Matrix(const Matrix& aValue) : mData(aValue.mData) {}
+  Matrix(const Matrix& aValue) : m(aValue.m) {}
 
   Matrix& operator=(const Matrix& aMatrix) {
-    mData.Copy(aMatrix.mData);
+    m.Copy(aMatrix.m);
     return *this;
   }
 
   Vector MultiplyPosition(const Vector& aPosition) {
     Vector result;
-    result.x() = mData.m00 * aPosition.x() + mData.m10 * aPosition.y() + mData.m20 * aPosition.z() + mData.m30;
-    result.y() = mData.m01 * aPosition.x() + mData.m11 * aPosition.y() + mData.m21 * aPosition.z() + mData.m31;
-    result.z() = mData.m02 * aPosition.x() + mData.m12 * aPosition.y() + mData.m22 * aPosition.z() + mData.m32;
-    const float w = mData.m03 * aPosition.x() + mData.m13 * aPosition.y() + mData.m23 * aPosition.z() + mData.m33;
+    result.x() = m.m00 * aPosition.x() + m.m10 * aPosition.y() + m.m20 * aPosition.z() + m.m30;
+    result.y() = m.m01 * aPosition.x() + m.m11 * aPosition.y() + m.m21 * aPosition.z() + m.m31;
+    result.z() = m.m02 * aPosition.x() + m.m12 * aPosition.y() + m.m22 * aPosition.z() + m.m32;
+    const float w = m.m03 * aPosition.x() + m.m13 * aPosition.y() + m.m23 * aPosition.z() + m.m33;
     if ((w != 0) && (w != 1)) {
       result /= w;
     }
@@ -165,10 +163,10 @@ public:
 
   Vector MultiplyDirection(const Vector& aPosition) {
     Vector result;
-    result.x() = mData.m00 * aPosition.x() + mData.m10 * aPosition.y() + mData.m20 * aPosition.z() + mData.m30;
-    result.y() = mData.m01 * aPosition.x() + mData.m11 * aPosition.y() + mData.m21 * aPosition.z() + mData.m31;
-    result.z() = mData.m02 * aPosition.x() + mData.m12 * aPosition.y() + mData.m22 * aPosition.z() + mData.m32;
-    const float w = mData.m03 * aPosition.x() + mData.m13 * aPosition.y() + mData.m23 * aPosition.z();
+    result.x() = m.m00 * aPosition.x() + m.m10 * aPosition.y() + m.m20 * aPosition.z() + m.m30;
+    result.y() = m.m01 * aPosition.x() + m.m11 * aPosition.y() + m.m21 * aPosition.z() + m.m31;
+    result.z() = m.m02 * aPosition.x() + m.m12 * aPosition.y() + m.m22 * aPosition.z() + m.m32;
+    const float w = m.m03 * aPosition.x() + m.m13 * aPosition.y() + m.m23 * aPosition.z();
     if ((w != 0) && (w != 1)) {
       result /= w;
     }
@@ -182,9 +180,9 @@ public:
       for(int jy = 0; jy < 4; jy++) {
         float sum = 0;
         for(int kz = 0; kz < 4; kz++) {
-           sum += aMatrix.mData.m[kz][jy] * mData.m[ix][kz];
+           sum += aMatrix.m.m[kz][jy] * m.m[ix][kz];
         }
-        result.mData.m[ix][jy] = sum;
+        result.m.m[ix][jy] = sum;
       }
     }
 
@@ -197,9 +195,9 @@ public:
       for(int jy = 0; jy < 4; jy++) {
         float sum = 0;
         for(int kz = 0; kz < 4; kz++) {
-           sum += mData.m[kz][jy] * aMatrix.mData.m[ix][kz];
+           sum += m.m[kz][jy] * aMatrix.m.m[ix][kz];
         }
-        result.mData.m[ix][jy] = sum;
+        result.m.m[ix][jy] = sum;
       }
     }
 
@@ -218,36 +216,38 @@ public:
 
   Matrix Transpose() const {
     return Matrix(
-      mData.m00, mData.m10, mData.m20, mData.m30,
-      mData.m01, mData.m11, mData.m21, mData.m31,
-      mData.m02, mData.m12, mData.m22, mData.m32,
-      mData.m03, mData.m13, mData.m23, mData.m33);
+      m.m00, m.m10, m.m20, m.m30,
+      m.m01, m.m11, m.m21, m.m31,
+      m.m02, m.m12, m.m22, m.m32,
+      m.m03, m.m13, m.m23, m.m33);
   }
 
   Matrix& TranslateInPlace(const Vector& aOffset) {
-    mData.m[3][0] += aOffset.x();
-    mData.m[3][1] += aOffset.y();
-    mData.m[3][2] += aOffset.z();
+    m.m[3][0] += aOffset.x();
+    m.m[3][1] += aOffset.y();
+    m.m[3][2] += aOffset.z();
     return *this;
   }
 
   Matrix& ScaleInPlace(const Vector& aScale) {
-    mData.m[0][0] *= aScale.x();
-    mData.m[1][1] *= aScale.y();
-    mData.m[2][2] *= aScale.z();
+    m.m[0][0] *= aScale.x();
+    m.m[1][1] *= aScale.y();
+    m.m[2][2] *= aScale.z();
     return *this;
   }
 
   Matrix Inverse() const {
-    const float m00 = mData.m00,  m10 = mData.m10,  m20 = mData.m20,  m30 = mData.m30;
-    const float m01 = mData.m01,  m11 = mData.m11,  m21 = mData.m21,  m31 = mData.m31;
-    const float m02 = mData.m02,  m12 = mData.m12,  m22 = mData.m22,  m32 = mData.m32;
+    const float c00 =   m.m11 * m.m22 - m.m12 * m.m21;
+    const float c10 = -(m.m01 * m.m22 - m.m02 * m.m21);
+    const float c20 =   m.m01 * m.m12 - m.m02 * m.m11;
+    const float c01 = -(m.m10 * m.m22 - m.m12 * m.m20);
+    const float c11 =   m.m00 * m.m22 - m.m02 * m.m20;
+    const float c21 = -(m.m00 * m.m12 - m.m02 * m.m10);
+    const float c02 =   m.m10 * m.m21 - m.m11 * m.m20;
+    const float c12 = -(m.m00 * m.m21 - m.m01 * m.m20);
+    const float c22 =   m.m00 * m.m11 - m.m01 * m.m10;
 
-    const float c00 =   m11*m22 - m12*m21,   c10 = -(m01*m22 - m02*m21),  c20 =   m01*m12 - m02*m11;
-    const float c01 = -(m10*m22 - m12*m20),  c11 =   m00*m22 - m02*m20,   c21 = -(m00*m12 - m02*m10);
-    const float c02 =   m10*m21 - m11*m20,   c12 = -(m00*m21 - m01*m20),  c22 =   m00*m11 - m01*m10;
-
-    const float det = m00*c00 + m10*c10 + m20 * c20;
+    const float det = m.m00*c00 + m.m10*c10 + m.m20 * c20;
     if (std::fabsf(det) < 0.00001) {
       return Matrix::Identity();
    }
@@ -259,14 +259,14 @@ public:
         i00, i01, i02, 0.0f,
         i10, i11, i12, 0.0f,
         i20, i21, i22, 0.0f,
-        -(i00*m30 + i10*m31 + i20*m32),
-        -(i01*m30 + i11*m31 + i21*m32),
-        -(i02*m30 + i12*m31 + i22*m32),
+        -(i00 * m.m30 + i10 * m.m31 + i20 * m.m32),
+        -(i01 * m.m30 + i11 * m.m31 + i21 * m.m32),
+        -(i02 * m.m30 + i12 * m.m31 + i22 * m.m32),
         1);
   }
 
-  float* Data() { return reinterpret_cast<float*>(&(mData.m)); }
-  const float* Data () const { return reinterpret_cast<const float*>(&(mData.m)); }
+  float* Data() { return reinterpret_cast<float*>(&(m.m)); }
+  const float* Data () const { return reinterpret_cast<const float*>(&(m.m)); }
 
   std::string ToString() const {
     std::string result;
@@ -274,7 +274,7 @@ public:
       result += "[";
       for(int jy = 0; jy < 4; jy++) {
         if (jy != 0) { result += ", "; }
-        result += std::to_string(mData.m[ix][jy]);
+        result += std::to_string(m.m[ix][jy]);
 
       }
       result += "]";
@@ -315,7 +315,7 @@ protected:
     }
   } data_t;
 
-  data_t mData;
+  data_t m;
 };
 
 }
