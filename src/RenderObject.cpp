@@ -77,6 +77,9 @@ struct RenderObject::State {
   std::vector<Vector> uvs;
   std::vector<Vector> normals;
   RenderObjectStatePtr renderState;
+  Matrix model;
+
+  State() : model(Matrix::Identity()) {}
 };
 
 RenderObjectPtr
@@ -99,15 +102,10 @@ RenderObject::GetName() const {
   return m.name;
 }
 
-static GLint sPOS;
-
 void
 RenderObject::Init() {
   VRLINE;
   m.renderState->Init();
-  //VRB_CHECK(glBindAttribLocation(m.renderState->Program(), 0, "a_position"));
-  sPOS = glGetAttribLocation(m.renderState->Program(), "a_position");VRB_CHECK()
-  VRLOG("sPOS=%d", sPOS);
   for (Group& group: m.groups) {
     VRB_CHECK(glGenBuffers(1, &group.vertexObjectId));
     VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, group.vertexObjectId));
@@ -143,7 +141,7 @@ RenderObject::Init() {
         indicies.push_back(count);
         count++;
         offset += vertexSize;
-        VRLOG("array buffer[%d] o:%d c:%d : %s", ix, offset, count, out.c_str());
+        //VRLOG("array buffer[%d] o:%d c:%d : %s", ix, (int)offset, count, out.c_str());
       }
     }
     VRLOG("indicies: %d vertex: %d", indicies.size(), group.vertexCount);
@@ -151,27 +149,36 @@ RenderObject::Init() {
     VRB_CHECK(glGenBuffers(1, &group.indexObjectId));
     VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, group.indexObjectId));
     VRB_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * indicies.size(), indicies.data(), GL_STATIC_DRAW));
+    VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
   }
 }
 
 
 void
 RenderObject::Draw(const Matrix &aProjection) {
-//  VRLINE;
-  if (m.renderState->Enable(aProjection)) {
+  if (m.renderState->Enable(aProjection.PostMultiply(m.model))) {
     for (Group& group: m.groups) {
 
       VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, group.vertexObjectId));
-      VRB_CHECK(glVertexAttribPointer(sPOS, 3, GL_FLOAT, GL_FALSE, 0, nullptr));
+      VRB_CHECK(glVertexAttribPointer(m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, 0, nullptr));
 
 
       VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, group.indexObjectId));
-      VRB_CHECK(glEnableVertexAttribArray(sPOS));
+      VRB_CHECK(glEnableVertexAttribArray(m.renderState->AttributePosition()));
       VRB_CHECK(glDrawElements(GL_TRIANGLES, group.vertexCount, GL_UNSIGNED_SHORT, 0));
       //VRB_CHECK(glDrawArrays(GL_TRIANGLES, 0, group.vertexCount));
-      VRB_CHECK(glDisableVertexAttribArray(sPOS));
+      VRB_CHECK(glDisableVertexAttribArray(m.renderState->AttributePosition()));
+      VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+      VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
     }
   }
+}
+
+void
+RenderObject::SetTransform(const Matrix& aTransform) {
+  m.model = aTransform;
 }
 
 int

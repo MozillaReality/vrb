@@ -19,6 +19,7 @@ public:
   std::string GetName() const;
   void Init();
   void Draw(const Matrix& aProjection);
+  void SetTransform(const Matrix& aTransform);
 
   int AddVertex(const Vector& aVertex);
   int AddNormal(const Vector& aNormal);

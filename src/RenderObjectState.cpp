@@ -47,12 +47,14 @@ struct RenderObjectState::State {
   GLuint fragmentShader;
   GLuint program;
   GLint uniformProjectionMatrix;
+  GLint attributePosition;
 
   State()
       : vertexShader(0)
       , fragmentShader(0)
       , program(0)
       , uniformProjectionMatrix(0)
+      , attributePosition(0)
   {}
 };
 
@@ -62,8 +64,13 @@ RenderObjectState::Create() {
 }
 
 GLuint
-RenderObjectState::Program() {
+RenderObjectState::Program() const {
   return m.program;
+}
+
+GLint
+RenderObjectState::AttributePosition() const {
+  return m.attributePosition;
 }
 
 void
@@ -95,6 +102,7 @@ RenderObjectState::Init() {
     if (m.uniformProjectionMatrix < 0) {
       VRLOG("Unable to glGetUniformLocation for '%s'", varName);
     }
+    m.attributePosition = glGetAttribLocation(m.program, "a_position");
   }
 }
 

@@ -14,7 +14,8 @@ typedef std::shared_ptr<RenderObjectState> RenderObjectStatePtr;
 class RenderObjectState {
 public:
   static RenderObjectStatePtr Create();
-  GLuint Program();
+  GLuint Program() const;
+  GLint AttributePosition() const;
   void Init();
   bool Enable(const Matrix& aProjection);
 
