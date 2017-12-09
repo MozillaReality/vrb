@@ -161,15 +161,17 @@ public:
     return result;
   }
 
-  Vector MultiplyDirection(const Vector& aPosition) {
+  Vector MultiplyDirection(const Vector& aDirection) {
     Vector result;
-    result.x() = m.m00 * aPosition.x() + m.m10 * aPosition.y() + m.m20 * aPosition.z() + m.m30;
-    result.y() = m.m01 * aPosition.x() + m.m11 * aPosition.y() + m.m21 * aPosition.z() + m.m31;
-    result.z() = m.m02 * aPosition.x() + m.m12 * aPosition.y() + m.m22 * aPosition.z() + m.m32;
-    const float w = m.m03 * aPosition.x() + m.m13 * aPosition.y() + m.m23 * aPosition.z();
+    result.x() = m.m00 * aDirection.x() + m.m10 * aDirection.y() + m.m20 * aDirection.z();
+    result.y() = m.m01 * aDirection.x() + m.m11 * aDirection.y() + m.m21 * aDirection.z();
+    result.z() = m.m02 * aDirection.x() + m.m12 * aDirection.y() + m.m22 * aDirection.z();
+
+    const float w = m.m03 * aDirection.x() + m.m13 * aDirection.y() + m.m23 * aDirection.z();
     if ((w != 0) && (w != 1)) {
       result /= w;
     }
+
 
     return result;
   }
