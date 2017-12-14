@@ -115,7 +115,10 @@ RenderObject::Init() {
     GLushort count = 0;
     GLintptr offset = 0;
     const GLintptr vertexSize = sizeof(GLfloat) * 3;
-    for (auto face: group.faces) {
+    for (auto& face: group.faces) {
+      if (face.vertices.size() == 0) {
+        break;
+      }
       const GLushort vertexIndex = face.vertices[0] - 1;
       const Vector& firstVertex = m.vertices[vertexIndex];
       if (face.vertices.size() < 3) {

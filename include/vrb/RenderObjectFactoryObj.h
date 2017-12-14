@@ -2,7 +2,7 @@
 #define VRB_RENDER_OBJECT_FACTORY_OBJ_DOT_H
 
 #include "vrb/Mutex.h"
-#include "vrb/Parser_obj.h"
+#include "vrb/ParserObj.h"
 #include "vrb/RenderObject.h"
 #include "vrb/Vector.h"
 
@@ -13,17 +13,17 @@ namespace vrb {
 //       which may be called from any thread.
 class RenderObject;
 
-class RenderObjectFactory_obj : public ParserObserver_obj {
+class RenderObjectFactoryObj : public ParserObserverObj {
 public:
-  RenderObjectFactory_obj();
-  ~RenderObjectFactory_obj();
+  RenderObjectFactoryObj();
+  ~RenderObjectFactoryObj();
 
-  void CreateRenderObject(const std::string& aName);
-  void FinishRenderObject();
   // Function is thread safe
   void GetLoadedRenderObjects(std::vector<RenderObjectPtr>& aObjects);
 
-  // OBJParserObserver interface
+  // ParserObserverObj interface
+  void StartModel(const std::string& aFileName) override;
+  void FinishModel() override;
   void LoadMaterialLibrary(const std::string& aFile) override;
   void SetGroupNames(const std::vector<std::string>& aNames) override;
   void SetObjectName(const std::string& aName) override;
@@ -36,6 +36,18 @@ public:
       const std::vector<int>& aVerticies,
       const std::vector<int>& aUVs,
       const std::vector<int>& aNormals) override;
+
+  void StartMaterialFile(const std::string& aFileName) override;
+  void FinishMaterialFile() override;
+  void CreateMaterial(const std::string& aName ) override;
+  void SetAmbientColor(const Vector& aColor) override;
+  void SetDiffuseColor(const Vector& aColor) override;
+  void SetSpecularColor(const Vector& aColor) override;
+  void SetSpecularExponent(const float aValue) override;
+  void SetIlluniationModel(const int aValue) override;
+  void SetAmbientTexture(const std::string& aFileName) override;
+  void SetDiffuseTexture(const std::string& aFileName) override;
+  void SetSpecularTexture(const std::string& aFileName) override;
 
 protected:
   Mutex mMutex;
