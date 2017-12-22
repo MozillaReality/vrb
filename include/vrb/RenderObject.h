@@ -1,16 +1,11 @@
 #ifndef VRB_RENDER_OBJECT_DOT_H
 #define VRB_RENDER_OBJECT_DOT_H
 
-#include "vrb/Vector.h"
-#include <memory>
+#include "vrb/Forward.h"
 #include <string>
 #include <vector>
 
 namespace vrb {
-
-class Matrix;
-class RenderObject;
-typedef std::shared_ptr<RenderObject> RenderObjectPtr;
 
 class RenderObject {
 public:
@@ -31,16 +26,14 @@ public:
       const std::vector<int>& aUVs,
       const std::vector<int>& aNormals);
 
-
   void Dump();
 
 protected:
-  RenderObject() = delete;
-  RenderObject(const std::string& aName);
+  RenderObject();
   ~RenderObject();
 
   struct State;
-  State &m;
+  State *m;
 };
 
 }

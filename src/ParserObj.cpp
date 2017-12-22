@@ -72,7 +72,7 @@ TokenizeWhiteSpace(const std::string& aBuffer, std::vector<std::string>& aTokens
 
 static std::string
 TokenizeBuffer(std::string& aBuffer, std::vector<std::string>& aTokens) {
-  // VRLOG("line: %s", aBuffer.c_str());
+  // VRB_LOG("line: %s", aBuffer.c_str());
   size_t end = aBuffer.find("#");
   if (end != std::string::npos) { aBuffer.erase(end); }
   return TokenizeWhiteSpace(aBuffer, aTokens);
@@ -185,7 +185,7 @@ public:
   SpecularParser() : ColorParser(1.0f) {}
 protected:
   void SetVector(const vrb::Vector& aVector, const float aW, vrb::ParserObserverObj& aObserver) override {
-    aObserver.SetAmbientColor(aVector);
+    aObserver.SetSpecularColor(aVector);
   }
 };
 
@@ -213,7 +213,7 @@ VectorParser::GetValue(const std::vector<std::string>& aTokens, const int place)
   } else {
     // Since place < 0 then endPlace < aTokens.size()
     const int endPlace = aTokens.size() + place;
-    return endPlace >= 0 ? LocalStof(aTokens[place]) : mDefaultValue;
+    return endPlace >= 0 ? LocalStof(aTokens[endPlace]) : mDefaultValue;
   }
 }
 
@@ -242,6 +242,8 @@ FaceParser::Parse(const std::vector<std::string>& aTokens, vrb::ParserObserverOb
 namespace vrb {
 
 struct ParserObj::State {
+  std::weak_ptr<ParserObj> self;
+  FileReaderPtr fileReader;
   ParserObserverObj *observer;
   std::string mtlFileName;
   int objFileHandle;
@@ -319,6 +321,9 @@ ParserObj::State::ParseObj(FileHandler& aFileHandler) {
       observer->SetObjectName(tokens.size() > 0 ? tokens[0] : "");
     } else if (type == "mtllib") {
       mtlFileName = tokens.size() > 0 ? tokens[0] : "";
+      if (fileReader) {
+        fileReader->ReadRawFile(mtlFileName, self.lock());
+      }
       observer->LoadMaterialLibrary(mtlFileName);
     } else if (type == "usemtl") {
       observer->SetMaterialName(tokens.size() > 0 ? tokens[0] : "");
@@ -347,15 +352,27 @@ ParserObj::State::ParseMtl() {
 
     if (type == "#") {
       // Found line comment
+    } else if (type == "newmtl") {
+      observer->CreateMaterial(tokens.size() > 0 ? tokens[0] : "");
     } else if (type == "Ka") {
       currentParser = &ambientParser;
     } else if (type == "Ks") {
       currentParser = &specularParser;
     } else if (type == "Kd") {
-       currentParser = &diffuseParser;
-    } else {
+      currentParser = &diffuseParser;
+    } else if (type == "Ns") {
+      observer->SetSpecularExponent(LocalStof(tokens.size() > 0 ? tokens[tokens.size() - 1] : "1.0"));
+    } else if (type == "map_Ka") {
+      observer->SetAmbientTexture(tokens.size() > 0 ? tokens[tokens.size() - 1] : "");
+    } else if (type == "map_Kd") {
+      observer->SetDiffuseTexture(tokens.size() > 0 ? tokens[tokens.size() - 1] : "");
+    } else if (type == "map_Ks") {
+      observer->SetSpecularTexture(tokens.size() > 0 ? tokens[tokens.size() - 1] : "");
+    } else if (type == "illum") {
+      observer->SetIlluniationModel(LocalStoi(tokens.size() > 0 ? tokens[tokens.size() - 1] : "1"));
+    }else {
       // Unhandled tag
-      VRLOG("In file: '%s' Unhandled mtl option: '%s'", mtlFileName.c_str(), mtlLineBuffer.c_str());
+      VRB_LOG("In file: '%s' Unhandled mtl option: '%s'", mtlFileName.c_str(), mtlLineBuffer.c_str());
     }
 
     if (currentParser) {
@@ -367,7 +384,19 @@ ParserObj::State::ParseMtl() {
 
 ParserObjPtr
 ParserObj::Create() {
-  return std::make_shared<ParserObjAlloc>();
+  ParserObjPtr self = std::make_shared<ParserObjAlloc>();
+  self->m.self = self;
+  return self;
+}
+
+void
+ParserObj::SetFileReader(FileReaderPtr aFileReader) {
+  m.fileReader = aFileReader;
+}
+
+void
+ParserObj::ClearFileReader() {
+  m.fileReader = nullptr;
 }
 
 void
@@ -385,7 +414,7 @@ ParserObj::Bind(const std::string& aFileName, const int aFileHandle) {
 
 void
 ParserObj::LoadFailed(const int aFileHandle, const std::string& aReason) {
-  VRLOG("Failed to load: %s", aReason.c_str());
+  VRB_LOG("Failed to load: %s", aReason.c_str());
   Finish(aFileHandle);
 }
 
@@ -394,7 +423,7 @@ ParserObj::ProcessBuffer(const int aFileHandle, const char* aBuffer, const size_
   std::string* lineBuffer = m.GetBuffer(aFileHandle);
 
   if (!lineBuffer) {
-    VRLOG("Failed to find line buffer of file handle: %d", aFileHandle);
+    VRB_LOG("Failed to find line buffer of file handle: %d", aFileHandle);
     return;
   }
   size_t place = 0;

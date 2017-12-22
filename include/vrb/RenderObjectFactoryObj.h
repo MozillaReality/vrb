@@ -1,7 +1,6 @@
 #ifndef VRB_RENDER_OBJECT_FACTORY_OBJ_DOT_H
 #define VRB_RENDER_OBJECT_FACTORY_OBJ_DOT_H
 
-#include "vrb/Mutex.h"
 #include "vrb/ParserObj.h"
 #include "vrb/RenderObject.h"
 #include "vrb/Vector.h"
@@ -50,10 +49,8 @@ public:
   void SetSpecularTexture(const std::string& aFileName) override;
 
 protected:
-  Mutex mMutex;
-  std::vector<RenderObjectPtr> mLoadedObjects;
-  RenderObjectPtr mObject;
-  int mGroup;
+  struct State;
+  State &m;
 };
 
 }

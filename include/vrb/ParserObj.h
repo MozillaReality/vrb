@@ -12,17 +12,6 @@ namespace vrb {
 class ParserObj;
 typedef std::shared_ptr<ParserObj> ParserObjPtr;
 
-class ParserFileReaderObj;
-typedef std::shared_ptr<ParserFileReaderObj> ParserFileReaderObjPtr;
-
-class ParserFileReaderObj {
-public:
-  static ParserFileReaderObjPtr Create(ParserObjPtr aParser, FileReaderPtr aFileReader);
-  void ReadRawFile(const std::string& aFileName);
-
-protected:
-  ParserFileReaderObj(FileReaderPtr aFileReader, ParserObjPtr aParser);
-};
 
 class ParserObserverObj {
 public:

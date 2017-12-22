@@ -1,17 +1,11 @@
 #include "vrb/RenderObjectState.h"
 
+#include "vrb/Logger.h"
 #include "vrb/GLError.h"
 #include "vrb/Matrix.h"
 
 #include <GLES2/gl2.h>
 #include <string>
-
-#if defined(ANDROID)
-#include <android/log.h>
-#define VRLOG(format, ...) __android_log_print(ANDROID_LOG_INFO, "VRBrowser", format, ##__VA_ARGS__);
-#else
-#define VRLOG(...);
-#endif
 
 namespace {
 
@@ -89,7 +83,7 @@ RenderObjectState::Init() {
       VRB_CHECK(glGetProgramiv(m.program, GL_INFO_LOG_LENGTH, &length));
       if (length > 1) {
         char* log = new char[length];
-        VRLOG("Failed to link program:\n%s", log);
+        VRB_LOG("Failed to link program:\n%s", log);
         delete[] log;
       }
       VRB_CHECK(glDeleteProgram(m.program));
@@ -100,7 +94,7 @@ RenderObjectState::Init() {
     const char* varName = "u_matViewProjection";
     m.uniformProjectionMatrix = glGetUniformLocation(m.program, varName);
     if (m.uniformProjectionMatrix < 0) {
-      VRLOG("Unable to glGetUniformLocation for '%s'", varName);
+      VRB_LOG("Unable to glGetUniformLocation for '%s'", varName);
     }
     m.attributePosition = glGetAttribLocation(m.program, "a_position");
   }
@@ -129,7 +123,7 @@ RenderObjectState::LoadShader(GLenum type, const char* src) {
   result = glCreateShader(type);
 
   if (result == 0) {
-    VRLOG("FAILDED to create shader of type: %s", (type == GL_VERTEX_SHADER ? "vertex shader" : "fragment shader"));
+    VRB_LOG("FAILDED to create shader of type: %s", (type == GL_VERTEX_SHADER ? "vertex shader" : "fragment shader"));
   }
 
   VRB_CHECK(glShaderSource(result, 1, &src, nullptr));
@@ -143,8 +137,8 @@ RenderObjectState::LoadShader(GLenum type, const char* src) {
     if (length > 1) {
       char* log = new char[length];
       VRB_CHECK(glGetShaderInfoLog(result, length, nullptr, log));
-      VRLOG("FAILED TO COMPILE SHADER:\n%s", log);
-      VRLOG("From source:\n%s", src);
+      VRB_LOG("FAILED TO COMPILE SHADER:\n%s", log);
+      VRB_LOG("From source:\n%s", src);
       delete[] log;
     }
   }

@@ -13,7 +13,7 @@ const char* GLErrorCheck();
 {                                                           \
   const char* str = GLErrorCheck();                         \
   if (str) {                                                \
-    __android_log_print(ANDROID_LOG_ERROR, "VRBrowser",     \
+    __android_log_print(ANDROID_LOG_ERROR, "VRB",           \
                          "OpenGL Error: %s at%s:%s:%d",     \
                          str,                               \
                          __FILE__, __FUNCTION__, __LINE__); \

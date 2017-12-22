@@ -61,7 +61,7 @@ public:
     const float right = std::tanf(aRight) * aNear;
     const float bottom = -std::tanf(aBottom) * aNear;
     const float top = std::tanf(aTop) * aNear;
-    VRLOG("left=%f right=%f bottom=%f top=%f",left,right,bottom,top);
+    VRB_LOG("left=%f right=%f bottom=%f top=%f",left,right,bottom,top);
 
     if ((left < right) && (bottom < top) &&
         (aNear < aFar) && (aNear > 0.0f) && (aFar > 0.0f)) {
