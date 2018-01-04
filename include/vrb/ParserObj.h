@@ -10,9 +10,6 @@
 #include <vector>
 
 namespace vrb {
-class ParserObj;
-typedef std::shared_ptr<ParserObj> ParserObjPtr;
-
 
 class ParserObserverObj {
 public:

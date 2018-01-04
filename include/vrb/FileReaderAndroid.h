@@ -2,13 +2,12 @@
 #define VRB_FILE_READER_ANDROID_DOT_H
 
 #include "vrb/FileReader.h"
+#include "vrb/Forward.h"
+
 #include <jni.h>
 #include <memory>
 
 namespace vrb {
-
-class FileReaderAndroid;
-typedef std::shared_ptr<FileReaderAndroid> FileReaderAndroidPtr;
 
 class FileReaderAndroid : public FileReader {
 public:

@@ -8,7 +8,21 @@ namespace vrb {
 class Context;
 typedef std::shared_ptr<Context> ContextPtr;
 
+class FileHandler;
+typedef std::shared_ptr<FileHandler> FileHandlerPtr;
+
+class FileReader;
+typedef std::shared_ptr<FileReader> FileReaderPtr;
+
+#if defined(ANDROID)
+class FileReaderAndroid;
+typedef std::shared_ptr<FileReaderAndroid> FileReaderAndroidPtr;
+#endif // defined(ANDROID)
+
 class Matrix;
+
+class ParserObj;
+typedef std::shared_ptr<ParserObj> ParserObjPtr;
 
 class ParserObserverObj;
 typedef std::shared_ptr<ParserObserverObj> ParserObserverObjPtr;

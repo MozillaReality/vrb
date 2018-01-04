@@ -1,15 +1,12 @@
 #ifndef VRB_FILE_READER_DOT_H
 #define VRB_FILE_READER_DOT_H
 
+#include "vrb/Forward.h"
+
 #include <string>
 #include <memory>
 
 namespace vrb {
-
-class FileHandler;
-typedef std::shared_ptr<FileHandler> FileHandlerPtr;
-class FileReader;
-typedef std::shared_ptr<FileReader> FileReaderPtr;
 
 class FileHandler {
 public:
