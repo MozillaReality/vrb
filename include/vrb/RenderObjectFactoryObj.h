@@ -1,10 +1,10 @@
 #ifndef VRB_RENDER_OBJECT_FACTORY_OBJ_DOT_H
 #define VRB_RENDER_OBJECT_FACTORY_OBJ_DOT_H
 
+#include "vrb/Forward.h"
 #include "vrb/ParserObj.h"
-#include "vrb/RenderObject.h"
-#include "vrb/Vector.h"
 
+#include <memory>
 #include <vector>
 
 namespace vrb {
@@ -14,8 +14,7 @@ class RenderObject;
 
 class RenderObjectFactoryObj : public ParserObserverObj {
 public:
-  RenderObjectFactoryObj();
-  ~RenderObjectFactoryObj();
+  static RenderObjectFactoryObjPtr Create();
 
   // Function is thread safe
   void GetLoadedRenderObjects(std::vector<RenderObjectPtr>& aObjects);
@@ -49,8 +48,11 @@ public:
   void SetSpecularTexture(const std::string& aFileName) override;
 
 protected:
+  RenderObjectFactoryObj();
+  ~RenderObjectFactoryObj();
+
   struct State;
-  State &m;
+  State *m;
 };
 
 }

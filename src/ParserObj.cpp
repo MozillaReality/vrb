@@ -1,4 +1,8 @@
 #include "vrb/ParserObj.h"
+
+#include "vrb/Base.h"
+#include "vrb/Vector.h"
+
 #include <string>
 #include <vector>
 #include <iostream>
@@ -98,11 +102,6 @@ TokenizeDelimiter(const std::string& aStr, const std::string& aDelimiter, std::v
   return aTokens.size();
 
 }
-
-class ParserObjAlloc : public vrb::ParserObj {
-public:
-  ParserObjAlloc() {}
-};
 
 class LineParser {
 public:
@@ -244,7 +243,7 @@ namespace vrb {
 struct ParserObj::State {
   std::weak_ptr<ParserObj> self;
   FileReaderPtr fileReader;
-  ParserObserverObj *observer;
+  std::weak_ptr<ParserObserverObj> weakObserver;
   std::string mtlFileName;
   int objFileHandle;
   int mtlFileHandle;
@@ -259,8 +258,7 @@ struct ParserObj::State {
   SpecularParser specularParser;
 
   State()
-      : observer(nullptr)
-      , objFileHandle(0)
+      : objFileHandle(0)
       , mtlFileHandle(0)
     {}
 
@@ -289,6 +287,7 @@ ParserObj::State::Parse(const int aFileHandle, FileHandler& aFileHandler) {
 
 void
 ParserObj::State::Finish(const int aFileHandle) {
+  ParserObserverObjPtr observer = weakObserver.lock();
   if (aFileHandle == objFileHandle) {
     if (observer) { observer->FinishModel(); }
     objFileHandle = 0;
@@ -301,6 +300,7 @@ ParserObj::State::Finish(const int aFileHandle) {
 
 void
 ParserObj::State::ParseObj(FileHandler& aFileHandler) {
+  ParserObserverObjPtr observer = weakObserver.lock();
   if (!objLineBuffer.empty() && observer) {
     std::vector<std::string> tokens;
     const std::string type = TokenizeBuffer(objLineBuffer, tokens);
@@ -337,7 +337,7 @@ ParserObj::State::ParseObj(FileHandler& aFileHandler) {
     }
 
     if (currentParser) {
-      currentParser->Parse(tokens, *observer);
+      currentParser->Parse(tokens, *observer.get());
     }
   }
   objLineBuffer.clear();
@@ -345,6 +345,7 @@ ParserObj::State::ParseObj(FileHandler& aFileHandler) {
 
 void
 ParserObj::State::ParseMtl() {
+  ParserObserverObjPtr observer = weakObserver.lock();
   if (!mtlLineBuffer.empty() && observer) {
     std::vector<std::string> tokens;
     const std::string type = TokenizeBuffer(mtlLineBuffer, tokens);
@@ -376,7 +377,7 @@ ParserObj::State::ParseMtl() {
     }
 
     if (currentParser) {
-      currentParser->Parse(tokens, *observer);
+      currentParser->Parse(tokens, *observer.get());
     }
   }
   mtlLineBuffer.clear();
@@ -384,43 +385,44 @@ ParserObj::State::ParseMtl() {
 
 ParserObjPtr
 ParserObj::Create() {
-  ParserObjPtr self = std::make_shared<ParserObjAlloc>();
-  self->m.self = self;
+  ParserObjPtr self = std::make_shared<Alloc<ParserObj, ParserObj::State> >();
+  self->m->self = self;
   return self;
 }
 
 void
 ParserObj::SetFileReader(FileReaderPtr aFileReader) {
-  m.fileReader = aFileReader;
+  m->fileReader = aFileReader;
 }
 
 void
 ParserObj::ClearFileReader() {
-  m.fileReader = nullptr;
+  m->fileReader = nullptr;
 }
 
 void
-ParserObj::Bind(const std::string& aFileName, const int aFileHandle) {
-  if (!m.mtlFileName.empty() && (aFileName == m.mtlFileName)) {
-    m.mtlFileHandle = aFileHandle;
-    m.mtlLineBuffer.clear();
-    if (m.observer) { m.observer->StartMaterialFile(aFileName); }
+ParserObj::BindFileHandle(const std::string& aFileName, const int aFileHandle) {
+  ParserObserverObjPtr observer = m->weakObserver.lock();
+  if (!m->mtlFileName.empty() && (aFileName == m->mtlFileName)) {
+    m->mtlFileHandle = aFileHandle;
+    m->mtlLineBuffer.clear();
+    if (observer) { observer->StartMaterialFile(aFileName); }
   } else {
-    m.objFileHandle = aFileHandle;
-    m.objLineBuffer.clear();
-    if (m.observer) { m.observer->StartModel(aFileName); }
+    m->objFileHandle = aFileHandle;
+    m->objLineBuffer.clear();
+    if (observer) { observer->StartModel(aFileName); }
   }
 }
 
 void
 ParserObj::LoadFailed(const int aFileHandle, const std::string& aReason) {
   VRB_LOG("Failed to load: %s", aReason.c_str());
-  Finish(aFileHandle);
+  FinishRawFile(aFileHandle);
 }
 
 void
-ParserObj::ProcessBuffer(const int aFileHandle, const char* aBuffer, const size_t aSize) {
-  std::string* lineBuffer = m.GetBuffer(aFileHandle);
+ParserObj::ProcessRawFileChunk(const int aFileHandle, const char* aBuffer, const size_t aSize) {
+  std::string* lineBuffer = m->GetBuffer(aFileHandle);
 
   if (!lineBuffer) {
     VRB_LOG("Failed to find line buffer of file handle: %d", aFileHandle);
@@ -434,7 +436,7 @@ ParserObj::ProcessBuffer(const int aFileHandle, const char* aBuffer, const size_
       if ((place - start) > 0) {
         lineBuffer->append(&(aBuffer[start]), place - start);
       }
-      m.Parse(aFileHandle, *this);
+      m->Parse(aFileHandle, *this);
       start = place + 1;
     }
     place++;
@@ -446,23 +448,24 @@ ParserObj::ProcessBuffer(const int aFileHandle, const char* aBuffer, const size_
 }
 
 void
-ParserObj::Finish(const int aFileHandle) {
-  m.Parse(aFileHandle, *this);
-  m.Finish(aFileHandle);
+ParserObj::FinishRawFile(const int aFileHandle) {
+  m->Parse(aFileHandle, *this);
+  m->Finish(aFileHandle);
 
 }
 
 void
-ParserObj::SetObserver(ParserObserverObj* aObserver) {
-  m.observer = aObserver;
-}
-
-ParserObj::ParserObj() : m(*(new State)) {
+ParserObj::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight) {
 
 }
 
-ParserObj::~ParserObj() {
-  delete &m;
+void
+ParserObj::SetObserver(ParserObserverObjPtr aObserver) {
+  m->weakObserver = aObserver;
 }
+
+ParserObj::ParserObj() : m(nullptr) {}
+
+ParserObj::~ParserObj() {}
 
 } // namespace vrb

@@ -13,7 +13,7 @@ public:
   static TexturePtr Create();
 
   void SetName(const std::string& aName);
-  void SetRGBData(const void* aImage, const int aWidth, const int aHeight, const int aChannels);
+  void SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight, const int aChannels);
   void Init();
   std::string GetName();
   GLuint GetHandle();

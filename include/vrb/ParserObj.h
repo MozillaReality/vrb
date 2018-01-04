@@ -1,8 +1,9 @@
 #ifndef VRB_PARSER_OBJ_DOT_H
 #define VRB_PARSER_OBJ_DOT_H
 
+#include "vrb/Forward.h"
+
 #include "vrb/FileReader.h"
-#include "vrb/Vector.h"
 
 #include <memory>
 #include <string>
@@ -57,25 +58,21 @@ public:
   void ClearFileReader();
 
   // FileHandler Interface
-  void Bind(const std::string& aFileName, const int aFileHandle) override ;
+  void BindFileHandle(const std::string& aFileName, const int aFileHandle) override ;
   void LoadFailed(const int aFileHandle, const std::string& aReason) override ;
-  void ProcessBuffer(const int aFileHandle, const char* aBuffer, const size_t aSize) override ;
-  void Finish(const int aFileHandle) override;
+  void ProcessRawFileChunk(const int aFileHandle, const char* aBuffer, const size_t aSize) override ;
+  void FinishRawFile(const int aFileHandle) override;
+  void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight) override;
 
   // ParserObj Interface
-  void SetObserver(ParserObserverObj* aObserver);
+  void SetObserver(ParserObserverObjPtr aObserver);
 
 protected:
   ParserObj();
   ~ParserObj();
 
   struct State;
-  State& m;
-};
-
-class ParserObserver_mtl {
-public:
-
+  State* m;
 };
 
 }

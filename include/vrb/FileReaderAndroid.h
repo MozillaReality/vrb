@@ -17,6 +17,8 @@ public:
   void ReadImageFile(const std::string& aFileName, FileHandlerPtr aHandler) override;
   void SetAssetManager(JNIEnv* aEnv, jobject& aAssetManager);
   void ClearAssetManager();
+  void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight);
+  void ImageFileLoadFailed(const int aFileHandle, const std::string& aReason);
 protected:
   FileReaderAndroid();
   ~FileReaderAndroid();

@@ -13,10 +13,11 @@ typedef std::shared_ptr<FileReader> FileReaderPtr;
 
 class FileHandler {
 public:
-  virtual void Bind(const std::string& aFileName, const int aFileHandle) = 0;
+  virtual void BindFileHandle(const std::string& aFileName, const int aFileHandle) = 0;
   virtual void LoadFailed(const int aFileHandle, const std::string& aReason) = 0;
-  virtual void ProcessBuffer(const int aFileHandle, const char* aBuffer, const size_t aSize) = 0;
-  virtual void Finish(const int aFileHandle) = 0;
+  virtual void ProcessRawFileChunk(const int aFileHandle, const char* aBuffer, const size_t aSize) = 0;
+  virtual void FinishRawFile(const int aFileHandle) = 0;
+  virtual void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight) = 0;
 protected:
   FileHandler() {}
   virtual ~FileHandler() {}

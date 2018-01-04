@@ -10,8 +10,14 @@ typedef std::shared_ptr<Context> ContextPtr;
 
 class Matrix;
 
+class ParserObserverObj;
+typedef std::shared_ptr<ParserObserverObj> ParserObserverObjPtr;
+
 class RenderObject;
 typedef std::shared_ptr<RenderObject> RenderObjectPtr;
+
+class RenderObjectFactoryObj;
+typedef std::shared_ptr<RenderObjectFactoryObj> RenderObjectFactoryObjPtr;
 
 class RenderObjectState;
 typedef std::shared_ptr<RenderObjectState> RenderObjectStatePtr;

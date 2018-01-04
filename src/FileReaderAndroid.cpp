@@ -30,6 +30,8 @@ struct FileReaderAndroid::State {
   AAssetManager* am;
   jclass imageLoaderClass;
   jmethodID loadFromAssets;
+  int imageTargetHandle;
+  FileHandlerPtr imageTarget;
   State()
       : trackingHandleCount(0)
       , env(nullptr)
@@ -37,6 +39,7 @@ struct FileReaderAndroid::State {
       , am(nullptr)
       , imageLoaderClass(0)
       , loadFromAssets(0)
+      , imageTargetHandle(0)
   {}
 
   int nextHandle() {
@@ -57,7 +60,7 @@ FileReaderAndroid::Create() {
 void
 FileReaderAndroid::ReadRawFile(const std::string& aFileName, FileHandlerPtr aHandler) {
   const int handle = m->nextHandle();
-  aHandler->Bind(aFileName, handle);
+  aHandler->BindFileHandle(aFileName, handle);
   if (!m->am) {
     aHandler->LoadFailed(handle, "Unable to load file: No Android AssetManager.");
     return;
@@ -73,10 +76,10 @@ FileReaderAndroid::ReadRawFile(const std::string& aFileName, FileHandlerPtr aHan
   char buffer[bufferSize];
   int read = 0;
   while ((read = AAsset_read(asset, buffer, bufferSize)) > 0) {
-    aHandler->ProcessBuffer(handle, buffer, read);
+    aHandler->ProcessRawFileChunk(handle, buffer, read);
   }
   if (read == 0) {
-    aHandler->Finish(handle);
+    aHandler->FinishRawFile(handle);
   } else {
     aHandler->LoadFailed(handle, "Error while reading file");
   }
@@ -86,11 +89,18 @@ FileReaderAndroid::ReadRawFile(const std::string& aFileName, FileHandlerPtr aHan
 
 void
 FileReaderAndroid::ReadImageFile(const std::string& aFileName, FileHandlerPtr aHandler) {
-  const int handle = m->nextHandle();
-  if (!m->loadFromAssets || m->am) {
+  if (!aHandler) {
     return;
   }
-  m->env->CallStaticVoidMethod(m->imageLoaderClass, m->loadFromAssets, m->jassetManager, m->env->NewStringUTF(aFileName.c_str()), handle);
+  m->imageTarget = aHandler;
+  m->imageTargetHandle = m->nextHandle();
+  m->imageTarget->BindFileHandle(aFileName, m->imageTargetHandle);
+  if (!m->loadFromAssets || m->am) {
+    m->imageTarget->LoadFailed(m->imageTargetHandle, "FileReaderAndroid is not initialized.");
+    return;
+  }
+
+  m->env->CallStaticVoidMethod(m->imageLoaderClass, m->loadFromAssets, m->jassetManager, m->env->NewStringUTF(aFileName.c_str()), m->imageTargetHandle);
 }
 
 void
@@ -101,35 +111,90 @@ FileReaderAndroid::SetAssetManager(JNIEnv* aEnv, jobject &aAssetManager) {
   }
   m->jassetManager = m->env->NewGlobalRef(aAssetManager);
   m->am = AAssetManager_fromJava(m->env, m->jassetManager);
-  jclass localImageLoaderClass = m->env->FindClass("mozilla/org/vrb/ImageLoader");
+  jclass localImageLoaderClass = m->env->FindClass("org/mozilla/vrb/ImageLoader");
   m->imageLoaderClass = (jclass)m->env->NewGlobalRef(localImageLoaderClass);
-  m->loadFromAssets = m->env->GetMethodID(m->imageLoaderClass, "loadFromAssets", "(Landroid/content/res/AssetManager;Ljava/lang/String;JI)V");
+  m->loadFromAssets = m->env->GetStaticMethodID(m->imageLoaderClass, "loadFromAssets", "(Landroid/content/res/AssetManager;Ljava/lang/String;JI)V");
 }
 
 void
 FileReaderAndroid::ClearAssetManager() {
   if (m->env) {
     m->env->DeleteGlobalRef(m->jassetManager);
+    m->env->DeleteGlobalRef(m->imageLoaderClass);
     m->am = nullptr;
     m->env = nullptr;
-    m->env->DeleteGlobalRef(m->imageLoaderClass);
     m->loadFromAssets = 0;
   }
 }
 
+void
+FileReaderAndroid::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]> &aImage, const int aWidth, const int aHeight) {
+  if (m->imageTargetHandle != aFileHandle) {
+    return;
+  }
+
+  m->imageTargetHandle = 0;
+  if (!m->imageTarget) {
+    return;
+  }
+
+  m->imageTarget->ProcessImageFile(aFileHandle, aImage, aWidth, aHeight);
+  m->imageTarget = nullptr;
+}
+
+
+void
+FileReaderAndroid::ImageFileLoadFailed(const int aFileHandle, const std::string& aReason) {
+  if (!m->imageTarget || (m->imageTargetHandle != aFileHandle)) {
+    return;
+  }
+
+  m->imageTarget->LoadFailed(aFileHandle, aReason);
+  m->imageTargetHandle = 0;
+  m->imageTarget = nullptr;
+}
 
 FileReaderAndroid::FileReaderAndroid() : m(nullptr) {}
 FileReaderAndroid::~FileReaderAndroid() {}
 
 } // namespace vrb
 
-JNI_METHOD(void, ProcessTexture)
-(JNIEnv*, jclass, jlong aFileReaderAndroid, int aFileTrackingHandle, jintArray aPixels, int width, int height) {
+JNI_METHOD(void, ProcessImage)
+(JNIEnv* env, jclass, jlong aFileReaderAndroid, int aFileTrackingHandle, jintArray aPixels, int width, int height) {
   vrb::FileReaderAndroid* reader = ptr(aFileReaderAndroid);
 
   if (!reader) {
-    VRB_LOG("Error: void FileReaderAndroid in ProcessTexture");
+    VRB_LOG("Error: nullptr FileReaderAndroid in ProcessTexture");
     return;
   }
 
+  jsize arraySize = env->GetArrayLength(aPixels);
+  if ((width * height) > arraySize) {
+
+  }
+
+  const int imageSize = width * height * 4;
+  std::unique_ptr<uint8_t[]> image = std::make_unique<uint8_t[]>(imageSize);
+
+  jint* array = env->GetIntArrayElements(aPixels, 0);
+  memcpy(image.get(), array, imageSize);
+  env->ReleaseIntArrayElements(aPixels, array, 0);
+
+  reader->ProcessImageFile(aFileTrackingHandle, image, width, height);
+}
+
+JNI_METHOD(void, ImageLoadFailed)
+(JNIEnv* env, jclass, jlong aFileReaderAndroid, int aFileTrackingHandle, jstring aReason) {
+  vrb::FileReaderAndroid* reader = ptr(aFileReaderAndroid);
+
+  if (!reader) {
+    VRB_LOG("Error: nullptr FileReaderAndroid in ImageLoadFailed");
+    return;
+  }
+
+  const char *nativeString = env->GetStringUTFChars(aReason, 0);
+  std::string reason = nativeString;
+  env->ReleaseStringUTFChars(aReason, nativeString);
+
+  reader->ImageFileLoadFailed(aFileTrackingHandle, reason);
 }

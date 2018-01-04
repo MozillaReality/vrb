@@ -19,7 +19,7 @@ struct MipMap {
   GLenum format;
   GLenum type;
   GLsizei dataSize;
-  char* data;
+  std::unique_ptr<uint8_t[]> data;
 
   MipMap()
       : target(GL_TEXTURE_2D)
@@ -31,10 +31,9 @@ struct MipMap {
   	   , format(GL_RGB)
   	   , type(GL_UNSIGNED_BYTE)
       , dataSize(0)
-  	   , data(nullptr)
   {}
 
-  MipMap(const MipMap& aSource)
+  MipMap(MipMap&& aSource)
       : target(GL_TEXTURE_2D)
       , level(0)
   	   , internalFormat(GL_RGB)
@@ -43,16 +42,14 @@ struct MipMap {
   	   , border(0)
   	   , format(GL_RGB)
   	   , type(GL_UNSIGNED_BYTE)
-      , dataSize(0)
-      , data(nullptr) {
-    *this = aSource;
+      , dataSize(0) {
+    *this = std::move(aSource);
   }
 
   ~MipMap() {
-    delete[] data;
   }
 
-  MipMap& operator=(const MipMap& aSource) {
+  MipMap& operator=(MipMap&& aSource) {
     target = aSource.target;
     level = aSource.level;
     internalFormat = aSource.internalFormat;
@@ -61,34 +58,18 @@ struct MipMap {
     border = aSource.border;
     format = aSource.format;
     type = aSource.type;
-    SetData(aSource.data, aSource.dataSize);
+    dataSize = aSource.dataSize;
+    data = std::move(aSource.data);
     return *this;
   }
 
-  void SetData(const char* aData, const size_t aDataSize) {
-    if (data) {
-      delete data; data = nullptr;
-      dataSize = 0;
-    }
-
-    if (aData && (aDataSize > 0)) {
-      dataSize = aDataSize;
-      data = new char[dataSize];
-      memcpy((void*)data, (void*)aData, dataSize);
-    }
-  }
-
-  void ResetRGB(const bool aHasAlpha) {
-    target = GL_TEXTURE_2D;
-    level = 0;
+  void SetAlpha(const bool aHasAlpha) {
   	 internalFormat = aHasAlpha ? GL_RGBA : GL_RGB;
-  	 width = 0;
-  	 height = 0;
-  	 border = 0;
   	 format = aHasAlpha ? GL_RGBA : GL_RGB;
-  	 type = GL_UNSIGNED_BYTE;
-    SetData(nullptr, 0);
   }
+private:
+  MipMap(const MipMap&) = delete;
+  MipMap& operator=(const MipMap&) = delete;
 };
 
 }
@@ -114,7 +95,7 @@ Texture::SetName(const std::string& aName) {
 }
 
 void
-Texture::SetRGBData(const void* aImage, const int aWidth, const int aHeight, const int aChannels) {
+Texture::SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight, const int aChannels) {
   if ((aChannels < 3) || (aChannels > 4)) {
     return;
   }
@@ -127,13 +108,13 @@ Texture::SetRGBData(const void* aImage, const int aWidth, const int aHeight, con
     return;
   }
 
-  if (m->mipMaps.size() == 0) {
-    m->mipMaps.push_back(MipMap());
-  }
-
-  MipMap& mipMap = m->mipMaps[0];
-  mipMap.ResetRGB(aChannels == 4);
-  mipMap.SetData((const char*)aImage, aWidth * aHeight * aChannels);
+  MipMap mipMap;
+  mipMap.width = aWidth;
+  mipMap.height = aHeight;
+  mipMap.SetAlpha(aChannels == 4);
+  mipMap.dataSize = aWidth * aHeight * aChannels;
+  mipMap.data = std::move(aImage);
+  m->mipMaps.push_back(std::move(mipMap));
 }
 
 void
@@ -154,7 +135,7 @@ Texture::Init() {
   	   mipMap.border,
   	   mipMap.format,
   	   mipMap.type,
-  	   (void*)mipMap.data));
+  	   (void*)mipMap.data.get()));
   }
 }
 

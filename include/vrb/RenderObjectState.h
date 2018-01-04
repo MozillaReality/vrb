@@ -22,7 +22,7 @@ protected:
   GLuint LoadShader(GLenum type, const char* src);
 
   struct State;
-  State& m;
+  State* m;
 };
 
 } // namespace vrb
