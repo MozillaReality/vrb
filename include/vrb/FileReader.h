@@ -2,6 +2,7 @@
 #define VRB_FILE_READER_DOT_H
 
 #include "vrb/Forward.h"
+#include "vrb/MacroUtils.h"
 
 #include <string>
 #include <memory>
@@ -19,8 +20,7 @@ protected:
   FileHandler() {}
   virtual ~FileHandler() {}
 private:
-  FileHandler(const FileHandler&) = delete;
-  FileHandler& operator=(const FileHandler&) = delete;
+  VRB_NO_DEFAULTS(FileHandler)
 };
 
 class FileReader {
@@ -31,8 +31,7 @@ protected:
   FileReader() {}
   virtual ~FileReader() {}
 private:
-  FileReader(const FileReader&) = delete;
-  FileReader& operator=(const FileReader&) = delete;
+  VRB_NO_DEFAULTS(FileReader)
 };
 
 }

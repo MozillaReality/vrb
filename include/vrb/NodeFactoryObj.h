@@ -1,23 +1,17 @@
-#ifndef VRB_RENDER_OBJECT_FACTORY_OBJ_DOT_H
-#define VRB_RENDER_OBJECT_FACTORY_OBJ_DOT_H
+#ifndef VRB_NODE_FACTORY_OBJ_DOT_H
+#define VRB_NODE_FACTORY_OBJ_DOT_H
 
 #include "vrb/Forward.h"
+#include "vrb/MacroUtils.h"
 #include "vrb/ParserObj.h"
 
-#include <memory>
-#include <vector>
+#include <string>
 
 namespace vrb {
-// Note: All functions should be called in the same thread except GetLoadedRenderObjects
-//       which may be called from any thread.
-class RenderObject;
 
-class RenderObjectFactoryObj : public ParserObserverObj {
+class NodeFactoryObj : public ParserObserverObj {
 public:
-  static RenderObjectFactoryObjPtr Create();
-
-  // Function is thread safe
-  void GetLoadedRenderObjects(std::vector<RenderObjectPtr>& aObjects);
+  static NodeFactoryObjPtr Create(ContextWeak& aContext);
 
   // ParserObserverObj interface
   void StartModel(const std::string& aFileName) override;
@@ -48,13 +42,16 @@ public:
   void SetSpecularTexture(const std::string& aFileName) override;
 
 protected:
-  RenderObjectFactoryObj();
-  ~RenderObjectFactoryObj();
-
   struct State;
-  State *m;
+  NodeFactoryObj(State& aState, ContextWeak& aContext);
+  ~NodeFactoryObj();
+
+private:
+  State &m;
+  NodeFactoryObj() = delete;
+  VRB_NO_DEFAULTS(NodeFactoryObj);
 };
 
 }
 
-#endif // VRB_RENDER_OBJECT_FACTORY_OBJ_DOT_H
+#endif // VRB_NODE_FACTORY_OBJ_DOT_H

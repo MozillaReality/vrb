@@ -1,59 +1,176 @@
 #include "vrb/Context.h"
+#include "vrb/private/ResourceGLState.h"
 
-#include "vrb/Base.h"
+#include "vrb/ConcreteClass.h"
+#if defined(ANDROID)
+#include "vrb/FileReaderAndroid.h"
+#endif // defined(ANDROID)
 #include "vrb/Logger.h"
+#include "vrb/ResourceGL.h"
 #include "vrb/TextureCache.h"
-
 #include <EGL/egl.h>
+
+namespace {
+
+class ResourceAnchor : public vrb::ResourceGL {
+public:
+  ResourceAnchor();
+  ~ResourceAnchor();
+
+  // vrb::ResourcGL interface
+  void InitializeGL() override;
+  void ShutdownGL() override;
+
+  // ResourceAnchor // interface
+  void BindTail(ResourceAnchor& aTail);
+  bool Update();
+  void Prepend(vrb::ResourceGL* aResource);
+  void PrependAndAdoptList(ResourceAnchor& aHead, ResourceAnchor& aTail);
+protected:
+  vrb::ResourceGL::State m;
+};
+
+class ResourceAnchorTail : public ResourceAnchor {
+public:
+  void InitializeGL() override {} // noop
+  void ShutdownGL() override {} // noop
+};
+
+ResourceAnchor::ResourceAnchor() : vrb::ResourceGL(m) {}
+ResourceAnchor::~ResourceAnchor() {}
+
+void
+ResourceAnchor::BindTail(ResourceAnchor& aTail) {
+  m.nextResource = &aTail;
+  aTail.m.prevResource = this;
+}
+
+void
+ResourceAnchor::InitializeGL() {
+  m.CallAllInitializeGL();
+}
+
+void
+ResourceAnchor::ShutdownGL() {
+  m.CallAllShutdownGL();
+}
+
+bool
+ResourceAnchor::Update() {
+  if (!m.nextResource) {
+    return false;
+  }
+  m.CallAllInitializeGL();
+  return true;
+}
+
+void
+ResourceAnchor::Prepend(vrb::ResourceGL* aResource) {
+  m.Prepend(aResource);
+}
+
+void
+ResourceAnchor::PrependAndAdoptList(ResourceAnchor& aHead, ResourceAnchor& aTail) {
+  m.PrependAndAdoptList(*this, aHead, aTail);
+}
+
+}
 
 namespace vrb {
 
 struct Context::State {
+  std::weak_ptr<Context> self;
   EGLContext eglContext;
   TextureCachePtr textureCache;
+#if defined(ANDROID)
+  FileReaderAndroidPtr fileReader;
+#endif // defined(ANDROID)
+  ResourceAnchor addedResourcesHead;
+  ResourceAnchorTail addedResourcesTail;
+  ResourceAnchor resourcesHead;
+  ResourceAnchorTail resourcesTail;
   State();
 };
 
-Context::State::State()
-    : eglContext(EGL_NO_CONTEXT)
-{
-  textureCache = TextureCache::Create();
-};
+Context::State::State() : eglContext(EGL_NO_CONTEXT) {
+  addedResourcesHead.BindTail(addedResourcesTail);
+  resourcesHead.BindTail(resourcesTail);
+}
 
 ContextPtr
 Context::Create() {
-  return std::make_shared<Alloc<Context, Context::State> >();
+  ContextPtr result = std::make_shared<ConcreteClass<Context, Context::State> >();
+  result->m.self = result;
+  result->m.textureCache = TextureCache::Create(result->m.self);
+#if defined(ANDROID)
+  result->m.fileReader = FileReaderAndroid::Create(result->m.self);
+#endif // defined(ANDROID)
+
+  return result;
 }
 
+#if defined(ANDROID)
 void
-Context::Init() {
+Context::InitializeJava(JNIEnv* aEnv, jobject& aAssetManager) {
+  if (m.fileReader) { m.fileReader->Init(aEnv, aAssetManager); }
+}
+#endif // defined(ANDROID)
+
+void
+Context::InitializeGL() {
   EGLContext current = eglGetCurrentContext();
   if (current == EGL_NO_CONTEXT) {
     VRB_LOG("Unable to initialize VRB context: EGLContext is not valid.");
-    m->eglContext = current;
+    m.eglContext = current;
     return;
   }
-  if (current == m->eglContext) {
-    VRB_LOG("EGLContext c:%p == %p",(void*)current,(void*)m->eglContext);
+  if (current == m.eglContext) {
+    VRB_LOG("EGLContext c:%p == %p",(void*)current,(void*)m.eglContext);
   } else {
-    VRB_LOG("*** EGLContext NOT EQUAL %p != %p",(void*)current,(void*)m->eglContext);
+    VRB_LOG("*** EGLContext NOT EQUAL %p != %p",(void*)current,(void*)m.eglContext);
   }
-  m->eglContext = current;
-  if (m->textureCache) { m->textureCache->Init(); }
+  m.eglContext = current;
+  if (m.textureCache) { m.textureCache->Init(); }
+}
+
+
+void
+Context::Update() {
+  if (!m.addedResourcesHead.Update()) {
+    return;
+  }
+
+  m.resourcesTail.PrependAndAdoptList(m.addedResourcesHead, m.addedResourcesTail);
+}
+void
+Context::Shutdown() {
+  if (m.textureCache) { m.textureCache->Shutdown(); }
+#if defined(ANDROID)
+  if (m.fileReader) { m.fileReader->Shutdown(); }
+#endif // defined(ANDROID)
+  m.eglContext = EGL_NO_CONTEXT;
+}
+
+FileReaderPtr
+Context::GetFileReader() {
+#if defined(ANDROID)
+  return m.fileReader;
+#else
+#  error "Platform not supported"
+#endif // defined(ANDROID)
 }
 
 void
-Context::Shutdown() {
-  if (m->textureCache) { m->textureCache->Shutdown(); }
+Context::AddResourceGL(ResourceGL* aResource) {
+  m.addedResourcesTail.Prepend(aResource);
 }
 
-TextureCachePtr&
+TextureCachePtr
 Context::GetTextureCache() {
-  return m->textureCache;
+  return m.textureCache;
 }
 
-Context::Context() : m(nullptr) {}
-
+Context::Context(State& aState) : m(aState) {}
 Context::~Context() {}
 
 } // namespace vrb

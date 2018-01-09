@@ -1,6 +1,6 @@
 #include "vrb/RenderObject.h"
 
-#include "vrb/Base.h"
+#include "vrb/ConcreteClass.h"
 #include "vrb/GLError.h"
 #include "vrb/Logger.h"
 #include "vrb/Matrix.h"
@@ -72,9 +72,9 @@ struct RenderObject::State {
 
 RenderObjectPtr
 RenderObject::Create(const std::string &aName) {
-  RenderObjectPtr result = std::make_shared<Alloc<RenderObject, RenderObject::State> >();
-  result->m->name = aName;
-  result->m->renderState = RenderObjectState::Create();
+  RenderObjectPtr result = std::make_shared<ConcreteClass<RenderObject, RenderObject::State> >();
+  result->m.name = aName;
+  result->m.renderState = RenderObjectState::Create();
   VRB_LOG("CREATE RenderObject[%p]:'%s'",(void*)result.get(), aName.c_str());
   return result;
 }
@@ -83,19 +83,19 @@ RenderObject::RenderObject() : m(nullptr) {
 }
 
 RenderObject::~RenderObject() {
-  VRB_LOG("DESTROY RenderObject[%p]:'%s'", (void *)this, m->name.c_str());
+  VRB_LOG("DESTROY RenderObject[%p]:'%s'", (void *)this, m.name.c_str());
 }
 
 std::string
 RenderObject::GetName() const {
-  return m->name;
+  return m.name;
 }
 
 void
 RenderObject::Init() {
   VRB_LINE;
-  m->renderState->Init();
-  for (Group& group: m->groups) {
+  m.renderState->Init();
+  for (Group& group: m.groups) {
     VRB_CHECK(glGenBuffers(1, &group.vertexObjectId));
     VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, group.vertexObjectId));
     VRB_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 9 * group.triangleCount, nullptr, GL_STATIC_DRAW));
@@ -109,7 +109,7 @@ RenderObject::Init() {
         break;
       }
       const GLushort vertexIndex = face.vertices[0] - 1;
-      const Vector& firstVertex = m->vertices[vertexIndex];
+      const Vector& firstVertex = m.vertices[vertexIndex];
       if (face.vertices.size() < 3) {
         std::string message;
         for (auto index: face.vertices) { message += " "; message += std::to_string(index); }
@@ -123,13 +123,13 @@ RenderObject::Init() {
         out += " " + firstVertex.ToString();
         count++;
         offset += vertexSize;
-        VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, vertexSize, m->vertices[face.vertices[ix] - 1].Data()));
-        out += "/" + m->vertices[face.vertices[ix] - 1].ToString();
+        VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, vertexSize, m.vertices[face.vertices[ix] - 1].Data()));
+        out += "/" + m.vertices[face.vertices[ix] - 1].ToString();
         indicies.push_back(count);
         count++;
         offset += vertexSize;
-        VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, vertexSize, m->vertices[face.vertices[ix + 1] - 1].Data()));
-        out += "/" + m->vertices[face.vertices[ix + 1] - 1].ToString();
+        VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, vertexSize, m.vertices[face.vertices[ix + 1] - 1].Data()));
+        out += "/" + m.vertices[face.vertices[ix + 1] - 1].ToString();
         indicies.push_back(count);
         count++;
         offset += vertexSize;
@@ -149,18 +149,18 @@ RenderObject::Init() {
 
 void
 RenderObject::Draw(const Matrix &aProjection) {
-  if (m->renderState->Enable(aProjection.PostMultiply(m->model))) {
-    for (Group& group: m->groups) {
+  if (m.renderState->Enable(aProjection.PostMultiply(m.model))) {
+    for (Group& group: m.groups) {
 
       VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, group.vertexObjectId));
-      VRB_CHECK(glVertexAttribPointer(m->renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, 0, nullptr));
+      VRB_CHECK(glVertexAttribPointer(m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, 0, nullptr));
 
 
       VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, group.indexObjectId));
-      VRB_CHECK(glEnableVertexAttribArray(m->renderState->AttributePosition()));
+      VRB_CHECK(glEnableVertexAttribArray(m.renderState->AttributePosition()));
       VRB_CHECK(glDrawElements(GL_TRIANGLES, group.vertexCount, GL_UNSIGNED_SHORT, 0));
       //VRB_CHECK(glDrawArrays(GL_TRIANGLES, 0, group.vertexCount));
-      VRB_CHECK(glDisableVertexAttribArray(m->renderState->AttributePosition()));
+      VRB_CHECK(glDisableVertexAttribArray(m.renderState->AttributePosition()));
       VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
       VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
     }
@@ -169,33 +169,33 @@ RenderObject::Draw(const Matrix &aProjection) {
 
 void
 RenderObject::SetTransform(const Matrix& aTransform) {
-  m->model = aTransform;
+  m.model = aTransform;
 }
 
 int
 RenderObject::AddVertex(const Vector &aVertex) {
-  m->vertices.push_back(aVertex);
-  return m->vertices.size();
+  m.vertices.push_back(aVertex);
+  return m.vertices.size();
 }
 
 int
 RenderObject::AddNormal(const Vector &aNormal) {
-  m->normals.push_back(aNormal);
-  return m->normals.size();
+  m.normals.push_back(aNormal);
+  return m.normals.size();
 }
 
 int
 RenderObject::AddUV(const Vector &aUV) {
-  m->uvs.push_back(aUV);
-  return m->uvs.size();
+  m.uvs.push_back(aUV);
+  return m.uvs.size();
 }
 
 int
 RenderObject::CreateGroup(const std::vector<std::string> &aNames) {
   Group group;
   group.names = aNames;
-  m->groups.push_back(group);
-  return m->groups.size();
+  m.groups.push_back(group);
+  return m.groups.size();
 }
 
 int
@@ -205,11 +205,11 @@ RenderObject::AddFace(
     const std::vector<int> &aUVs,
     const std::vector<int> &aNormals) {
   const int index = aGroup - 1;
-  if (index >= m->groups.size()) {
+  if (index >= m.groups.size()) {
     return -1;
   }
 
-  Group &group = m->groups[index];
+  Group &group = m.groups[index];
   group.faces.push_back(Face());
   const int result = group.faces.size();
   const int faceIndex = result - 1;
@@ -238,27 +238,27 @@ RenderObject::AddFace(
 
 void
 RenderObject::Dump() {
-  std::cout << "RenderObject: " << m->name << std::endl;
-  VRB_LOG("RenderObject: '%s'", m->name.c_str());
-  std::cout << "  Vertices:" << (m->vertices.size() == 0 ? " None" : "") << std::endl;
-  VRB_LOG("  Vertices[%d]:", m->vertices.size());
-  for (auto vertex: m->vertices) {
+  std::cout << "RenderObject: " << m.name << std::endl;
+  VRB_LOG("RenderObject: '%s'", m.name.c_str());
+  std::cout << "  Vertices:" << (m.vertices.size() == 0 ? " None" : "") << std::endl;
+  VRB_LOG("  Vertices[%d]:", m.vertices.size());
+  for (auto vertex: m.vertices) {
     std::cout << "    " << vertex.ToString() << std::endl;
     VRB_LOG("    %s", vertex.ToString().c_str());
   }
-  std::cout << "  UVs:" << (m->uvs.size() == 0 ? " None" : "") << std::endl;
-  VRB_LOG("  UVs[%d]:", m->uvs.size());
-  for (auto uv: m->uvs) {
+  std::cout << "  UVs:" << (m.uvs.size() == 0 ? " None" : "") << std::endl;
+  VRB_LOG("  UVs[%d]:", m.uvs.size());
+  for (auto uv: m.uvs) {
     std::cout << "    " << uv.ToString() << std::endl;
     VRB_LOG("    %s", uv.ToString().c_str());
   }
-  std::cout << "  Normals:" << (m->normals.size() == 0 ? " None" : "") << std::endl;
-  VRB_LOG("  Normals[%d]:", m->normals.size());
-  for (auto normal: m->normals) {
+  std::cout << "  Normals:" << (m.normals.size() == 0 ? " None" : "") << std::endl;
+  VRB_LOG("  Normals[%d]:", m.normals.size());
+  for (auto normal: m.normals) {
     std::cout << "    " << normal.ToString() << std::endl;
     VRB_LOG("    %s", normal.ToString().c_str());
   }
-  for (auto group: m->groups) {
+  for (auto group: m.groups) {
     std::cout << "  Group:";
     std::string nameStr("");
     for (auto name: group.names) {

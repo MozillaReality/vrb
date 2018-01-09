@@ -2,6 +2,7 @@
 #define VRB_TEXTURE_CACHE_DOT_H
 
 #include "vrb/Forward.h"
+#include "vrb/MacroUtils.h"
 
 #include <string>
 
@@ -9,23 +10,18 @@ namespace vrb {
 
 class TextureCache {
 public:
-  static TextureCachePtr Create();
-
+  static TextureCachePtr Create(ContextWeak& aContext);
   void Init();
   void Shutdown();
-
   TexturePtr LoadTexture(const std::string& aFileName);
-
 protected:
-  TextureCache();
-  ~TextureCache();
-
   struct State;
-  State *m;
-
+  TextureCache(State& aState, ContextWeak& aContext);
+  ~TextureCache();
 private:
-  TextureCache(const TextureCache&) = delete;
-  TextureCache& operator=(const TextureCache&) = delete;
+  State &m;
+  TextureCache() = delete;
+  VRB_NO_DEFAULTS(TextureCache)
 };
 
 }

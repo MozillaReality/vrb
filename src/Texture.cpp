@@ -1,7 +1,8 @@
 #include "vrb/Texture.h"
 
-#include "vrb/Base.h"
+#include "vrb/ConcreteClass.h"
 #include "vrb/GLError.h"
+#include "vrb/private/ResourceGLState.h"
 
 #include <GLES2/gl2.h>
 #include <cstring>
@@ -76,7 +77,7 @@ private:
 
 namespace vrb {
 
-struct Texture::State {
+struct Texture::State : public ResourceGL::State {
   std::string name;
   GLuint texture;
   std::vector<MipMap> mipMaps;
@@ -85,13 +86,13 @@ struct Texture::State {
 };
 
 TexturePtr
-Texture::Create() {
-  return std::make_shared<Alloc<Texture, Texture::State> >();
+Texture::Create(ContextWeak& aContext) {
+  return std::make_shared<ConcreteClass<Texture, Texture::State> >(aContext);
 }
 
 void
 Texture::SetName(const std::string& aName) {
-  m->name = aName;
+  m.name = aName;
 }
 
 void
@@ -114,14 +115,28 @@ Texture::SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const 
   mipMap.SetAlpha(aChannels == 4);
   mipMap.dataSize = aWidth * aHeight * aChannels;
   mipMap.data = std::move(aImage);
-  m->mipMaps.push_back(std::move(mipMap));
+  m.mipMaps.push_back(std::move(mipMap));
 }
 
+
+std::string
+Texture::GetName() {
+  return m.name;
+}
+
+GLuint
+Texture::GetHandle() {
+  return m.texture;
+}
+
+Texture::Texture(State& aState, ContextWeak& aContext) : ResourceGL (aState, aContext), m(aState) {}
+Texture::~Texture() {}
+
 void
-Texture::Init() {
-  VRB_CHECK(glGenTextures(1, &(m->texture)));
-  VRB_CHECK(glBindTexture(GL_TEXTURE_2D, m->texture));
-  for (MipMap& mipMap: m->mipMaps) {
+Texture::InitializeGL() {
+  VRB_CHECK(glGenTextures(1, &(m.texture)));
+  VRB_CHECK(glBindTexture(GL_TEXTURE_2D, m.texture));
+  for (MipMap& mipMap: m.mipMaps) {
     if (!mipMap.data) {
       continue;
     }
@@ -139,18 +154,9 @@ Texture::Init() {
   }
 }
 
-std::string
-Texture::GetName() {
-  return m->name;
+void
+Texture::ShutdownGL() {
+
 }
-
-GLuint
-Texture::GetHandle() {
-  return m->texture;
-}
-
-Texture::Texture() : m(nullptr) {}
-
-Texture::~Texture() {}
 
 } // namespace vrb

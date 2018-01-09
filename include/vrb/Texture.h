@@ -2,32 +2,35 @@
 #define VRB_TEXTURE_DOT_H
 
 #include "vrb/Forward.h"
+#include "vrb/MacroUtils.h"
+#include "vrb/ResourceGL.h"
 
 #include <GLES2/gl2.h>
 #include <string>
 
 namespace vrb {
 
-class Texture {
+class Texture : protected ResourceGL {
 public:
-  static TexturePtr Create();
+  static TexturePtr Create(ContextWeak& aContext);
 
   void SetName(const std::string& aName);
   void SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight, const int aChannels);
-  void Init();
   std::string GetName();
   GLuint GetHandle();
-
 protected:
-  Texture();
+  struct State;
+  Texture(State& aState, ContextWeak& aContext);
   ~Texture();
 
-  struct State;
-  State* m;
+  // From ResourceGL
+  void InitializeGL() override;
+  void ShutdownGL() override;
 
 private:
-  Texture(const Texture&) = delete;
-  Texture& operator=(const Texture&) = delete;
+  State& m;
+  Texture() = delete;
+  VRB_NO_DEFAULTS(Texture)
 };
 
 } // namespace vrb

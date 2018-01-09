@@ -1,6 +1,7 @@
-#include "vrb/RenderObjectState.h"
+#include "vrb/RenderState.h"
+#include "vrb/private/ResourceGLState.h"
 
-#include "vrb/Base.h"
+#include "vrb/ConcreteClass.h"
 #include "vrb/Logger.h"
 #include "vrb/GLError.h"
 #include "vrb/Matrix.h"
@@ -35,7 +36,7 @@ void main() {
 
 namespace vrb {
 
-struct RenderObjectState::State {
+struct RenderState::State : public ResourceGL::State {
   GLuint vertexShader;
   GLuint fragmentShader;
   GLuint program;
@@ -51,68 +52,72 @@ struct RenderObjectState::State {
   {}
 };
 
-RenderObjectStatePtr
-RenderObjectState::Create() {
-  return std::make_shared<Alloc<RenderObjectState, RenderObjectState::State>>();
+RenderStatePtr
+RenderState::Create(ContextWeak& aContext) {
+  return std::make_shared<ConcreteClass<RenderState, RenderState::State>>(aContext);
 }
 
 GLuint
-RenderObjectState::Program() const {
-  return m->program;
+RenderState::Program() const {
+  return m.program;
 }
 
 GLint
-RenderObjectState::AttributePosition() const {
-  return m->attributePosition;
-}
-
-void
-RenderObjectState::Init() {
-  m->vertexShader = LoadShader(GL_VERTEX_SHADER, vertexShaderSource);
-  m->fragmentShader = LoadShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
-  if (m->fragmentShader && m->vertexShader) {
-    m->program = glCreateProgram();
-    VRB_CHECK(glAttachShader(m->program, m->vertexShader));
-    VRB_CHECK(glAttachShader(m->program, m->fragmentShader));
-    VRB_CHECK(glLinkProgram(m->program));
-    GLint linked = 0;
-    VRB_CHECK(glGetProgramiv(m->program, GL_LINK_STATUS, &linked));
-    if (!linked) {
-      GLint length = 0;
-      VRB_CHECK(glGetProgramiv(m->program, GL_INFO_LOG_LENGTH, &length));
-      if (length > 1) {
-        std::unique_ptr<char[]> log = std::make_unique<char[]>(length);
-        VRB_CHECK(glGetProgramInfoLog(m->program, length, nullptr, log.get()));
-        VRB_LOG("Failed to link program:\n%s", log.get());
-      }
-      VRB_CHECK(glDeleteProgram(m->program));
-      m->program = 0;
-    }
-  }
-  if (m->program) {
-    const char* varName = "u_matViewProjection";
-    m->uniformProjectionMatrix = glGetUniformLocation(m->program, varName);
-    if (m->uniformProjectionMatrix < 0) {
-      VRB_LOG("Unable to glGetUniformLocation for '%s'", varName);
-    }
-    m->attributePosition = glGetAttribLocation(m->program, "a_position");
-  }
+RenderState::AttributePosition() const {
+  return m.attributePosition;
 }
 
 bool
-RenderObjectState::Enable(const Matrix& aProjection) {
-  if (!m->program) { return false; }
-  VRB_CHECK(glUseProgram(m->program));
-  VRB_CHECK(glUniformMatrix4fv(m->uniformProjectionMatrix, 1, GL_FALSE, aProjection.Data()));
+RenderState::Enable(const Matrix& aProjection) {
+  if (!m.program) { return false; }
+  VRB_CHECK(glUseProgram(m.program));
+  VRB_CHECK(glUniformMatrix4fv(m.uniformProjectionMatrix, 1, GL_FALSE, aProjection.Data()));
   return true;
 }
 
-RenderObjectState::RenderObjectState() : m(nullptr) {}
+RenderState::RenderState(State& aState, ContextWeak& aContext) : ResourceGL(aState, aContext), m(aState) {}
+RenderState::~RenderState() {}
 
-RenderObjectState::~RenderObjectState() {}
+void
+RenderState::InitializeGL() {
+  m.vertexShader = LoadShader(GL_VERTEX_SHADER, vertexShaderSource);
+  m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+  if (m.fragmentShader && m.vertexShader) {
+    m.program = glCreateProgram();
+    VRB_CHECK(glAttachShader(m.program, m.vertexShader));
+    VRB_CHECK(glAttachShader(m.program, m.fragmentShader));
+    VRB_CHECK(glLinkProgram(m.program));
+    GLint linked = 0;
+    VRB_CHECK(glGetProgramiv(m.program, GL_LINK_STATUS, &linked));
+    if (!linked) {
+      GLint length = 0;
+      VRB_CHECK(glGetProgramiv(m.program, GL_INFO_LOG_LENGTH, &length));
+      if (length > 1) {
+        std::unique_ptr<char[]> log = std::make_unique<char[]>(length);
+        VRB_CHECK(glGetProgramInfoLog(m.program, length, nullptr, log.get()));
+        VRB_LOG("Failed to link program:\n%s", log.get());
+      }
+      VRB_CHECK(glDeleteProgram(m.program));
+      m.program = 0;
+    }
+  }
+  if (m.program) {
+    const char* varName = "u_matViewProjection";
+    m.uniformProjectionMatrix = glGetUniformLocation(m.program, varName);
+    if (m.uniformProjectionMatrix < 0) {
+      VRB_LOG("Unable to glGetUniformLocation for '%s'", varName);
+    }
+    m.attributePosition = glGetAttribLocation(m.program, "a_position");
+  }
+}
+
+void
+RenderState::ShutdownGL() {
+
+}
 
 GLuint
-RenderObjectState::LoadShader(GLenum type, const char* src) {
+RenderState::LoadShader(GLenum type, const char* src) {
   GLuint result = 0;
 
   result = glCreateShader(type);

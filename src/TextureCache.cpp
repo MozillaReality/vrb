@@ -1,6 +1,6 @@
 #include "vrb/TextureCache.h"
 
-#include "vrb/Base.h"
+#include "vrb/ConcreteClass.h"
 #include "vrb/Texture.h"
 
 namespace vrb {
@@ -10,8 +10,8 @@ struct TextureCache::State {
 };
 
 TextureCachePtr
-TextureCache::Create() {
-  return std::make_shared<Alloc<TextureCache, TextureCache::State> >();
+TextureCache::Create(ContextWeak& aContext) {
+  return std::make_shared<ConcreteClass<TextureCache, TextureCache::State> >(aContext);
 }
 
 void
@@ -31,7 +31,7 @@ TextureCache::LoadTexture(const std::string& aFileName) {
   return result;
 }
 
-TextureCache::TextureCache() : m(nullptr) {}
+TextureCache::TextureCache(State& aState, ContextWeak& aContext) : m(aState) {}
 TextureCache::~TextureCache() {}
 
 } // namespace vrb

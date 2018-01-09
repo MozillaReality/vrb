@@ -1,6 +1,6 @@
 #include "vrb/ParserObj.h"
 
-#include "vrb/Base.h"
+#include "vrb/ConcreteClass.h"
 #include "vrb/Vector.h"
 
 #include <string>
@@ -384,32 +384,32 @@ ParserObj::State::ParseMtl() {
 }
 
 ParserObjPtr
-ParserObj::Create() {
-  ParserObjPtr self = std::make_shared<Alloc<ParserObj, ParserObj::State> >();
-  self->m->self = self;
+ParserObj::Create(ContextWeak& aContext) {
+  ParserObjPtr self = std::make_shared<ConcreteClass<ParserObj, ParserObj::State> >(aContext);
+  self->m.self = self;
   return self;
 }
 
 void
 ParserObj::SetFileReader(FileReaderPtr aFileReader) {
-  m->fileReader = aFileReader;
+  m.fileReader = aFileReader;
 }
 
 void
 ParserObj::ClearFileReader() {
-  m->fileReader = nullptr;
+  m.fileReader = nullptr;
 }
 
 void
 ParserObj::BindFileHandle(const std::string& aFileName, const int aFileHandle) {
-  ParserObserverObjPtr observer = m->weakObserver.lock();
-  if (!m->mtlFileName.empty() && (aFileName == m->mtlFileName)) {
-    m->mtlFileHandle = aFileHandle;
-    m->mtlLineBuffer.clear();
+  ParserObserverObjPtr observer = m.weakObserver.lock();
+  if (!m.mtlFileName.empty() && (aFileName == m.mtlFileName)) {
+    m.mtlFileHandle = aFileHandle;
+    m.mtlLineBuffer.clear();
     if (observer) { observer->StartMaterialFile(aFileName); }
   } else {
-    m->objFileHandle = aFileHandle;
-    m->objLineBuffer.clear();
+    m.objFileHandle = aFileHandle;
+    m.objLineBuffer.clear();
     if (observer) { observer->StartModel(aFileName); }
   }
 }
@@ -422,7 +422,7 @@ ParserObj::LoadFailed(const int aFileHandle, const std::string& aReason) {
 
 void
 ParserObj::ProcessRawFileChunk(const int aFileHandle, const char* aBuffer, const size_t aSize) {
-  std::string* lineBuffer = m->GetBuffer(aFileHandle);
+  std::string* lineBuffer = m.GetBuffer(aFileHandle);
 
   if (!lineBuffer) {
     VRB_LOG("Failed to find line buffer of file handle: %d", aFileHandle);
@@ -436,7 +436,7 @@ ParserObj::ProcessRawFileChunk(const int aFileHandle, const char* aBuffer, const
       if ((place - start) > 0) {
         lineBuffer->append(&(aBuffer[start]), place - start);
       }
-      m->Parse(aFileHandle, *this);
+      m.Parse(aFileHandle, *this);
       start = place + 1;
     }
     place++;
@@ -449,8 +449,8 @@ ParserObj::ProcessRawFileChunk(const int aFileHandle, const char* aBuffer, const
 
 void
 ParserObj::FinishRawFile(const int aFileHandle) {
-  m->Parse(aFileHandle, *this);
-  m->Finish(aFileHandle);
+  m.Parse(aFileHandle, *this);
+  m.Finish(aFileHandle);
 
 }
 
@@ -461,11 +461,10 @@ ParserObj::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& a
 
 void
 ParserObj::SetObserver(ParserObserverObjPtr aObserver) {
-  m->weakObserver = aObserver;
+  m.weakObserver = aObserver;
 }
 
-ParserObj::ParserObj() : m(nullptr) {}
-
+ParserObj::ParserObj(State& aState, ContextWeak& aContext) : m(aState) {}
 ParserObj::~ParserObj() {}
 
 } // namespace vrb

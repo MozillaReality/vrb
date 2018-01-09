@@ -4,6 +4,7 @@
 #include "vrb/Forward.h"
 
 #include "vrb/FileReader.h"
+#include "vrb/MacroUtils.h"
 
 #include <memory>
 #include <string>
@@ -28,7 +29,6 @@ public:
       const std::vector<int>& aUVs,
       const std::vector<int>& aNormals) = 0;
   virtual void SetSmoothingGroup(const int aGroup) = 0;
-
   // Material Interface
   virtual void StartMaterialFile(const std::string& aFileName) = 0;
   virtual void FinishMaterialFile() = 0;
@@ -41,15 +41,16 @@ public:
   virtual void SetAmbientTexture(const std::string& aFileName) = 0;
   virtual void SetDiffuseTexture(const std::string& aFileName) = 0;
   virtual void SetSpecularTexture(const std::string& aFileName) = 0;
-
 protected:
   ParserObserverObj() {}
   virtual ~ParserObserverObj() {}
+private:
+  VRB_NO_DEFAULTS(ParserObserverObj)
 };
 
 class ParserObj : public FileHandler {
 public:
-  static ParserObjPtr Create();
+  static ParserObjPtr Create(ContextWeak& aContext);
 
   void SetFileReader(FileReaderPtr aFileReader);
   void ClearFileReader();
@@ -63,13 +64,14 @@ public:
 
   // ParserObj Interface
   void SetObserver(ParserObserverObjPtr aObserver);
-
 protected:
-  ParserObj();
-  ~ParserObj();
-
   struct State;
-  State* m;
+  ParserObj(State& aState, ContextWeak& aContext);
+  ~ParserObj();
+private:
+  State& m;
+  ParserObj() = delete;
+  VRB_NO_DEFAULTS(ParserObj)
 };
 
 }
