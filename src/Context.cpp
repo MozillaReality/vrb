@@ -130,7 +130,8 @@ Context::InitializeGL() {
     VRB_LOG("*** EGLContext NOT EQUAL %p != %p",(void*)current,(void*)m.eglContext);
   }
   m.eglContext = current;
-  if (m.textureCache) { m.textureCache->Init(); }
+
+  m.resourcesHead.InitializeGL();
 }
 
 
@@ -144,7 +145,7 @@ Context::Update() {
 }
 void
 Context::Shutdown() {
-  if (m.textureCache) { m.textureCache->Shutdown(); }
+  m.resourcesHead.ShutdownGL();
 #if defined(ANDROID)
   if (m.fileReader) { m.fileReader->Shutdown(); }
 #endif // defined(ANDROID)

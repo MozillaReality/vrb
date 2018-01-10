@@ -14,12 +14,14 @@ namespace {
 
 static const char* vertexShaderSource = R"SHADER(
 
-uniform mat4 u_matViewProjection;
+uniform mat4 u_perspective;
+uniform mat4 u_view;
+uniform mat4 u_model;
 
 attribute vec4 a_position;
 
 void main(void) {
-  gl_Position = u_matViewProjection * a_position;
+  gl_Position = u_perspective * u_view * u_model * a_position;
 }
 
 )SHADER";
@@ -40,15 +42,19 @@ struct RenderState::State : public ResourceGL::State {
   GLuint vertexShader;
   GLuint fragmentShader;
   GLuint program;
-  GLint uniformProjectionMatrix;
-  GLint attributePosition;
+  GLint uPerspective;
+  GLint uView;
+  GLint uModel;
+  GLint aPosition;
 
   State()
       : vertexShader(0)
       , fragmentShader(0)
       , program(0)
-      , uniformProjectionMatrix(0)
-      , attributePosition(0)
+      , uPerspective(0)
+      , uView(0)
+      , uModel(0)
+      , aPosition(0)
   {}
 };
 
@@ -64,14 +70,16 @@ RenderState::Program() const {
 
 GLint
 RenderState::AttributePosition() const {
-  return m.attributePosition;
+  return m.aPosition;
 }
 
 bool
-RenderState::Enable(const Matrix& aProjection) {
+RenderState::Enable(const Matrix& aPerspective, const Matrix& aView, const Matrix& aModel) {
   if (!m.program) { return false; }
   VRB_CHECK(glUseProgram(m.program));
-  VRB_CHECK(glUniformMatrix4fv(m.uniformProjectionMatrix, 1, GL_FALSE, aProjection.Data()));
+  VRB_CHECK(glUniformMatrix4fv(m.uPerspective, 1, GL_FALSE, aPerspective.Data()));
+  VRB_CHECK(glUniformMatrix4fv(m.uView, 1, GL_FALSE, aView.Data()));
+  VRB_CHECK(glUniformMatrix4fv(m.uModel, 1, GL_FALSE, aModel.Data()));
   return true;
 }
 
@@ -102,12 +110,16 @@ RenderState::InitializeGL() {
     }
   }
   if (m.program) {
-    const char* varName = "u_matViewProjection";
-    m.uniformProjectionMatrix = glGetUniformLocation(m.program, varName);
-    if (m.uniformProjectionMatrix < 0) {
-      VRB_LOG("Unable to glGetUniformLocation for '%s'", varName);
+    const char* perspectiveName = "u_perspective";
+    m.uPerspective = glGetUniformLocation(m.program, perspectiveName);
+    if (m.uPerspective < 0) {
+      VRB_LOG("Unable to glGetUniformLocation for '%s'", perspectiveName);
     }
-    m.attributePosition = glGetAttribLocation(m.program, "a_position");
+    const char* viewName = "u_view";
+    m.uView = glGetUniformLocation(m.program, viewName);
+    const char* modelName = "u_model";
+    m.uModel = glGetUniformLocation(m.program, modelName);
+    m.aPosition = glGetAttribLocation(m.program, "a_position");
   }
 }
 

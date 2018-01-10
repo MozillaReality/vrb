@@ -51,10 +51,6 @@ private:
 class ParserObj : public FileHandler {
 public:
   static ParserObjPtr Create(ContextWeak& aContext);
-
-  void SetFileReader(FileReaderPtr aFileReader);
-  void ClearFileReader();
-
   // FileHandler Interface
   void BindFileHandle(const std::string& aFileName, const int aFileHandle) override ;
   void LoadFailed(const int aFileHandle, const std::string& aReason) override ;
@@ -63,7 +59,11 @@ public:
   void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight) override;
 
   // ParserObj Interface
+  void LoadModel(const std::string& aFileName);
+  void SetFileReader(FileReaderPtr aFileReader);
+  void ClearFileReader();
   void SetObserver(ParserObserverObjPtr aObserver);
+
 protected:
   struct State;
   ParserObj(State& aState, ContextWeak& aContext);

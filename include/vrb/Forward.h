@@ -8,6 +8,9 @@ namespace vrb {
 class Camera;
 typedef std::shared_ptr<Camera> CameraPtr;
 
+class CameraSimple;
+typedef std::shared_ptr<CameraSimple> CameraSimplePtr;
+
 class Context;
 typedef std::shared_ptr<Context> ContextPtr;
 typedef std::weak_ptr<Context> ContextWeak;

@@ -14,7 +14,7 @@ public:
   static RenderStatePtr Create(ContextWeak& aContext);
   GLuint Program() const;
   GLint AttributePosition() const;
-  bool Enable(const Matrix& aProjection);
+  bool Enable(const Matrix& aPerspective, const Matrix& aView, const Matrix& aModel);
 protected:
   struct State;
   RenderState(State& aState, ContextWeak& aContext);

@@ -15,8 +15,8 @@ public:
   void Cull(CullVisitorPtr& aVisitor, DrawableListPtr& aDrawables) override;
 
   // Group interface
-  void AddNode(const NodePtr& aNode);
-  void RemoveNode(const NodePtr& aNode);
+  void AddNode(const NodePtr aNode);
+  void RemoveNode(const NodePtr aNode);
 
 protected:
   struct State;

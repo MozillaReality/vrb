@@ -12,7 +12,7 @@ public:
 
   void Reset();
   void AddDrawable(DrawablePtr&& aDrawable, const Matrix& aTransform);
-  void Draw(CameraPtr& aCamera);
+  void Draw(const Camera& aCamera);
 
 protected:
   struct State;

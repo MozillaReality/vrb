@@ -38,6 +38,7 @@ struct NodeFactoryObj::State {
   VertexArrayPtr vertices;
   GeometryPtr currentGeometry;
   Material* currentMaterial;
+  RenderStatePtr defaultRenderState;
 
   State()
       : groupId(0)
@@ -45,7 +46,6 @@ struct NodeFactoryObj::State {
 
   void Reset() {
     groupId = 0;
-    root = nullptr;
     vertices = nullptr;
     currentGeometry = nullptr;
     currentMaterial = nullptr;
@@ -70,6 +70,10 @@ NodeFactoryObj::Create(ContextWeak& aContext) {
 void
 NodeFactoryObj::StartModel(const std::string& aFileName) {
   FinishModel();
+  if (!m.root) {
+    m.root = Group::Create(m.context);
+  }
+  m.root->SetName(aFileName);
   m.vertices = VertexArray::Create(m.context);
 }
 
@@ -89,6 +93,10 @@ NodeFactoryObj::SetGroupNames(const std::vector<std::string>& aNames) {
   m.currentGeometry = Geometry::Create(m.context);
   m.root->AddNode(m.currentGeometry);
   m.currentGeometry->SetVertexArray(m.vertices);
+  if (!m.defaultRenderState) {
+    m.defaultRenderState = RenderState::Create(m.context);
+  }
+  m.currentGeometry->SetRenderState(m.defaultRenderState);
 }
 
 void
@@ -141,7 +149,7 @@ NodeFactoryObj::AddFace(
     std::vector<std::string> names;
     SetGroupNames(names);
   }
-  //m.currentGeometry->AddFace(aVerticies, aUVs, aNormals);
+  m.currentGeometry->AddFace(aVerticies, aUVs, aNormals);
 }
 
 void
@@ -224,8 +232,20 @@ NodeFactoryObj::SetSpecularTexture(const std::string& aFileName) {
   }
 }
 
+// NodeFactoryObj interface
+void
+NodeFactoryObj::SetModelRoot(GroupPtr aGroup) {
+  m.root = aGroup;
+}
 
-NodeFactoryObj::NodeFactoryObj(State& aState, ContextWeak& aContext) : m(aState) {}
+GroupPtr&
+NodeFactoryObj::GetModelRoot() {
+  return m.root;
+}
+
+NodeFactoryObj::NodeFactoryObj(State& aState, ContextWeak& aContext) : m(aState) {
+  m.context = aContext;
+}
 NodeFactoryObj::~NodeFactoryObj() {}
 
 } // namespace vrb

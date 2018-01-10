@@ -31,14 +31,14 @@ Group::Cull(CullVisitorPtr& aVisitor, DrawableListPtr& aDrawables) {
 }
 
 void
-Group::AddNode(const NodePtr& aNode) {
+Group::AddNode(const NodePtr aNode) {
   if (!m.Contains(aNode)) {
     m.children.push_back(aNode);
   }
 }
 
 void
-Group::RemoveNode(const NodePtr& aNode) {
+Group::RemoveNode(const NodePtr aNode) {
   for (auto it = m.children.begin(); it != m.children.end(); it++) {
     if (*it == aNode) {
       m.children.erase(it);

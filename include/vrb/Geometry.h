@@ -11,7 +11,7 @@
 
 namespace vrb {
 
-class Geometry : public Node, protected ResourceGL, protected Drawable {
+class Geometry : public Node, protected ResourceGL, public Drawable {
 public:
   static GeometryPtr Create(ContextWeak& aContext);
 
@@ -40,7 +40,7 @@ protected:
   void ShutdownGL() override;
 
   // From Drawable
-  void Draw(const CameraPtr& aCamera, const Matrix& aModelTransform) override;
+  void Draw(const Camera& aCamera, const Matrix& aModelTransform) override;
 
 private:
   State& m;

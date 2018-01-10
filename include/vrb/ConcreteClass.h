@@ -6,11 +6,10 @@
 namespace vrb {
 
 template<class Base, class State>
-class ConcreteClass : public Base {
-  State mConcreteClassInternalState;
+class ConcreteClass : private State, public Base {
 public:
-  ConcreteClass() : Base(mConcreteClassInternalState) {}
-  ConcreteClass(ContextWeak& aContext) : Base(mConcreteClassInternalState, aContext) {}
+  ConcreteClass() : Base(*(State*)this) {}
+  ConcreteClass(ContextWeak& aContext) : Base(*(State*)this, aContext) {}
 };
 
 } // namespace vrb

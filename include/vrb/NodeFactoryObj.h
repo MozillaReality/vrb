@@ -41,6 +41,10 @@ public:
   void SetDiffuseTexture(const std::string& aFileName) override;
   void SetSpecularTexture(const std::string& aFileName) override;
 
+  // NodeFactoryObj interface
+  void SetModelRoot(GroupPtr aGroup);
+  GroupPtr& GetModelRoot();
+
 protected:
   struct State;
   NodeFactoryObj(State& aState, ContextWeak& aContext);

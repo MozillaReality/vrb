@@ -1,7 +1,9 @@
 #include "vrb/DrawableList.h"
 #include "vrb/private/DrawableListState.h"
 
+#include "vrb/Camera.h"
 #include "vrb/ConcreteClass.h"
+#include "vrb/Drawable.h"
 
 namespace vrb {
 
@@ -36,8 +38,12 @@ DrawableList::AddDrawable(DrawablePtr&& aDrawable, const Matrix& aTransform) {
 }
 
 void
-DrawableList::Draw(CameraPtr& aCamera) {
-
+DrawableList::Draw(const Camera& aCamera) {
+  State::DrawNode* current = m.list;
+  while (current) {
+    current->drawable->Draw(aCamera, current->transform);
+    current = current->next;
+  }
 }
 
 DrawableList::DrawableList(State& aState, ContextWeak& aContext) : m(aState) {}

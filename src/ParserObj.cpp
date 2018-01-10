@@ -1,6 +1,7 @@
 #include "vrb/ParserObj.h"
 
 #include "vrb/ConcreteClass.h"
+#include "vrb/Context.h"
 #include "vrb/Vector.h"
 
 #include <string>
@@ -260,7 +261,9 @@ struct ParserObj::State {
   State()
       : objFileHandle(0)
       , mtlFileHandle(0)
-    {}
+    {
+VRB_LOG("STATE CONSTRUCTOR!");
+}
 
   std::string* GetBuffer(const int aFileHandle);
   void Parse(const int aFileHandle, FileHandler& aFileHandler);
@@ -391,16 +394,6 @@ ParserObj::Create(ContextWeak& aContext) {
 }
 
 void
-ParserObj::SetFileReader(FileReaderPtr aFileReader) {
-  m.fileReader = aFileReader;
-}
-
-void
-ParserObj::ClearFileReader() {
-  m.fileReader = nullptr;
-}
-
-void
 ParserObj::BindFileHandle(const std::string& aFileName, const int aFileHandle) {
   ParserObserverObjPtr observer = m.weakObserver.lock();
   if (!m.mtlFileName.empty() && (aFileName == m.mtlFileName)) {
@@ -460,11 +453,43 @@ ParserObj::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& a
 }
 
 void
+ParserObj::LoadModel(const std::string& aFileName) {
+VRB_LOG("LoadModel(%p) m.fileReader=%p",this,(void*)m.fileReader.get());
+  if (m.fileReader) {
+    VRB_LOG("Loading file: '%s'", aFileName.c_str());
+    m.fileReader->ReadRawFile(aFileName, m.self.lock());
+  } else {
+    VRB_LOG("ParserObj unable to load file: '%s'. FileReader not set", aFileName.c_str());
+  }
+}
+
+void
+ParserObj::SetFileReader(FileReaderPtr aFileReader) {
+VRB_LOG("################## SET FILE READER ########################");
+  m.fileReader = aFileReader;
+}
+
+void
+ParserObj::ClearFileReader() {
+VRB_LOG("************* CLEAR FILE READER! *********************");
+  m.fileReader = nullptr;
+}
+
+void
 ParserObj::SetObserver(ParserObserverObjPtr aObserver) {
   m.weakObserver = aObserver;
 }
 
-ParserObj::ParserObj(State& aState, ContextWeak& aContext) : m(aState) {}
+ParserObj::ParserObj(State& aState, ContextWeak& aContext) : m(aState) {
+  ContextPtr context = aContext.lock();
+  if (context) {
+    m.fileReader = context->GetFileReader();
+VRB_LOG("Ctor(%p) m.fileReader=%p",this, (void*)m.fileReader.get());
+  } else {
+    VRB_LOG("ParserObj unable to lock context to obtain FileReader");
+  }
+}
+
 ParserObj::~ParserObj() {}
 
 } // namespace vrb

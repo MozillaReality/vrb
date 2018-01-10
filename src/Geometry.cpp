@@ -4,6 +4,7 @@
 #include "vrb/private/NodeState.h"
 #include "vrb/private/ResourceGLState.h"
 
+#include "vrb/Camera.h"
 #include "vrb/ConcreteClass.h"
 #include "vrb/CullVisitor.h"
 #include "vrb/DrawableList.h"
@@ -176,8 +177,8 @@ Geometry::ShutdownGL() {
 }
 
 void
-Geometry::Draw(const CameraPtr& aCamera, const Matrix& aModelTransform) {
-//  if (m.renderState->Enable(aProjection.PostMultiply(aModelTransform))) {
+Geometry::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
+  if (m.renderState->Enable(aCamera.GetPerspective(), aCamera.GetView(), aModelTransform)) {
     VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
     VRB_CHECK(glVertexAttribPointer(m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, 0, nullptr));
 
@@ -187,6 +188,7 @@ Geometry::Draw(const CameraPtr& aCamera, const Matrix& aModelTransform) {
     VRB_CHECK(glDisableVertexAttribArray(m.renderState->AttributePosition()));
     VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
     VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+  }
 }
 
 }
