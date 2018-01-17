@@ -2,16 +2,27 @@
 #include "vrb/private/GroupState.h"
 
 #include "vrb/ConcreteClass.h"
+#include "vrb/DrawableList.h"
+#include "vrb/Light.h"
 
 #include <memory>
 
 namespace vrb {
 
+bool
+Group::State::Contains(const Node& aNode) {
+  for (NodePtr& node: children) {
+    if (node.get() == &aNode) {
+      return true;
+    }
+  }
+  return false;
+}
 
 bool
-Group::State::Contains(const NodePtr& aNode) {
-  for (NodePtr& node: children) {
-    if (node == aNode) {
+Group::State::Contains(const Light& aLight) {
+  for (LightPtr& light: lights) {
+    if (light.get() == &aLight) {
       return true;
     }
   }
@@ -24,23 +35,44 @@ Group::Create(ContextWeak& aContext) {
 }
 
 void
-Group::Cull(CullVisitorPtr& aVisitor, DrawableListPtr& aDrawables) {
+Group::Cull(CullVisitor& aVisitor, DrawableList& aDrawables) {
+  for (LightPtr& light: m.lights) {
+    aDrawables.PushLight(*light);
+  }
   for (NodePtr& node: m.children) {
     node->Cull(aVisitor, aDrawables);
   }
+  aDrawables.PopLights(m.lights.size());
 }
 
 void
-Group::AddNode(const NodePtr aNode) {
-  if (!m.Contains(aNode)) {
-    m.children.push_back(aNode);
+Group::AddLight(LightPtr aLight) {
+  if (!m.Contains(*aLight)) {
+    m.lights.push_back(std::move(aLight));
   }
 }
 
 void
-Group::RemoveNode(const NodePtr aNode) {
+Group::RemoveLight(const Light& aLight) {
+  for (auto it = m.lights.begin(); it != m.lights.end(); it++) {
+    if (it->get() == &aLight) {
+      m.lights.erase(it);
+      return;
+    }
+  }
+}
+
+void
+Group::AddNode(NodePtr aNode) {
+  if (!m.Contains(*aNode)) {
+    m.children.push_back(std::move(aNode));
+  }
+}
+
+void
+Group::RemoveNode(const Node& aNode) {
   for (auto it = m.children.begin(); it != m.children.end(); it++) {
-    if (*it == aNode) {
+    if (it->get() == &aNode) {
       m.children.erase(it);
       return;
     }

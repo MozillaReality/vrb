@@ -11,6 +11,8 @@ typedef std::shared_ptr<Camera> CameraPtr;
 class CameraSimple;
 typedef std::shared_ptr<CameraSimple> CameraSimplePtr;
 
+class Color;
+
 class Context;
 typedef std::shared_ptr<Context> ContextPtr;
 typedef std::weak_ptr<Context> ContextWeak;
@@ -40,6 +42,9 @@ typedef std::shared_ptr<Geometry> GeometryPtr;
 
 class Group;
 typedef std::shared_ptr<Group> GroupPtr;
+
+class Light;
+typedef std::shared_ptr<Light> LightPtr;
 
 class Matrix;
 

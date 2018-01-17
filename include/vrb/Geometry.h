@@ -16,7 +16,7 @@ public:
   static GeometryPtr Create(ContextWeak& aContext);
 
   // Node interface
-  void Cull(CullVisitorPtr& aVisitor, DrawableListPtr& aDrawables) override;
+  void Cull(CullVisitor& aVisitor, DrawableList& aDrawables) override;
 
   // Geometry interface
   RenderStatePtr GetRenderState() const;

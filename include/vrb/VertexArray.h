@@ -14,6 +14,8 @@ public:
   int GetNormalCount() const;
   int GetUVCount() const;
 
+  void SetNormalCount(const int aCount);
+
   const Vector& GetVertex(const int aIndex) const;
   const Vector& GetNormal(const int aIndex) const;
   const Vector& GetUV(const int aIndex) const;
@@ -22,9 +24,11 @@ public:
   void SetNormal(const int aIndex, const Vector& aNormal);
   void SetUV(const int aIndex, const Vector& aUV);
 
-  int AddVertex(const Vector& aPoint);
-  int AddNormal(const Vector& aNormal);
-  int AddUV(const Vector& aUV);
+  int AppendVertex(const Vector& aPoint);
+  int AppendNormal(const Vector& aNormal);
+  int AppendUV(const Vector& aUV);
+
+  void AddNormal(const int aIndex, const Vector& aNormal);
 
 protected:
   struct State;

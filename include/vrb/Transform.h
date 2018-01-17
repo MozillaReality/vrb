@@ -11,7 +11,7 @@ class Transform : public Group {
 public:
   static TransformPtr Create(ContextWeak& aContext);
   // Node interface
-  void Cull(CullVisitorPtr& aVisitor, DrawableListPtr& aDrawables) override;
+  void Cull(CullVisitor& aVisitor, DrawableList& aDrawables) override;
   // Transform interface
   const Matrix& GetTransform() const;
   void SetTransform(const Matrix& aTransform);

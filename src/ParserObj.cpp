@@ -454,7 +454,6 @@ ParserObj::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& a
 
 void
 ParserObj::LoadModel(const std::string& aFileName) {
-VRB_LOG("LoadModel(%p) m.fileReader=%p",this,(void*)m.fileReader.get());
   if (m.fileReader) {
     VRB_LOG("Loading file: '%s'", aFileName.c_str());
     m.fileReader->ReadRawFile(aFileName, m.self.lock());
@@ -465,13 +464,11 @@ VRB_LOG("LoadModel(%p) m.fileReader=%p",this,(void*)m.fileReader.get());
 
 void
 ParserObj::SetFileReader(FileReaderPtr aFileReader) {
-VRB_LOG("################## SET FILE READER ########################");
   m.fileReader = aFileReader;
 }
 
 void
 ParserObj::ClearFileReader() {
-VRB_LOG("************* CLEAR FILE READER! *********************");
   m.fileReader = nullptr;
 }
 
@@ -484,7 +481,6 @@ ParserObj::ParserObj(State& aState, ContextWeak& aContext) : m(aState) {
   ContextPtr context = aContext.lock();
   if (context) {
     m.fileReader = context->GetFileReader();
-VRB_LOG("Ctor(%p) m.fileReader=%p",this, (void*)m.fileReader.get());
   } else {
     VRB_LOG("ParserObj unable to lock context to obtain FileReader");
   }

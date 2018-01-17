@@ -59,8 +59,8 @@ Geometry::Create(ContextWeak& aContext) {
 }
 
 void
-Geometry::Cull(CullVisitorPtr& aVisitor, DrawableListPtr& aDrawables) {
-  aDrawables->AddDrawable(std::move(CreateDrawablePtr()), aVisitor->GetTransform());
+Geometry::Cull(CullVisitor& aVisitor, DrawableList& aDrawables) {
+  aDrawables.AddDrawable(std::move(CreateDrawablePtr()), aVisitor.GetTransform());
 }
 
 RenderStatePtr
@@ -85,29 +85,46 @@ Geometry::SetVertexArray(const VertexArrayPtr& aVertexArray) {
 
 void
 Geometry::AddFace(
-    const std::vector<int>& aVerticies,
+    const std::vector<int>& aVertices,
     const std::vector<int>& aUVs,
     const std::vector<int>& aNormals) {
 
   Face face;
-  m.vertexCount += aVerticies.size();
-  m.triangleCount += aVerticies.size() - 2;
-  CopyIndecies(face.vertices, aVerticies);
+  m.vertexCount += aVertices.size();
+  m.triangleCount += aVertices.size() - 2;
+  CopyIndecies(face.vertices, aVertices);
   if (face.vertices.size() < 3) {
-    std::string indicies;
+    std::string indices;
     for (auto ix: face.vertices) {
-      indicies += " ";
-      indicies += std::to_string(ix);
+      indices += " ";
+      indices += std::to_string(ix);
     }
-    indicies += " from:";
-    for (auto ix: aVerticies) {
-      indicies += " ";
-      indicies += std::to_string(ix);
+    indices += " from:";
+    for (auto ix: aVertices) {
+      indices += " ";
+      indices += std::to_string(ix);
     }
-    VRB_LOG("ERROR! Face with only %d verticies:%s", face.vertices.size(), indicies.c_str());
+    VRB_LOG("ERROR! Face with only %d vertices:%s", face.vertices.size(), indices.c_str());
   }
-  CopyIndecies(face.uvs, aUVs);
-  CopyIndecies(face.normals, aNormals);
+  if (aUVs.size() > 0) {
+    CopyIndecies(face.uvs, aUVs);
+  }
+
+  if (aNormals.size() > 0) {
+    CopyIndecies(face.normals, aNormals);
+  } else if (m.vertexArray) {
+    m.vertexArray->SetNormalCount(m.vertexArray->GetVertexCount());
+    const Vector point = m.vertexArray->GetVertex(aVertices[0]);
+    const Vector normal = ((m.vertexArray->GetVertex(aVertices[1]) - point).Cross(m.vertexArray->GetVertex(aVertices[2]) - point)).Normalize();
+    for (GLuint index: face.vertices) {
+      if (index <= 0) {
+        VRB_LOG("Vertices index is less than zero.");
+      }
+      m.vertexArray->AddNormal(index - 1, normal);
+      face.normals.push_back(index);
+    }
+  }
+
   m.faces.push_back(std::move(face));
 }
 
@@ -124,7 +141,7 @@ Geometry::InitializeGL() {
   VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
   VRB_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 9 * m.triangleCount, nullptr, GL_STATIC_DRAW));
   VRB_LOG("Allocate: %d", sizeof(GLfloat) * 9 * m.triangleCount);
-  std::vector<GLushort> indicies;
+  std::vector<GLushort> indices;
   GLushort count = 0;
   GLintptr offset = 0;
   const GLintptr vertexSize = sizeof(GLfloat) * 3;
@@ -137,13 +154,13 @@ Geometry::InitializeGL() {
     if (face.vertices.size() < 3) {
       std::string message;
       for (auto index: face.vertices) { message += " "; message += std::to_string(index); }
-      VRB_LOG("ERROR! Face with only %d verticies:%s", face.vertices.size(), message.c_str());
+      VRB_LOG("ERROR! Face with only %d vertices:%s", face.vertices.size(), message.c_str());
       continue;
     }
     for (int ix = 1; ix <= face.vertices.size() - 2; ix++) {
       std::string out;
       VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, vertexSize, firstVertex.Data()));
-      indicies.push_back(count);
+      indices.push_back(count);
       out += " " + firstVertex.ToString();
       count++;
       offset += vertexSize;
@@ -151,22 +168,22 @@ Geometry::InitializeGL() {
       const Vector v2 = m.vertexArray->GetVertex(face.vertices[ix + 1] - 1);
       VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, vertexSize, v1.Data()));
       out += "/" + v1.ToString();
-      indicies.push_back(count);
+      indices.push_back(count);
       count++;
       offset += vertexSize;
       VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, vertexSize, v2.Data()));
       out += "/" + v2.ToString();
-      indicies.push_back(count);
+      indices.push_back(count);
       count++;
       offset += vertexSize;
       // VRB_LOG("array buffer[%d] o:%d c:%d : %s", ix, (int)offset, count, out.c_str());
     }
   }
-  VRB_LOG("indicies: %d vertex: %d", indicies.size(), m.vertexCount);
+  VRB_LOG("indices: %d vertex: %d", indices.size(), m.vertexCount);
 
   VRB_CHECK(glGenBuffers(1, &m.indexObjectId));
   VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
-  VRB_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * indicies.size(), indicies.data(), GL_STATIC_DRAW));
+  VRB_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * indices.size(), indices.data(), GL_STATIC_DRAW));
   VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
   VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }

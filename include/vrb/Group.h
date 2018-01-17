@@ -12,11 +12,13 @@ public:
   static GroupPtr Create(ContextWeak& aContext);
 
   // Node interface
-  void Cull(CullVisitorPtr& aVisitor, DrawableListPtr& aDrawables) override;
+  void Cull(CullVisitor& aVisitor, DrawableList& aDrawables) override;
 
   // Group interface
-  void AddNode(const NodePtr aNode);
-  void RemoveNode(const NodePtr aNode);
+  void AddLight(LightPtr aLight);
+  void RemoveLight(const Light& aLight);
+  void AddNode(NodePtr aNode);
+  void RemoveNode(const Node& aNode);
 
 protected:
   struct State;

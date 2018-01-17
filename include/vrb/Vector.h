@@ -20,20 +20,6 @@ public:
   float y() const { return m.mY; }
   float z() const { return m.mZ; }
 
-  Vector operator+(const Vector& aValue) {
-    return Vector(
-        m.mX + aValue.m.mX,
-        m.mY + aValue.m.mY,
-        m.mZ + aValue.m.mZ);
-  }
-
-  Vector operator-(const Vector& aValue) {
-    return Vector(
-        m.mX - aValue.m.mX,
-        m.mY - aValue.m.mY,
-        m.mZ - aValue.m.mZ);
-  }
-
   Vector& operator*=(const float aValue) {
     m.mX *= aValue;
     m.mY *= aValue;
@@ -48,6 +34,28 @@ public:
       m.mZ /= aValue;
     }
     return *this;
+  }
+
+  Vector operator+(const Vector& aValue) const {
+    return Vector(
+        m.mX + aValue.m.mX,
+        m.mY + aValue.m.mY,
+        m.mZ + aValue.m.mZ);
+  }
+
+  Vector operator-(const Vector& aValue) const {
+    return Vector(
+        m.mX - aValue.m.mX,
+        m.mY - aValue.m.mY,
+        m.mZ - aValue.m.mZ);
+  }
+
+  Vector operator*(const float aValue) const {
+    return Vector(*this) *= aValue;
+  }
+
+  Vector operator/(const float aValue) const {
+    return Vector(*this) /= aValue;
   }
 
   float Magnitude() const {
@@ -88,17 +96,17 @@ public:
   }
 
 protected:
-  typedef union data {
+  union Data {
     float mV[3];
     struct {
       float mX, mY, mZ;
     };
-    data() : mX(0.0f), mY(0.0f), mZ(0.0f) {}
-    data(const float aX, const float aY, const float aZ) : mX(aX), mY(aY), mZ(aZ) {}
-    data(const data& aData) : mX(aData.mX), mY(aData.mY), mZ(aData.mZ) {}
-  } data_t;
+    Data() : mX(0.0f), mY(0.0f), mZ(0.0f) {}
+    Data(const float aX, const float aY, const float aZ) : mX(aX), mY(aY), mZ(aZ) {}
+    Data(const Data& aData) : mX(aData.mX), mY(aData.mY), mZ(aData.mZ) {}
+  };
 
-  data_t m;
+  union Data m;
 };
 
 }

@@ -10,8 +10,14 @@ namespace vrb {
 static const vrb::Vector cZeroVector;
 
 struct VertexArray::State {
+  struct NormalState {
+    Vector normal;
+    float count;
+    NormalState() : count(0.0f) {}
+    NormalState(const Vector& aNormal) : normal(aNormal), count(1.0f) {}
+  };
   std::vector<Vector> vertices;
-  std::vector<Vector> normals;
+  std::vector<NormalState> normals;
   std::vector<Vector> uvs;
 };
 
@@ -35,6 +41,11 @@ VertexArray::GetUVCount() const {
   return m.uvs.size();
 }
 
+void
+VertexArray::SetNormalCount(const int aCount) {
+  m.normals.resize(aCount);
+}
+
 const Vector&
 VertexArray::GetVertex(const int aIndex) const {
   if (aIndex >= m.vertices.size()) {
@@ -48,7 +59,7 @@ VertexArray::GetNormal(const int aIndex) const {
   if (aIndex >= m.normals.size()) {
     return cZeroVector;
   }
-  return m.normals[aIndex];
+  return m.normals[aIndex].normal;
 }
 
 const Vector&
@@ -78,19 +89,28 @@ VertexArray::SetUV(const int aIndex, const Vector& aUV) {
 }
 
 int
-VertexArray::AddVertex(const Vector& aPoint) {
+VertexArray::AppendVertex(const Vector& aPoint) {
   m.vertices.push_back(aPoint);
   return m.vertices.size() - 1;
 }
 
 int
-VertexArray::AddNormal(const Vector& aNormal) {
-  m.normals.push_back(aNormal);
+VertexArray::AppendNormal(const Vector& aNormal) {
+  m.normals.push_back(State::NormalState(aNormal));
   return m.normals.size() - 1;
 }
 
+void
+VertexArray::AddNormal(const int aIndex, const Vector& aNormal) {
+  m.normals.resize(aIndex + 1);
+  State::NormalState& ns = m.normals[aIndex];
+  const float originalCount = ns.count;
+  ns.count++;
+  ns.normal = ((ns.normal * originalCount) + aNormal) / ns.count;
+}
+
 int
-VertexArray::AddUV(const Vector& aUV) {
+VertexArray::AppendUV(const Vector& aUV) {
   m.uvs.push_back(aUV);
   return m.uvs.size() - 1;
 }

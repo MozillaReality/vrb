@@ -14,10 +14,10 @@ Transform::Create(ContextWeak& aContext) {
 }
 
 void
-Transform::Cull(CullVisitorPtr& aVisitor, DrawableListPtr& aDrawables) {
-  aVisitor->PushTransform(m.transform);
+Transform::Cull(CullVisitor& aVisitor, DrawableList& aDrawables) {
+  aVisitor.PushTransform(m.transform);
   Group::Cull(aVisitor, aDrawables);
-  aVisitor->PopTransform();
+  aVisitor.PopTransform();
 }
 
 const Matrix&

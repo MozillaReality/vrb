@@ -1,5 +1,6 @@
 #include "vrb/NodeFactoryObj.h"
 
+#include "vrb/Color.h"
 #include "vrb/ConcreteClass.h"
 #include "vrb/Context.h"
 #include "vrb/Geometry.h"
@@ -14,9 +15,9 @@
 namespace {
 
 struct Material {
-  vrb::Vector ambient;
-  vrb::Vector diffuse;
-  vrb::Vector specular;
+  vrb::Color ambient;
+  vrb::Color diffuse;
+  vrb::Color specular;
   float specularExponent;
   std::string ambientTextureName;
   std::string diffuseTextureName;
@@ -121,19 +122,19 @@ NodeFactoryObj::SetMaterialName(const std::string& aName) {
 void
 NodeFactoryObj::AddVertex(const Vector& aPoint, const float aW) {
   // VRB_LOG("AddVertex %s", aPoint.ToString().c_str());
-  m.vertices->AddVertex(aPoint);
+  m.vertices->AppendVertex(aPoint);
 }
 
 void
 NodeFactoryObj::AddNormal(const Vector& aNormal) {
   // VRB_LOG("AddNormal %s", aNormal.ToString().c_str());
-  m.vertices->AddNormal(aNormal);
+  m.vertices->AppendNormal(aNormal);
 }
 
 void
 NodeFactoryObj::AddUV(const float aU, const float aV, const float aW) {
   // VRB_LOG("AddUV %f %f %f", aU, aV, aW);
-  m.vertices->AddUV(Vector(aU, aV, aW));
+  m.vertices->AppendUV(Vector(aU, aV, aW));
 }
 
 void

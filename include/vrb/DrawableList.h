@@ -11,6 +11,8 @@ public:
   static DrawableListPtr Create(ContextWeak& aContext);
 
   void Reset();
+  void PushLight(const Light& aLight);
+  void PopLights(const int aCount);
   void AddDrawable(DrawablePtr&& aDrawable, const Matrix& aTransform);
   void Draw(const Camera& aCamera);
 

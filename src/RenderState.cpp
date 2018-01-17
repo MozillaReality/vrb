@@ -19,6 +19,7 @@ uniform mat4 u_view;
 uniform mat4 u_model;
 
 attribute vec4 a_position;
+attribute vec4 a_normal;
 
 void main(void) {
   gl_Position = u_perspective * u_view * u_model * a_position;
@@ -46,6 +47,7 @@ struct RenderState::State : public ResourceGL::State {
   GLint uView;
   GLint uModel;
   GLint aPosition;
+  GLint aNormal;
 
   State()
       : vertexShader(0)
@@ -55,6 +57,7 @@ struct RenderState::State : public ResourceGL::State {
       , uView(0)
       , uModel(0)
       , aPosition(0)
+      , aNormal(0)
   {}
 };
 
@@ -71,6 +74,11 @@ RenderState::Program() const {
 GLint
 RenderState::AttributePosition() const {
   return m.aPosition;
+}
+
+GLint
+RenderState::AttributeNormal() const {
+  return m.aNormal;
 }
 
 bool
@@ -120,6 +128,7 @@ RenderState::InitializeGL() {
     const char* modelName = "u_model";
     m.uModel = glGetUniformLocation(m.program, modelName);
     m.aPosition = glGetAttribLocation(m.program, "a_position");
+    m.aNormal = glGetAttribLocation(m.program, "a_normal");
   }
 }
 
