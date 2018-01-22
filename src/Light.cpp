@@ -33,7 +33,9 @@ Light::GetSpecularColor() const {
 
 void
 Light::SetDirection(const Vector& aDirection) {
-  m.direction = aDirection;
+  if (aDirection.Magnitude() > 0.0f) {
+    m.direction = aDirection.Normalize();
+  }
 }
 
 void

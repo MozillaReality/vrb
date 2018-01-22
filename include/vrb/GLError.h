@@ -11,7 +11,7 @@ const char* GLErrorCheck();
 
 #define VRB_CHECK(X) X;                                     \
 {                                                           \
-  const char* str = GLErrorCheck();                         \
+  const char* str = vrb::GLErrorCheck();                    \
   if (str) {                                                \
     __android_log_print(ANDROID_LOG_ERROR, "VRB",           \
                          "OpenGL Error: %s at%s:%s:%d",     \

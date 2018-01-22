@@ -20,6 +20,16 @@ public:
   float y() const { return m.mY; }
   float z() const { return m.mZ; }
 
+  Vector operator-() const {
+    Vector result(-m.mX, -m.mY, -m.mZ);
+    return result;
+  }
+
+  Vector& operator=(const Vector& aValue) {
+    m = aValue.m;
+    return *this;
+  }
+
   Vector& operator*=(const float aValue) {
     m.mX *= aValue;
     m.mY *= aValue;
@@ -104,6 +114,12 @@ protected:
     Data() : mX(0.0f), mY(0.0f), mZ(0.0f) {}
     Data(const float aX, const float aY, const float aZ) : mX(aX), mY(aY), mZ(aZ) {}
     Data(const Data& aData) : mX(aData.mX), mY(aData.mY), mZ(aData.mZ) {}
+    Data& operator=(const Data& aData) {
+      mX = aData.mX;
+      mY = aData.mY;
+      mZ = aData.mZ;
+      return *this;
+    }
   };
 
   union Data m;

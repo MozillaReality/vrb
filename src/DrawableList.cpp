@@ -4,6 +4,7 @@
 #include "vrb/Camera.h"
 #include "vrb/ConcreteClass.h"
 #include "vrb/Drawable.h"
+#include "vrb/RenderState.h"
 
 namespace vrb {
 
@@ -39,7 +40,9 @@ DrawableList::Reset() {
 void
 DrawableList::PushLight(const Light& aLight) {
   m.depth++;
-  State::LightSnapshot* light = new State::LightSnapshot(m.depth, aLight);
+  m.idCount++;
+  if (m.idCount == 0) { m.idCount++; }
+  State::LightSnapshot* light = new State::LightSnapshot(m.idCount, m.depth, aLight);
   light->next = m.currentLights;
   m.currentLights = light;
   light->masterNext = m.lights;
@@ -64,6 +67,7 @@ DrawableList::AddDrawable(DrawablePtr&& aDrawable, const Matrix& aTransform) {
   State::DrawNode* node = new State::DrawNode;
   node->drawable = aDrawable;
   node->transform = aTransform;
+  node->lights = m.currentLights;
   node->next = m.drawables;
   m.drawables = node;
 }
@@ -72,6 +76,15 @@ void
 DrawableList::Draw(const Camera& aCamera) {
   State::DrawNode* current = m.drawables;
   while (current) {
+    const uint32_t id = current->lights ? current->lights->id : 0;
+    if (id != current->drawable->GetRenderState()->GetLightId()) {
+      current->drawable->GetRenderState()->ResetLights(id);
+      State::LightSnapshot* snapshot = current->lights;
+      while (snapshot) {
+        current->drawable->GetRenderState()->AddLight(snapshot->direction, snapshot->ambient, snapshot->diffuse, snapshot->specular);
+        snapshot = snapshot->next;
+      }
+    }
     current->drawable->Draw(aCamera, current->transform);
     current = current->next;
   }

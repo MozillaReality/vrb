@@ -8,7 +8,7 @@ namespace vrb {
 CameraSimple::State::State()
     : width(1920.0f)
     , height(1080.0f)
-    , nearClip(1.0f)
+    , nearClip(0.1f)
     , farClip(100.0f)
     , horizontalFOV(60.f)
     , verticalFOV(-1.0f)

@@ -43,7 +43,9 @@ VertexArray::GetUVCount() const {
 
 void
 VertexArray::SetNormalCount(const int aCount) {
-  m.normals.resize(aCount);
+  if (m.normals.size() < aCount) {
+    m.normals.resize(aCount);
+  }
 }
 
 const Vector&
@@ -72,19 +74,25 @@ VertexArray::GetUV(const int aIndex) const {
 
 void
 VertexArray::SetVertex(const int aIndex, const Vector& aPoint) {
-  m.vertices.resize(aIndex + 1);
+  if (m.vertices.size() < (aIndex + 1)) {
+    m.vertices.resize(aIndex + 1);
+  }
   m.vertices[aIndex] = aPoint;
 }
 
 void
 VertexArray::SetNormal(const int aIndex, const Vector& aNormal) {
-  m.normals.resize(aIndex + 1);
+  if (m.normals.size() < (aIndex + 1)) {
+    m.normals.resize(aIndex + 1);
+  }
   m.normals[aIndex] = aNormal;
 }
 
 void
 VertexArray::SetUV(const int aIndex, const Vector& aUV) {
-  m.uvs.resize(aIndex + 1);
+  if (m.uvs.size() < (aIndex + 1)) {
+    m.uvs.resize(aIndex + 1);
+  }
   m.uvs[aIndex] = aUV;
 }
 
@@ -102,11 +110,14 @@ VertexArray::AppendNormal(const Vector& aNormal) {
 
 void
 VertexArray::AddNormal(const int aIndex, const Vector& aNormal) {
-  m.normals.resize(aIndex + 1);
+  if (m.normals.size() < (aIndex + 1)) {
+    m.normals.resize(aIndex + 1);
+  }
   State::NormalState& ns = m.normals[aIndex];
   const float originalCount = ns.count;
   ns.count++;
-  ns.normal = ((ns.normal * originalCount) + aNormal) / ns.count;
+  Vector orig = ns.normal;
+  ns.normal = (((ns.normal * originalCount) + aNormal) / ns.count).Normalize();
 }
 
 int

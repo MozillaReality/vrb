@@ -10,6 +10,8 @@ namespace vrb {
 class Drawable : public std::enable_shared_from_this<Drawable> {
 public:
   DrawablePtr CreateDrawablePtr();
+  virtual RenderStatePtr& GetRenderState() = 0;
+  virtual void SetRenderState(const RenderStatePtr& aRenderState) = 0;
   virtual void Draw(const Camera& aCamera, const Matrix& aModelTransform) = 0;
 protected:
   struct State;

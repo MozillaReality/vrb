@@ -12,14 +12,16 @@ struct DrawableList::State {
   struct LightSnapshot {
     LightSnapshot* next;
     LightSnapshot* masterNext;
+    const uint32_t id;
     const int depth;
     const Vector direction;
     const Color ambient;
     const Color diffuse;
     const Color specular;
-    LightSnapshot(const int aDepth, const Light& aLight)
+    LightSnapshot(const uint32_t aId, const int aDepth, const Light& aLight)
       : next(nullptr)
       , masterNext(nullptr)
+      , id(aId)
       , depth(aDepth)
       , direction(aLight.GetDirection())
       , ambient(aLight.GetAmbientColor())
@@ -39,9 +41,10 @@ struct DrawableList::State {
   DrawNode* drawables;
   LightSnapshot* currentLights;
   LightSnapshot* lights;
+  uint32_t idCount;
   int depth;
 
-  State() : drawables(nullptr), currentLights(nullptr), lights(nullptr), depth(0) {}
+  State() : drawables(nullptr), currentLights(nullptr), lights(nullptr), idCount(0), depth(0) {}
   ~State() { Reset(); }
   void Reset();
 };

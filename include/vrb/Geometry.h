@@ -11,17 +11,19 @@
 
 namespace vrb {
 
-class Geometry : public Node, protected ResourceGL, public Drawable {
+class Geometry : public Node, public Drawable, protected ResourceGL {
 public:
   static GeometryPtr Create(ContextWeak& aContext);
 
   // Node interface
   void Cull(CullVisitor& aVisitor, DrawableList& aDrawables) override;
 
-  // Geometry interface
-  RenderStatePtr GetRenderState() const;
-  void SetRenderState(const RenderStatePtr& aRenderState);
+  // From Drawable
+  RenderStatePtr& GetRenderState() override;
+  void SetRenderState(const RenderStatePtr& aRenderState) override;
+  void Draw(const Camera& aCamera, const Matrix& aModelTransform) override;
 
+  // Geometry interface
   VertexArrayPtr GetVertexArray() const;
   void SetVertexArray(const VertexArrayPtr& aVertexArray);
 
@@ -38,9 +40,6 @@ protected:
   // From ResourceGL
   void InitializeGL() override;
   void ShutdownGL() override;
-
-  // From Drawable
-  void Draw(const Camera& aCamera, const Matrix& aModelTransform) override;
 
 private:
   State& m;

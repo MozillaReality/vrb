@@ -61,6 +61,7 @@ NodeFactoryObj::State::CreateRenderState(Material& aMaterial) {
   }
 
   aMaterial.state = RenderState::Create(context);
+  aMaterial.state->SetMaterial(aMaterial.ambient, aMaterial.diffuse, aMaterial.specular, aMaterial.specularExponent);
 }
 
 NodeFactoryObjPtr
@@ -102,6 +103,9 @@ NodeFactoryObj::SetGroupNames(const std::vector<std::string>& aNames) {
 
 void
 NodeFactoryObj::SetObjectName(const std::string& aName) {
+  std::vector<std::string> name;
+  name.push_back(aName);
+  SetGroupNames(name);
 }
 
 void
@@ -115,6 +119,12 @@ NodeFactoryObj::SetMaterialName(const std::string& aName) {
   Material& material = it->second;
 
   m.CreateRenderState(material);
+
+  if (!m.currentGeometry) {
+    std::vector<std::string> name;
+    name.push_back(std::string(""));
+    SetGroupNames(name);
+  }
 
   m.currentGeometry->SetRenderState(material.state);
 }

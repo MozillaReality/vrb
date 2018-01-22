@@ -18,7 +18,7 @@ public:
   bool IsWhite() const { return (m.red == 1.0f) && (m.green == 1.0f) && (m.blue == 1.0f); }
 
   Color& operator=(const Color& aColor) {
-    for (int ix = ix ; ix < 4; ix++) {
+    for (int ix = 0; ix < 4; ix++) {
       m.v[ix] = aColor.m.v[ix];
     }
     return *this;
@@ -90,8 +90,8 @@ public:
         + std::to_string(m.alpha) + ")";
     return result;
   }
-  float* GetData() { return &m.v[0]; }
-  const float* GetData() const { return &m.v[0]; }
+  float* Data() { return &m.v[0]; }
+  const float* Data() const { return &m.v[0]; }
 private:
   union Data {
     float v[4];

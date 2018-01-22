@@ -15,6 +15,10 @@ public:
   GLuint Program() const;
   GLint AttributePosition() const;
   GLint AttributeNormal() const;
+  uint32_t GetLightId() const;
+  void ResetLights(const uint32_t aId);
+  void AddLight(const Vector& aDirection, const Color& aAmbient, const Color& aDiffuse, const Color& aSpecular);
+  void SetMaterial(const Color& aAmbient, const Color& aDiffuse, const Color& aSpecular, const float aSpecularExponent);
   bool Enable(const Matrix& aPerspective, const Matrix& aView, const Matrix& aModel);
 protected:
   struct State;
