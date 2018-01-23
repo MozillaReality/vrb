@@ -77,7 +77,7 @@ public:
 
   Vector Normalize() const {
     Vector result(*this);
-    const float magnitude (Magnitude());
+    const float magnitude = Magnitude();
     if (magnitude > 0.0f) { result *= 1.0f / magnitude; }
     return result;
   }
