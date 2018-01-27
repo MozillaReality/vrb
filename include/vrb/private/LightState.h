@@ -17,7 +17,7 @@ struct Light::State {
 
   State()
       : direction(-1.0f, -1.0f, -1.0f)
-      , ambient(0.2f, 0.2f, 0.2f)
+      , ambient(0.4f, 0.4f, 0.4f)
       , diffuse(1.0f, 1.0f, 1.0f)
       , specular(1.0f, 1.0f, 1.0f)
   {

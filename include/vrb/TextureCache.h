@@ -14,6 +14,7 @@ public:
   void Init();
   void Shutdown();
   TexturePtr LoadTexture(const std::string& aFileName);
+  TexturePtr GetDefaultTexture();
 protected:
   struct State;
   TextureCache(State& aState, ContextWeak& aContext);

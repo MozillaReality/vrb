@@ -7,6 +7,8 @@
 #include "vrb/Group.h"
 #include "vrb/Mutex.h"
 #include "vrb/RenderState.h"
+#include "vrb/Texture.h"
+#include "vrb/TextureCache.h"
 #include "vrb/Vector.h"
 #include "vrb/VertexArray.h"
 
@@ -61,6 +63,13 @@ NodeFactoryObj::State::CreateRenderState(Material& aMaterial) {
   }
 
   aMaterial.state = RenderState::Create(context);
+  if (!aMaterial.diffuseTextureName.empty()) {
+    TextureCachePtr cache = context.lock()->GetTextureCache();
+    if (cache) {
+      TexturePtr texture = cache->LoadTexture(aMaterial.diffuseTextureName);
+      aMaterial.state->SetTexture(texture);
+    }
+  }
   aMaterial.state->SetMaterial(aMaterial.ambient, aMaterial.diffuse, aMaterial.specular, aMaterial.specularExponent);
 }
 

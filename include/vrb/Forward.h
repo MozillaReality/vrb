@@ -60,6 +60,12 @@ typedef std::shared_ptr<ParserObj> ParserObjPtr;
 class ParserObserverObj;
 typedef std::shared_ptr<ParserObserverObj> ParserObserverObjPtr;
 
+class Program;
+typedef std::shared_ptr<Program> ProgramPtr;
+
+class ProgramFactory;
+typedef std::shared_ptr<ProgramFactory> ProgramFactoryPtr;
+
 class RenderState;
 typedef std::shared_ptr<RenderState> RenderStatePtr;
 

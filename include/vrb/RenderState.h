@@ -15,19 +15,23 @@ public:
   GLuint Program() const;
   GLint AttributePosition() const;
   GLint AttributeNormal() const;
+  GLint AttributeUV() const;
   uint32_t GetLightId() const;
   void ResetLights(const uint32_t aId);
   void AddLight(const Vector& aDirection, const Color& aAmbient, const Color& aDiffuse, const Color& aSpecular);
   void SetMaterial(const Color& aAmbient, const Color& aDiffuse, const Color& aSpecular, const float aSpecularExponent);
+  void SetTexture(const TexturePtr& aTexture);
+  bool HasTexture() const;
   bool Enable(const Matrix& aPerspective, const Matrix& aView, const Matrix& aModel);
+  void Disable();
 protected:
   struct State;
   RenderState(State& aState, ContextWeak& aContext);
   ~RenderState();
 
   // ResourceGL interface
-  void InitializeGL() override;
-  void ShutdownGL() override;
+  void InitializeGL(Context& aContext) override;
+  void ShutdownGL(Context& aContext) override;
 
   // RenderState interface
   GLuint LoadShader(GLenum type, const char* src);

@@ -8,15 +8,15 @@ namespace vrb {
 
 class ResourceGL {
 public:
-  virtual void InitializeGL() = 0;
-  virtual void ShutdownGL() = 0;
+  virtual void InitializeGL(Context& aContext) = 0;
+  virtual void ShutdownGL(Context& aContext) = 0;
 protected:
   struct State;
   ResourceGL(State& aState, ContextWeak& aContext);
   ResourceGL(State& aState);
   virtual ~ResourceGL();
-  void CallAllInitializeGL();
-  void CallAllShutdownGL();
+  void CallAllInitializeGL(Context& aContext);
+  void CallAllShutdownGL(Context& aContext);
 private:
   State& m;
   ResourceGL() = delete;

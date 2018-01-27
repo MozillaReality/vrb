@@ -95,12 +95,12 @@ FileReaderAndroid::ReadImageFile(const std::string& aFileName, FileHandlerPtr aH
   m.imageTarget = aHandler;
   m.imageTargetHandle = m.nextHandle();
   m.imageTarget->BindFileHandle(aFileName, m.imageTargetHandle);
-  if (!m.loadFromAssets || m.am) {
+  if (!m.loadFromAssets || !m.am) {
     m.imageTarget->LoadFailed(m.imageTargetHandle, "FileReaderAndroid is not initialized.");
     return;
   }
 
-  m.env->CallStaticVoidMethod(m.imageLoaderClass, m.loadFromAssets, m.jassetManager, m.env->NewStringUTF(aFileName.c_str()), m.imageTargetHandle);
+  m.env->CallStaticVoidMethod(m.imageLoaderClass, m.loadFromAssets, m.jassetManager, m.env->NewStringUTF(aFileName.c_str()), jptr(this), m.imageTargetHandle);
 }
 
 void
@@ -114,6 +114,9 @@ FileReaderAndroid::Init(JNIEnv* aEnv, jobject &aAssetManager) {
   jclass localImageLoaderClass = m.env->FindClass("org/mozilla/vrb/ImageLoader");
   m.imageLoaderClass = (jclass)m.env->NewGlobalRef(localImageLoaderClass);
   m.loadFromAssets = m.env->GetStaticMethodID(m.imageLoaderClass, "loadFromAssets", "(Landroid/content/res/AssetManager;Ljava/lang/String;JI)V");
+  if (!m.loadFromAssets) {
+    VRB_LOG("Failed to find Java function ImageLoader::loadFromAssets");
+  }
 }
 
 void
@@ -159,6 +162,8 @@ FileReaderAndroid::~FileReaderAndroid() {}
 
 } // namespace vrb
 
+extern "C" {
+
 JNI_METHOD(void, ProcessImage)
 (JNIEnv* env, jclass, jlong aFileReaderAndroid, int aFileTrackingHandle, jintArray aPixels, int width, int height) {
   vrb::FileReaderAndroid* reader = ptr(aFileReaderAndroid);
@@ -170,7 +175,8 @@ JNI_METHOD(void, ProcessImage)
 
   jsize arraySize = env->GetArrayLength(aPixels);
   if ((width * height) > arraySize) {
-
+    VRB_LOG("Error: Image width[%d] * height[%d] = %d > buffer[%d] size in ProcessImage", width, height, width * height, arraySize);
+    return;
   }
 
   const int imageSize = width * height * 4;
@@ -198,3 +204,5 @@ JNI_METHOD(void, ImageLoadFailed)
 
   reader->ImageFileLoadFailed(aFileTrackingHandle, reason);
 }
+
+} // extern "C"

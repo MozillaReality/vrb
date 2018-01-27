@@ -6,6 +6,7 @@
 #include "vrb/Logger.h"
 #include "vrb/GLError.h"
 #include "vrb/Matrix.h"
+#include "vrb/Texture.h"
 #include "vrb/Vector.h"
 
 #include <GLES2/gl2.h>
@@ -17,9 +18,10 @@ namespace {
 // make part of shader generation.
 static const int MaxLights = 2;
 
-static const char* vertexShaderSource = R"SHADER(
+static const char* sVertexShaderSource = R"SHADER(
 
 #define MAX_LIGHTS 2
+#define VRB_USE_TEXTURE VRB_TEXTURE_STATE
 
 struct Light {
   vec3 direction;
@@ -46,6 +48,11 @@ attribute vec3 a_position;
 attribute vec3 a_normal;
 
 varying vec4 v_color;
+
+#ifdef VRB_USE_TEXTURE
+attribute vec2 a_uv;
+varying vec2 v_uv;
+#endif // VRB_USE_TEXTURE
 
 vec4 normal;
 
@@ -81,17 +88,32 @@ void main(void) {
   if (u_lightCount == 0) {
     v_color = u_material.diffuse;
   }
+#ifdef VRB_USE_TEXTURE
+  v_uv = a_uv;
+#endif // VRB_USE_TEXTURE
   gl_Position = u_perspective * u_view * u_model * vec4(a_position.xyz, 1);
 }
 
 )SHADER";
 
-static const char* fragmentShaderSource = R"SHADER(
+static const char* sFragmentShaderSource = R"SHADER(
 
 varying vec4 v_color;
 
 void main() {
   gl_FragColor = v_color;
+}
+
+)SHADER";
+
+static const char* sFragmentTextureShaderSource = R"SHADER(
+
+uniform sampler2D u_texture0;
+varying vec4 v_color;
+varying vec2 v_uv;
+
+void main() {
+  gl_FragColor = texture2D(u_texture0, v_uv) * v_color;
 }
 
 )SHADER";
@@ -152,13 +174,16 @@ struct RenderState::State : public ResourceGL::State {
   GLint uMatterialDiffuse;
   GLint uMatterialSpecular;
   GLint uMatterialSpecularExponent;
+  GLint uTexture0;
   GLint aPosition;
   GLint aNormal;
+  GLint aUV;
   std::vector<Light> lights;
   Color ambient;
   Color diffuse;
   Color specular;
   float specularExponent;
+  TexturePtr texture;
   uint32_t lightId;
   bool updateLights;
   bool updateMaterial;
@@ -175,8 +200,10 @@ struct RenderState::State : public ResourceGL::State {
       , uMatterialDiffuse(-1)
       , uMatterialSpecular(-1)
       , uMatterialSpecularExponent(-1)
+      , uTexture0(-1)
       , aPosition(-1)
       , aNormal(-1)
+      , aUV(-1)
       , specularExponent(0.0f)
       , ambient(0.5f, 0.5f, 0.5f, 1.0f) // default to gray
       , diffuse(1.0f, 1.0f, 1.0f, 1.0f) // default to white
@@ -206,6 +233,11 @@ RenderState::AttributeNormal() const {
   return m.aNormal;
 }
 
+GLint
+RenderState::AttributeUV() const {
+  return m.aUV;
+}
+
 uint32_t
 RenderState::GetLightId() const {
   return m.lightId;
@@ -232,6 +264,16 @@ RenderState::SetMaterial(const Color& aAmbient, const Color& aDiffuse, const Col
   m.updateMaterial = true;
 }
 
+void
+RenderState::SetTexture(const TexturePtr& aTexture) {
+  m.texture = aTexture;
+}
+
+bool
+RenderState::HasTexture() const {
+  return m.texture != nullptr;
+}
+
 bool
 RenderState::Enable(const Matrix& aPerspective, const Matrix& aView, const Matrix& aModel) {
   if (!m.program) { return false; }
@@ -255,19 +297,47 @@ RenderState::Enable(const Matrix& aPerspective, const Matrix& aView, const Matri
      VRB_CHECK(glUniform4fv(m.uMatterialSpecular, 1, m.specular.Data()));
      VRB_CHECK(glUniform1f(m.uMatterialSpecularExponent, m.specularExponent));
   }
+  if (m.texture) {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m.texture->GetHandle());
+    glUniform1i(m.uTexture0, 0);
+  }
   VRB_CHECK(glUniformMatrix4fv(m.uPerspective, 1, GL_FALSE, aPerspective.Data()));
   VRB_CHECK(glUniformMatrix4fv(m.uView, 1, GL_FALSE, aView.Data()));
   VRB_CHECK(glUniformMatrix4fv(m.uModel, 1, GL_FALSE, aModel.Data()));
   return true;
 }
 
+void
+RenderState::Disable() {
+  if (m.texture) {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+}
+
 RenderState::RenderState(State& aState, ContextWeak& aContext) : ResourceGL(aState, aContext), m(aState) {}
 RenderState::~RenderState() {}
 
 void
-RenderState::InitializeGL() {
-  m.vertexShader = LoadShader(GL_VERTEX_SHADER, vertexShaderSource);
-  m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+RenderState::InitializeGL(Context& aContext) {
+  const bool kEnableTexturing = m.texture != nullptr;
+  std::string vertexShaderSource = sVertexShaderSource;
+  const std::string kTextureMacro("VRB_TEXTURE_STATE");
+  const size_t kStart = vertexShaderSource.find(kTextureMacro);
+  if (kEnableTexturing) {
+    if(kStart != std::string::npos) {
+      vertexShaderSource.replace(kStart, kTextureMacro.length(), "1");
+    }
+    m.vertexShader = LoadShader(GL_VERTEX_SHADER, vertexShaderSource.c_str());
+    m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, sFragmentTextureShaderSource);
+  } else {
+    if(kStart != std::string::npos) {
+      vertexShaderSource.replace(kStart, kTextureMacro.length(), "0");
+    }
+    m.vertexShader = LoadShader(GL_VERTEX_SHADER, vertexShaderSource.c_str());
+    m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, sFragmentShaderSource);
+  }
   if (m.fragmentShader && m.vertexShader) {
     m.program = glCreateProgram();
     VRB_CHECK(glAttachShader(m.program, m.vertexShader));
@@ -319,6 +389,10 @@ RenderState::InitializeGL() {
     m.uMatterialDiffuse = getUniformLocation(m.program, diffuse);
     m.uMatterialSpecular = getUniformLocation(m.program, specular);
     m.uMatterialSpecularExponent = getUniformLocation(m.program, specularExponent);
+    if (kEnableTexturing) {
+      const std::string texture0("u_texture0");
+      m.uTexture0 = getUniformLocation(m.program, texture0);
+    }
     const char* positionName = "a_position";
     m.aPosition = VRB_CHECK(glGetAttribLocation(m.program, positionName));
     if (m.aPosition < 0) {
@@ -329,12 +403,19 @@ RenderState::InitializeGL() {
     if (m.aNormal < 0) {
       VRB_LOG("Unable to glGetAttribLocation for '%s'", normalName);
     }
+    if (kEnableTexturing) {
+      const char* uvName = "a_uv";
+      m.aUV = VRB_CHECK(glGetAttribLocation(m.program, uvName));
+      if (m.aUV < 0) {
+        VRB_LOG("Unable to glGetAttribLocation for '%s'", uvName);
+      }
+    }
     m.updateMaterial = true;
   }
 }
 
 void
-RenderState::ShutdownGL() {
+RenderState::ShutdownGL(Context& aContext) {
 
 }
 

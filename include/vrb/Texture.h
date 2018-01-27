@@ -14,6 +14,7 @@ class Texture : protected ResourceGL {
 public:
   static TexturePtr Create(ContextWeak& aContext);
 
+  void SetFallbackTexture(const TexturePtr& aFallback);
   void SetName(const std::string& aName);
   void SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight, const int aChannels);
   std::string GetName();
@@ -24,8 +25,8 @@ protected:
   ~Texture();
 
   // From ResourceGL
-  void InitializeGL() override;
-  void ShutdownGL() override;
+  void InitializeGL(Context& aContext) override;
+  void ShutdownGL(Context& aContext) override;
 
 private:
   State& m;

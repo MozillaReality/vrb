@@ -2,6 +2,7 @@
 
 #include "vrb/ConcreteClass.h"
 #include "vrb/GLError.h"
+#include "vrb/Logger.h"
 #include "vrb/private/ResourceGLState.h"
 
 #include <GLES2/gl2.h>
@@ -25,24 +26,24 @@ struct MipMap {
   MipMap()
       : target(GL_TEXTURE_2D)
       , level(0)
-  	   , internalFormat(GL_RGB)
-  	   , width(0)
-  	   , height(0)
-  	   , border(0)
-  	   , format(GL_RGB)
-  	   , type(GL_UNSIGNED_BYTE)
+      , internalFormat(GL_RGB)
+      , width(0)
+      , height(0)
+      , border(0)
+      , format(GL_RGB)
+      , type(GL_UNSIGNED_BYTE)
       , dataSize(0)
   {}
 
   MipMap(MipMap&& aSource)
       : target(GL_TEXTURE_2D)
       , level(0)
-  	   , internalFormat(GL_RGB)
-  	   , width(0)
-  	   , height(0)
-  	   , border(0)
-  	   , format(GL_RGB)
-  	   , type(GL_UNSIGNED_BYTE)
+      , internalFormat(GL_RGB)
+      , width(0)
+      , height(0)
+      , border(0)
+      , format(GL_RGB)
+      , type(GL_UNSIGNED_BYTE)
       , dataSize(0) {
     *this = std::move(aSource);
   }
@@ -65,8 +66,8 @@ struct MipMap {
   }
 
   void SetAlpha(const bool aHasAlpha) {
-  	 internalFormat = aHasAlpha ? GL_RGBA : GL_RGB;
-  	 format = aHasAlpha ? GL_RGBA : GL_RGB;
+    internalFormat = aHasAlpha ? GL_RGBA : GL_RGB;
+    format = aHasAlpha ? GL_RGBA : GL_RGB;
   }
 private:
   MipMap(const MipMap&) = delete;
@@ -78,16 +79,66 @@ private:
 namespace vrb {
 
 struct Texture::State : public ResourceGL::State {
+  TexturePtr fallback;
+  bool dirty;
   std::string name;
   GLuint texture;
   std::vector<MipMap> mipMaps;
 
-  State() : texture(0) {}
+  State() : dirty(false), texture(0) {}
+  void CreateTexture();
+  void DestroyTexture();
 };
+
+void
+Texture::State::CreateTexture() {
+  if (!dirty) {
+    return;
+  }
+  VRB_CHECK(glGenTextures(1, &texture));
+  VRB_CHECK(glBindTexture(GL_TEXTURE_2D, texture));
+  for (MipMap& mipMap: mipMaps) {
+    if (!mipMap.data) {
+      continue;
+    }
+
+    VRB_CHECK(glTexImage2D(
+      mipMap.target,
+      mipMap.level,
+      mipMap.internalFormat,
+      mipMap.width,
+      mipMap.height,
+      mipMap.border,
+      mipMap.format,
+      mipMap.type,
+      (void*)mipMap.data.get()));
+  }
+  VRB_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+  VRB_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+  VRB_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+  VRB_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+  VRB_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
+  dirty = false;
+}
+
+void
+Texture::State::DestroyTexture() {
+  if (texture > 0) {
+    glDeleteTextures(1, &texture);
+    texture = 0;
+  }
+  dirty = true;
+}
 
 TexturePtr
 Texture::Create(ContextWeak& aContext) {
   return std::make_shared<ConcreteClass<Texture, Texture::State> >(aContext);
+}
+
+
+void
+Texture::SetFallbackTexture(const TexturePtr& aFallback) {
+  m.fallback = aFallback;
 }
 
 void
@@ -115,7 +166,9 @@ Texture::SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const 
   mipMap.SetAlpha(aChannels == 4);
   mipMap.dataSize = aWidth * aHeight * aChannels;
   mipMap.data = std::move(aImage);
+  m.mipMaps.clear();
   m.mipMaps.push_back(std::move(mipMap));
+  m.dirty = true;
 }
 
 
@@ -126,6 +179,13 @@ Texture::GetName() {
 
 GLuint
 Texture::GetHandle() {
+  if (m.dirty) {
+    m.DestroyTexture();
+    m.CreateTexture();
+  }
+  if (!m.texture && m.fallback) {
+    return m.fallback->GetHandle();
+  }
   return m.texture;
 }
 
@@ -133,30 +193,13 @@ Texture::Texture(State& aState, ContextWeak& aContext) : ResourceGL (aState, aCo
 Texture::~Texture() {}
 
 void
-Texture::InitializeGL() {
-  VRB_CHECK(glGenTextures(1, &(m.texture)));
-  VRB_CHECK(glBindTexture(GL_TEXTURE_2D, m.texture));
-  for (MipMap& mipMap: m.mipMaps) {
-    if (!mipMap.data) {
-      continue;
-    }
-
-    VRB_CHECK(glTexImage2D(
-      mipMap.target,
-  	   mipMap.level,
-  	   mipMap.internalFormat,
-  	   mipMap.width,
-  	   mipMap.height,
-  	   mipMap.border,
-  	   mipMap.format,
-  	   mipMap.type,
-  	   (void*)mipMap.data.get()));
-  }
+Texture::InitializeGL(Context& aContext) {
+  m.CreateTexture();
 }
 
 void
-Texture::ShutdownGL() {
-
+Texture::ShutdownGL(Context& aContext) {
+  m.DestroyTexture();
 }
 
 } // namespace vrb

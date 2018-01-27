@@ -38,8 +38,8 @@ protected:
   ~Geometry();
 
   // From ResourceGL
-  void InitializeGL() override;
-  void ShutdownGL() override;
+  void InitializeGL(Context& aContext) override;
+  void ShutdownGL(Context& aContext) override;
 
 private:
   State& m;

@@ -14,20 +14,20 @@ struct ResourceGL::State {
     if (prevResource) { prevResource->m.nextResource = nextResource; }
     if (nextResource) { nextResource->m.prevResource = prevResource; }
   }
-  void CallAllInitializeGL() {
+  void CallAllInitializeGL(Context& aContext) {
     ResourceGL* current = nextResource;
     while(current) {
       ResourceGL* tmp = current;
       current = current->m.nextResource;
-      tmp->InitializeGL();
+      tmp->InitializeGL(aContext);
     }
   }
-  void CallAllShutdownGL() {
+  void CallAllShutdownGL(Context& aContext) {
     ResourceGL* current = nextResource;
     while(current) {
       ResourceGL* tmp = current;
       current = current->m.nextResource;
-      tmp->ShutdownGL();
+      tmp->ShutdownGL(aContext);
     }
   }
 

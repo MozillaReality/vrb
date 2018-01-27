@@ -158,7 +158,7 @@ public:
   ~UVParser() {}
 protected:
   void SetVector(const vrb::Vector& aVector, const float aW, vrb::ParserObserverObj& aObserver) override {
-    aObserver.AddUV(aVector.x(), aVector.y(), aVector.z());
+    aObserver.AddUV(aVector.x(), 1.0f - aVector.y(), aVector.z());
   }
 };
 

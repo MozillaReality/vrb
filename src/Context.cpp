@@ -18,12 +18,12 @@ public:
   ~ResourceAnchor();
 
   // vrb::ResourcGL interface
-  void InitializeGL() override;
-  void ShutdownGL() override;
+  void InitializeGL(vrb::Context& aContext) override;
+  void ShutdownGL(vrb::Context& aContext) override;
 
   // ResourceAnchor // interface
   void BindTail(ResourceAnchor& aTail);
-  bool Update();
+  bool Update(vrb::Context& aContex);
   void Prepend(vrb::ResourceGL* aResource);
   void PrependAndAdoptList(ResourceAnchor& aHead, ResourceAnchor& aTail);
 protected:
@@ -32,8 +32,8 @@ protected:
 
 class ResourceAnchorTail : public ResourceAnchor {
 public:
-  void InitializeGL() override {} // noop
-  void ShutdownGL() override {} // noop
+  void InitializeGL(vrb::Context&) override {} // noop
+  void ShutdownGL(vrb::Context&) override {} // noop
 };
 
 ResourceAnchor::ResourceAnchor() : vrb::ResourceGL(m) {}
@@ -46,21 +46,21 @@ ResourceAnchor::BindTail(ResourceAnchor& aTail) {
 }
 
 void
-ResourceAnchor::InitializeGL() {
-  m.CallAllInitializeGL();
+ResourceAnchor::InitializeGL(vrb::Context& aContext) {
+  m.CallAllInitializeGL(aContext);
 }
 
 void
-ResourceAnchor::ShutdownGL() {
-  m.CallAllShutdownGL();
+ResourceAnchor::ShutdownGL(vrb::Context& aContext) {
+  m.CallAllShutdownGL(aContext);
 }
 
 bool
-ResourceAnchor::Update() {
+ResourceAnchor::Update(vrb::Context& aContext) {
   if (!m.nextResource) {
     return false;
   }
-  m.CallAllInitializeGL();
+  m.CallAllInitializeGL(aContext);
   return true;
 }
 
@@ -131,21 +131,22 @@ Context::InitializeGL() {
   }
   m.eglContext = current;
 
-  m.resourcesHead.InitializeGL();
+  m.resourcesHead.InitializeGL(*this);
 }
 
 
 void
 Context::Update() {
-  if (!m.addedResourcesHead.Update()) {
+  if (!m.addedResourcesHead.Update(*this)) {
     return;
   }
 
   m.resourcesTail.PrependAndAdoptList(m.addedResourcesHead, m.addedResourcesTail);
 }
+
 void
 Context::Shutdown() {
-  m.resourcesHead.ShutdownGL();
+  m.resourcesHead.ShutdownGL(*this);
 #if defined(ANDROID)
   if (m.fileReader) { m.fileReader->Shutdown(); }
 #endif // defined(ANDROID)

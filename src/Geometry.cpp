@@ -78,16 +78,28 @@ Geometry::SetRenderState(const RenderStatePtr& aRenderState) {
 void
 Geometry::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
   if (m.renderState->Enable(aCamera.GetPerspective(), aCamera.GetView(), aModelTransform)) {
+    bool kUseTextureCoords = m.renderState->HasTexture();
+    const GLsizei kSize = kUseTextureCoords ? 8 * sizeof(GLfloat) : 6 * sizeof(GLfloat);
     VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
-    VRB_CHECK(glVertexAttribPointer(m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), nullptr));
-    VRB_CHECK(glVertexAttribPointer(m.renderState->AttributeNormal(), 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat))));
+    VRB_CHECK(glVertexAttribPointer(m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, kSize, nullptr));
+    VRB_CHECK(glVertexAttribPointer(m.renderState->AttributeNormal(), 3, GL_FLOAT, GL_FALSE, kSize, (void*)(3 * sizeof(GLfloat))));
+    if (kUseTextureCoords) {
+      VRB_CHECK(glVertexAttribPointer(m.renderState->AttributeUV(), 2, GL_FLOAT, GL_FALSE, kSize, (void*)(6 * sizeof(GLfloat))));
+    }
 
     VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
     VRB_CHECK(glEnableVertexAttribArray(m.renderState->AttributePosition()));
     VRB_CHECK(glEnableVertexAttribArray(m.renderState->AttributeNormal()));
+    if (kUseTextureCoords) {
+      VRB_CHECK(glEnableVertexAttribArray(m.renderState->AttributeUV()));
+    }
     VRB_CHECK(glDrawElements(GL_TRIANGLES, m.triangleCount * 3, GL_UNSIGNED_SHORT, 0));
     VRB_CHECK(glDisableVertexAttribArray(m.renderState->AttributePosition()));
     VRB_CHECK(glDisableVertexAttribArray(m.renderState->AttributeNormal()));
+    if (kUseTextureCoords) {
+      VRB_CHECK(glDisableVertexAttribArray(m.renderState->AttributeUV()));
+    }
+    m.renderState->Disable();
     VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
     VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
   }
@@ -161,15 +173,21 @@ Geometry::~Geometry() {}
 
 // ResourceGL interface
 void
-Geometry::InitializeGL() {
+Geometry::InitializeGL(Context& aContext) {
+  if (!m.renderState) {
+    VRB_LOG("Unable to initialize Geometry Node. No RenderState set");
+  }
+  const bool kUseTextureCoords = m.renderState->HasTexture();
   VRB_CHECK(glGenBuffers(1, &m.vertexObjectId));
   VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
-  VRB_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 18 * m.triangleCount, nullptr, GL_STATIC_DRAW));
-  VRB_LOG("Allocate: %d", sizeof(GLfloat) * 18 * m.triangleCount);
+  GLsizei kSize = kUseTextureCoords ? 24 : 18;
+  VRB_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * kSize * m.triangleCount, nullptr, GL_STATIC_DRAW));
+  VRB_LOG("Allocate: %d", sizeof(GLfloat) * kSize * m.triangleCount);
   std::vector<GLushort> indices;
   GLushort count = 0;
   GLintptr offset = 0;
   const GLintptr kVectorSize = sizeof(GLfloat) * 3;
+  const GLintptr kUVSize = sizeof(GLfloat) * 2;
   for (auto& face: m.faces) {
     if (face.vertices.size() == 0) {
       break;
@@ -182,37 +200,56 @@ Geometry::InitializeGL() {
     }
     const GLushort vertexIndex = face.vertices[0] - 1;
     const GLushort normalIndex = face.normals[0] - 1;
+    const GLushort uvIndex = face.uvs[0] - 1;
     const Vector& firstVertex = m.vertexArray->GetVertex(vertexIndex);
     const Vector& firstNormal = m.vertexArray->GetNormal(normalIndex);
-const Vector light(0,0,-1);
+    const Vector& firstUV = m.vertexArray->GetUV(uvIndex);
     for (int ix = 1; ix <= face.vertices.size() - 2; ix++) {
       std::string out;
       VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstVertex.Data()));
       offset += kVectorSize;
       VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstNormal.Data()));
       offset += kVectorSize;
-      indices.push_back(count);
       out += " " + firstVertex.ToString() + firstNormal.ToString();
+      if (kUseTextureCoords) {
+        VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, firstUV.Data()));
+        offset += kUVSize;
+        out += firstUV.ToString();
+      }
+      indices.push_back(count);
       count++;
+
       const Vector v1 = m.vertexArray->GetVertex(face.vertices[ix] - 1);
       const Vector n1 = m.vertexArray->GetNormal(face.normals[ix] - 1);
-      const Vector v2 = m.vertexArray->GetVertex(face.vertices[ix + 1] - 1);
-      const Vector n2 = m.vertexArray->GetNormal(face.normals[ix + 1] - 1);
       VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, v1.Data()));
       offset += kVectorSize;
       VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, n1.Data()));
       offset += kVectorSize;
       out += "/" + v1.ToString() + n1.ToString();
+      if (kUseTextureCoords) {
+        const Vector uv1 = m.vertexArray->GetUV(face.uvs[ix] - 1);
+        VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv1.Data()));
+        offset += kUVSize;
+        out += uv1.ToString();
+      }
       indices.push_back(count);
       count++;
+
+      const Vector v2 = m.vertexArray->GetVertex(face.vertices[ix + 1] - 1);
+      const Vector n2 = m.vertexArray->GetNormal(face.normals[ix + 1] - 1);
       VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, v2.Data()));
       offset += kVectorSize;
       VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, n2.Data()));
       offset += kVectorSize;
       out += "/" + v2.ToString() + n2.ToString();
+      if (kUseTextureCoords) {
+        const Vector uv2 = m.vertexArray->GetUV(face.uvs[ix + 1] - 1);
+        VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv2.Data()));
+        offset += kUVSize;
+        out += uv2.ToString();
+      }
       indices.push_back(count);
       count++;
-//VRB_LOG("dot: %f %f %f", light.Dot(firstNormal), light.Dot(n1), light.Dot(n2));
 //      VRB_LOG("array buffer[%d] o:%d c:%d : %s", ix, (int)offset, count, out.c_str());
     }
   }
@@ -226,7 +263,7 @@ const Vector light(0,0,-1);
 }
 
 void
-Geometry::ShutdownGL() {
+Geometry::ShutdownGL(Context& aContext) {
 
 }
 
