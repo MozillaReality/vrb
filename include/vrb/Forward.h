@@ -71,14 +71,32 @@ typedef std::shared_ptr<RenderState> RenderStatePtr;
 
 class ResourceGL;
 
+#if defined(ANDROID)
+class SurfaceTextureFactory;
+typedef std::shared_ptr<SurfaceTextureFactory> SurfaceTextureFactoryPtr;
+
+class SurfaceTextureObserver;
+typedef std::shared_ptr<SurfaceTextureObserver> SurfaceTextureObserverPtr;
+#endif // defined(ANDROID)
+
 class Texture;
 typedef std::shared_ptr<Texture> TexturePtr;
 
 class TextureCache;
 typedef std::shared_ptr<TextureCache> TextureCachePtr;
 
+class TextureGL;
+typedef std::shared_ptr<TextureGL> TextureGLPtr;
+
+#if defined(ANDROID)
+class TextureSurface;
+typedef std::shared_ptr<TextureSurface> TextureSurfacePtr;
+#endif // defined(ANDROID)
+
 class Transform;
 typedef std::shared_ptr<Transform> TransformPtr;
+
+class Updatable;
 
 class Vector;
 

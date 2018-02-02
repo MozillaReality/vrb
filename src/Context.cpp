@@ -1,5 +1,6 @@
 #include "vrb/Context.h"
 #include "vrb/private/ResourceGLState.h"
+#include "vrb/private/UpdatableState.h"
 
 #include "vrb/ConcreteClass.h"
 #if defined(ANDROID)
@@ -7,10 +8,52 @@
 #endif // defined(ANDROID)
 #include "vrb/Logger.h"
 #include "vrb/ResourceGL.h"
+#include "vrb/SurfaceTextureFactory.h"
 #include "vrb/TextureCache.h"
+#include "vrb/Updatable.h"
 #include <EGL/egl.h>
 
 namespace {
+
+class UpdatableAnchor : public vrb::Updatable {
+public:
+  UpdatableAnchor();
+  ~UpdatableAnchor();
+
+  // vrb::Updatable interface
+  void UpdateResource(vrb::Context& aContext) override;
+
+  // UpdatableAnchor interface
+  void BindTail(UpdatableAnchor& aTail);
+protected:
+  vrb::Updatable::State m;
+
+};
+
+class UpdatableAnchorTail : public UpdatableAnchor {
+public:
+  void UpdateResource(vrb::Context&) override {} // noop
+  void Prepend(vrb::Updatable* aUpdatable);
+};
+
+UpdatableAnchor::UpdatableAnchor() : vrb::Updatable(m) {}
+UpdatableAnchor::~UpdatableAnchor() {}
+
+void
+UpdatableAnchor::UpdateResource(vrb::Context& aContext) {
+  m.CallAllUpdateResources(aContext);
+}
+
+void
+UpdatableAnchor::BindTail(UpdatableAnchor& aTail) {
+  m.nextUpdatable = &aTail;
+  aTail.m.prevUpdatable = this;
+}
+
+void
+UpdatableAnchorTail::Prepend(vrb::Updatable* aUpdatable) {
+  m.Prepend(aUpdatable);
+}
 
 class ResourceAnchor : public vrb::ResourceGL {
 public:
@@ -21,7 +64,7 @@ public:
   void InitializeGL(vrb::Context& aContext) override;
   void ShutdownGL(vrb::Context& aContext) override;
 
-  // ResourceAnchor // interface
+  // ResourceAnchor interface
   void BindTail(ResourceAnchor& aTail);
   bool Update(vrb::Context& aContex);
   void Prepend(vrb::ResourceGL* aResource);
@@ -84,7 +127,10 @@ struct Context::State {
   TextureCachePtr textureCache;
 #if defined(ANDROID)
   FileReaderAndroidPtr fileReader;
+  SurfaceTextureFactoryPtr surfaceTextureFactory;
 #endif // defined(ANDROID)
+  UpdatableAnchor updatableHead;
+  UpdatableAnchorTail updatableTail;
   ResourceAnchor addedResourcesHead;
   ResourceAnchorTail addedResourcesTail;
   ResourceAnchor resourcesHead;
@@ -93,6 +139,7 @@ struct Context::State {
 };
 
 Context::State::State() : eglContext(EGL_NO_CONTEXT) {
+  updatableHead.BindTail(updatableTail);
   addedResourcesHead.BindTail(addedResourcesTail);
   resourcesHead.BindTail(resourcesTail);
 }
@@ -104,6 +151,7 @@ Context::Create() {
   result->m.textureCache = TextureCache::Create(result->m.self);
 #if defined(ANDROID)
   result->m.fileReader = FileReaderAndroid::Create(result->m.self);
+  result->m.surfaceTextureFactory = SurfaceTextureFactory::Create(result->m.self);
 #endif // defined(ANDROID)
 
   return result;
@@ -113,6 +161,7 @@ Context::Create() {
 void
 Context::InitializeJava(JNIEnv* aEnv, jobject& aAssetManager) {
   if (m.fileReader) { m.fileReader->Init(aEnv, aAssetManager); }
+  if (m.surfaceTextureFactory) { m.surfaceTextureFactory->InitializeJava(aEnv); }
 }
 #endif // defined(ANDROID)
 
@@ -137,11 +186,10 @@ Context::InitializeGL() {
 
 void
 Context::Update() {
-  if (!m.addedResourcesHead.Update(*this)) {
-    return;
+  if (m.addedResourcesHead.Update(*this)) {
+    m.resourcesTail.PrependAndAdoptList(m.addedResourcesHead, m.addedResourcesTail);
   }
-
-  m.resourcesTail.PrependAndAdoptList(m.addedResourcesHead, m.addedResourcesTail);
+  m.updatableHead.UpdateResource(*this);
 }
 
 void
@@ -163,6 +211,11 @@ Context::GetFileReader() {
 }
 
 void
+Context::AddUpdatable(Updatable* aUpdatable) {
+  m.updatableTail.Prepend(aUpdatable);
+}
+
+void
 Context::AddResourceGL(ResourceGL* aResource) {
   m.addedResourcesTail.Prepend(aResource);
 }
@@ -171,6 +224,13 @@ TextureCachePtr
 Context::GetTextureCache() {
   return m.textureCache;
 }
+
+#if defined(ANDROID)
+SurfaceTextureFactoryPtr
+Context::GetSurfaceTextureFactory() {
+  return m.surfaceTextureFactory;
+}
+#endif // defined(ANDROID)
 
 Context::Context(State& aState) : m(aState) {}
 Context::~Context() {}

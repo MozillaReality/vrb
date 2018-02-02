@@ -15,8 +15,6 @@ protected:
   ResourceGL(State& aState, ContextWeak& aContext);
   ResourceGL(State& aState);
   virtual ~ResourceGL();
-  void CallAllInitializeGL(Context& aContext);
-  void CallAllShutdownGL(Context& aContext);
 private:
   State& m;
   ResourceGL() = delete;

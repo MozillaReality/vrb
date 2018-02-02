@@ -7,6 +7,9 @@
 #include "vrb/GLError.h"
 #include "vrb/Matrix.h"
 #include "vrb/Texture.h"
+#if defined(ANDROID)
+#include "vrb/TextureSurface.h"
+#endif // defined(ANDROID)
 #include "vrb/Vector.h"
 
 #include <GLES2/gl2.h>
@@ -109,6 +112,18 @@ void main() {
 static const char* sFragmentTextureShaderSource = R"SHADER(
 
 uniform sampler2D u_texture0;
+varying vec4 v_color;
+varying vec2 v_uv;
+
+void main() {
+  gl_FragColor = texture2D(u_texture0, v_uv) * v_color;
+}
+
+)SHADER";
+
+static const char* sFragmentSurfaceTextureShaderSource = R"SHADER(
+#extension GL_OES_EGL_image_external : require
+uniform samplerExternalOES u_texture0;
 varying vec4 v_color;
 varying vec2 v_uv;
 
@@ -299,7 +314,7 @@ RenderState::Enable(const Matrix& aPerspective, const Matrix& aView, const Matri
   }
   if (m.texture) {
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m.texture->GetHandle());
+    m.texture->Bind();
     glUniform1i(m.uTexture0, 0);
   }
   VRB_CHECK(glUniformMatrix4fv(m.uPerspective, 1, GL_FALSE, aPerspective.Data()));
@@ -312,7 +327,7 @@ void
 RenderState::Disable() {
   if (m.texture) {
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    m.texture->Unbind();
   }
 }
 
@@ -330,7 +345,14 @@ RenderState::InitializeGL(Context& aContext) {
       vertexShaderSource.replace(kStart, kTextureMacro.length(), "1");
     }
     m.vertexShader = LoadShader(GL_VERTEX_SHADER, vertexShaderSource.c_str());
-    m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, sFragmentTextureShaderSource);
+    const char* frag = sFragmentTextureShaderSource;
+#if defined(ANDROID)
+    // SurfaceTexture requires usage of fragment shader extension.
+    if (dynamic_cast<TextureSurface*>(m.texture.get()) != nullptr) {
+      frag = sFragmentSurfaceTextureShaderSource;
+    }
+#endif // defined(ANDROID)
+    m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, frag);
   } else {
     if(kStart != std::string::npos) {
       vertexShaderSource.replace(kStart, kTextureMacro.length(), "0");

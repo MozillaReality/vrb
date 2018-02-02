@@ -35,10 +35,10 @@ struct FileReaderAndroid::State {
   State()
       : trackingHandleCount(0)
       , env(nullptr)
-      , jassetManager(0)
+      , jassetManager(nullptr)
       , am(nullptr)
-      , imageLoaderClass(0)
-      , loadFromAssets(0)
+      , imageLoaderClass(nullptr)
+      , loadFromAssets(nullptr)
       , imageTargetHandle(0)
   {}
 

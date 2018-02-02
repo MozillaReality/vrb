@@ -21,8 +21,12 @@ public:
   void Shutdown();
 
   void AddResourceGL(ResourceGL* aResource);
+  void AddUpdatable(Updatable* aUpdatable);
   FileReaderPtr GetFileReader();
   TextureCachePtr GetTextureCache();
+#if defined(ANDROID)
+  SurfaceTextureFactoryPtr GetSurfaceTextureFactory();
+#endif // defined(ANDROID)
 
 protected:
   struct State;

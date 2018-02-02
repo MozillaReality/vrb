@@ -3,30 +3,26 @@
 
 #include "vrb/Forward.h"
 #include "vrb/MacroUtils.h"
-#include "vrb/ResourceGL.h"
 
 #include <GLES2/gl2.h>
 #include <string>
 
 namespace vrb {
 
-class Texture : protected ResourceGL {
+class Texture {
 public:
   static TexturePtr Create(ContextWeak& aContext);
 
-  void SetFallbackTexture(const TexturePtr& aFallback);
+  void Bind();
+  void Unbind();
+  std::string GetName() const;
   void SetName(const std::string& aName);
-  void SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight, const int aChannels);
-  std::string GetName();
-  GLuint GetHandle();
 protected:
   struct State;
   Texture(State& aState, ContextWeak& aContext);
-  ~Texture();
+  virtual ~Texture();
 
-  // From ResourceGL
-  void InitializeGL(Context& aContext) override;
-  void ShutdownGL(Context& aContext) override;
+  virtual void AboutToBind() {}
 
 private:
   State& m;

@@ -25,6 +25,6 @@ const uint32_t kDefaultImageData[kDefaultImageDataSize] = {
 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
 };
 
-} // vrb
+} // namespace vrb
 
 #endif // VRB_DEFAULT_IMAGE_DATA_DOT_H
