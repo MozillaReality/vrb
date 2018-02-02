@@ -16,7 +16,7 @@ public:
 #if defined(ANDROID)
   void InitializeJava(JNIEnv* aEnv, jobject& aAssetManager);
 #endif // defined(ANDROID)
-  void InitializeGL();
+  bool InitializeGL();
   void Update();
   void Shutdown();
 

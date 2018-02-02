@@ -165,13 +165,13 @@ Context::InitializeJava(JNIEnv* aEnv, jobject& aAssetManager) {
 }
 #endif // defined(ANDROID)
 
-void
+bool
 Context::InitializeGL() {
   EGLContext current = eglGetCurrentContext();
   if (current == EGL_NO_CONTEXT) {
     VRB_LOG("Unable to initialize VRB context: EGLContext is not valid.");
     m.eglContext = current;
-    return;
+    return false;
   }
   if (current == m.eglContext) {
     VRB_LOG("EGLContext c:%p == %p",(void*)current,(void*)m.eglContext);
@@ -181,6 +181,7 @@ Context::InitializeGL() {
   m.eglContext = current;
 
   m.resourcesHead.InitializeGL(*this);
+  return true;
 }
 
 
