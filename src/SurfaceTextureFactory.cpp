@@ -1,4 +1,5 @@
 #include "vrb/SurfaceTextureFactory.h"
+#include "vrb/private/ResourceGLState.h"
 #include "vrb/private/UpdatableState.h"
 #include "vrb/ConcreteClass.h"
 #include "vrb/GLError.h"
@@ -59,11 +60,13 @@ SurfaceTextureRecord::Release(JNIEnv* aEnv) {
 
 namespace vrb {
 
-struct SurfaceTextureFactory::State : public Updatable::State {
+struct SurfaceTextureFactory::State : public Updatable::State, public ResourceGL::State {
   JNIEnv* env;
   jclass surfaceTextureClass;
   jmethodID surfaceTextureCtor;
   jmethodID updateTexImageMethod;
+  jmethodID attachToGLContextMethod;
+  jmethodID detachFromGLContextMethod;
   std::forward_list<SurfaceTextureRecord> textures;
   std::forward_list<SurfaceTextureObserverPtr> observers;
 
@@ -72,6 +75,8 @@ struct SurfaceTextureFactory::State : public Updatable::State {
       , surfaceTextureClass(nullptr)
       , surfaceTextureCtor(nullptr)
       , updateTexImageMethod(nullptr)
+      , attachToGLContextMethod(nullptr)
+      , detachFromGLContextMethod(nullptr)
   {}
 
   bool Contains(const std::string& aName);
@@ -115,6 +120,18 @@ SurfaceTextureFactory::State::Initialize(JNIEnv* aEnv) {
   if (!updateTexImageMethod) {
     VRB_LOG("Failed finding SurfaceTexure.updateTexImage function");
   }
+
+  attachToGLContextMethod = env->GetMethodID(surfaceTextureClass, "attachToGLContext", "(I)V");
+
+  if (!attachToGLContextMethod) {
+    VRB_LOG("Failed finding SurfaceTexure.attachToGLContext function");
+  }
+
+  detachFromGLContextMethod = env->GetMethodID(surfaceTextureClass, "detachFromGLContext", "()V");
+
+  if (!detachFromGLContextMethod) {
+    VRB_LOG("Failed finding SurfaceTexure.detachFromGLContext function");
+  }
 }
 
 void
@@ -129,6 +146,8 @@ SurfaceTextureFactory::State::Shutdown() {
   surfaceTextureClass = nullptr;
   surfaceTextureCtor = nullptr;
   updateTexImageMethod = nullptr;
+  attachToGLContextMethod = nullptr;
+  detachFromGLContextMethod = nullptr;
   env = nullptr;
 }
 
@@ -194,7 +213,7 @@ SurfaceTextureFactory::LookupSurfaceTexture(const std::string& aName) {
   return nullptr;
 }
 
-SurfaceTextureFactory::SurfaceTextureFactory(State& aState, ContextWeak& aContext) : Updatable(aState, aContext), m(aState) {}
+SurfaceTextureFactory::SurfaceTextureFactory(State& aState, ContextWeak& aContext) : Updatable(aState, aContext), ResourceGL(aState, aContext), m(aState) {}
 SurfaceTextureFactory::~SurfaceTextureFactory() {}
 
 void
@@ -241,6 +260,39 @@ SurfaceTextureFactory::UpdateResource(Context& aContext) {
     }
     if (record.surface && m.updateTexImageMethod) {
       m.env->CallVoidMethod(record.surface, m.updateTexImageMethod);
+    }
+  }
+}
+
+// ResourceGL interface
+void
+SurfaceTextureFactory::InitializeGL(Context& aContext) {
+  for(SurfaceTextureRecord& record: m.textures) {
+    if (record.surface) {
+      VRB_CHECK(glGenTextures(1, &record.texture));
+      m.env->CallVoidMethod(record.surface, m.attachToGLContextMethod, record.texture);
+      if (record.observer) {
+        record.observer->SurfaceTextureHandleUpdated(record.name, record.texture);
+      }
+      for (SurfaceTextureObserverPtr& observer: m.observers) {
+        observer->SurfaceTextureHandleUpdated(record.name, record.texture);
+      }
+    }
+  }
+}
+
+void
+SurfaceTextureFactory::ShutdownGL(Context& aContext) {
+  for(SurfaceTextureRecord& record: m.textures) {
+    if (record.surface) {
+      m.env->CallVoidMethod(record.surface, m.detachFromGLContextMethod);
+      record.texture = 0;
+      if (record.observer) {
+        record.observer->SurfaceTextureHandleUpdated(record.name, record.texture);
+      }
+      for (SurfaceTextureObserverPtr& observer: m.observers) {
+        observer->SurfaceTextureHandleUpdated(record.name, record.texture);
+      }
     }
   }
 }

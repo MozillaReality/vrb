@@ -19,6 +19,7 @@ class LocalObserver : public vrb::SurfaceTextureObserver {
 public:
   LocalObserver(SurfaceWeakPtr& aTexture);
   void SurfaceTextureCreated(const std::string& aName, GLuint aHandle, jobject aSurfaceTexture) override;
+  void SurfaceTextureHandleUpdated(const std::string aName, GLuint aHandle) override;
   void SurfaceTextureDestroyed(const std::string& aName) override;
   void SurfaceTextureCreationError(const std::string& aName, const std::string& aReason) override;
 protected:
@@ -29,6 +30,13 @@ LocalObserver::LocalObserver(SurfaceWeakPtr& aTexture) : mTexture(aTexture) {}
 
 void
 LocalObserver::SurfaceTextureCreated(const std::string& aName, GLuint aHandle, jobject aSurfaceTexture) {
+  if (vrb::TextureSurfacePtr texture = mTexture.lock()) {
+    texture->SetTextureHandle(aHandle);
+  }
+}
+
+void
+LocalObserver::SurfaceTextureHandleUpdated(const std::string aName, GLuint aHandle) {
   if (vrb::TextureSurfacePtr texture = mTexture.lock()) {
     texture->SetTextureHandle(aHandle);
   }

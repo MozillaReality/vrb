@@ -4,6 +4,7 @@
 #include "vrb/Forward.h"
 #include "vrb/MacroUtils.h"
 
+#include "vrb/ResourceGL.h"
 #include "vrb/Updatable.h"
 
 #include <GLES2/gl2.h>
@@ -15,6 +16,7 @@ namespace vrb {
 class SurfaceTextureObserver {
 public:
   virtual void SurfaceTextureCreated(const std::string& aName, GLuint aHandle, jobject aSurfaceTexture) = 0;
+  virtual void SurfaceTextureHandleUpdated(const std::string aName, GLuint aHandle) = 0;
   virtual void SurfaceTextureDestroyed(const std::string& aName) = 0;
   virtual void SurfaceTextureCreationError(const std::string& aName, const std::string& aReason) = 0;
 protected:
@@ -24,7 +26,7 @@ private:
   VRB_NO_DEFAULTS(SurfaceTextureObserver)
 };
 
-class SurfaceTextureFactory : protected Updatable {
+class SurfaceTextureFactory : protected Updatable, protected ResourceGL {
 public:
   static SurfaceTextureFactoryPtr Create(ContextWeak& aContext);
   void InitializeJava(JNIEnv* aEnv);
@@ -44,6 +46,10 @@ protected:
 
   // Updatable interface
   void UpdateResource(Context& aContext) override;
+
+  // ResourceGL interface
+  void InitializeGL(Context& aContext) override;
+  void ShutdownGL(Context& aContext) override;
 
 private:
   State& m;
