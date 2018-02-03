@@ -15,10 +15,11 @@ public:
 
 #if defined(ANDROID)
   void InitializeJava(JNIEnv* aEnv, jobject& aAssetManager);
+  void ShutdownJava();
 #endif // defined(ANDROID)
   bool InitializeGL();
+  void ShutdownGL();
   void Update();
-  void Shutdown();
 
   void AddResourceGL(ResourceGL* aResource);
   void AddUpdatable(Updatable* aUpdatable);

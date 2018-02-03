@@ -163,6 +163,11 @@ Context::InitializeJava(JNIEnv* aEnv, jobject& aAssetManager) {
   if (m.fileReader) { m.fileReader->Init(aEnv, aAssetManager); }
   if (m.surfaceTextureFactory) { m.surfaceTextureFactory->InitializeJava(aEnv); }
 }
+
+void
+Context::ShutdownJava() {
+  if (m.fileReader) { m.fileReader->Shutdown(); }
+}
 #endif // defined(ANDROID)
 
 bool
@@ -194,11 +199,8 @@ Context::Update() {
 }
 
 void
-Context::Shutdown() {
+Context::ShutdownGL() {
   m.resourcesHead.ShutdownGL(*this);
-#if defined(ANDROID)
-  if (m.fileReader) { m.fileReader->Shutdown(); }
-#endif // defined(ANDROID)
   m.eglContext = EGL_NO_CONTEXT;
 }
 
