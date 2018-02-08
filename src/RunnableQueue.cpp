@@ -5,8 +5,9 @@
 
 #include "vrb/RunnableQueue.h"
 
-#include "vrb/Mutex.h"
 #include "vrb/ConcreteClass.h"
+#include "vrb/Logger.h"
+#include "vrb/Mutex.h"
 
 #include <jni.h>
 #include <vector>
@@ -52,10 +53,20 @@ struct RunnableQueue::State {
   void Init(JavaVM* aVM) {
     vm = aVM;
     JNIEnv* env = nullptr;
-    if (!vm->AttachCurrentThread(&env, nullptr)) { return; }
+    if (vm->AttachCurrentThread(&env, nullptr) != 0) {
+      VRB_LOG("Failed to attach to current thread in %s:%s:%d", __FILE__, __FUNCTION__, __LINE__);
+      return;
+    }
     jclass localRunnableClass = env->FindClass("java/lang/Runnable");
+    if (!localRunnableClass) {
+      VRB_LOG("Failed to fine java class java/lang/Runnable in %s", __FILE__);
+      return;
+    }
     runnableClass = (jclass)env->NewGlobalRef(localRunnableClass);
     runMethod = env->GetMethodID(runnableClass, "run", "()V");
+    if (!runMethod) {
+      VRB_LOG("Failed to fine java/lang/Runnable.run() in %s", __FILE__);
+    }
   }
 };
 
@@ -75,10 +86,18 @@ RunnableQueue::AddRunnable(JNIEnv* aEnv, jobject aRunnable) {
 
 void
 RunnableQueue::ProcessRunnables() {
-  if (!m.vm || m.runMethod) { return; }
-  if (!m.processEnv) {
-    if (!m.vm->AttachCurrentThread(&(m.processEnv), nullptr)) { return; }
+  if (!m.vm) {
+    VRB_LOG("Unable to process Runnables, JavaVM is a nullptr in %s", __FILE__);
+    return;
   }
+  if (!m.runMethod) {
+    VRB_LOG("Unable to process Runnables, runMethod is a nullptr in %s", __FILE__);
+    return;
+  }
+  if (!m.processEnv) {
+    if (m.vm->AttachCurrentThread(&(m.processEnv), nullptr) != 0) {
+      return;}
+    }
   {
     MutexAutoLock lock(m.lock);
     // Switch lists

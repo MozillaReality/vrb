@@ -15,7 +15,7 @@ namespace vrb {
 
 class RunnableQueue {
 public:
-  RunnableQueuePtr Create(JavaVM* aVM);
+  static RunnableQueuePtr Create(JavaVM* aVM);
 
   void AddRunnable(JNIEnv* aEnv, jobject aRunnable);
   void ProcessRunnables();
