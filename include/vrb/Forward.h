@@ -77,6 +77,9 @@ typedef std::shared_ptr<RenderState> RenderStatePtr;
 class ResourceGL;
 
 #if defined(ANDROID)
+class RunnableQueue;
+typedef std::shared_ptr<RunnableQueue> RunnableQueuePtr;
+
 class SurfaceTextureFactory;
 typedef std::shared_ptr<SurfaceTextureFactory> SurfaceTextureFactoryPtr;
 

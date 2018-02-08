@@ -18,4 +18,10 @@
   VRB_NO_COPY(Class)           \
   VRB_NO_MOVE(Class)
 
+#define VRB_NO_NEW_DELETE \
+  static void *operator new (size_t) = delete;   \
+  static void *operator new[] (size_t) = delete; \
+  static void operator delete (void*) = delete;  \
+  static void operator delete[](void*) = delete; \
+
 #endif //  VRB_MACRO_UTILS_DOT_H
