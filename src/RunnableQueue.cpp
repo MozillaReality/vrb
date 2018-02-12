@@ -25,15 +25,13 @@ struct RunnableQueue::State {
   jclass runnableClass;
   jmethodID runMethod;
   std::vector<jobject> list[2];
-  int add;
-  int process;
+  uint32_t count;
   State()
       : vm(nullptr)
       , processEnv(nullptr)
       , runnableClass(nullptr)
       , runMethod(nullptr)
-      , add(0)
-      , process(1)
+      , count(0)
   {}
   ~State() {
     if (!vm) { return; }
@@ -68,6 +66,12 @@ struct RunnableQueue::State {
       VRB_LOG("Failed to fine java/lang/Runnable.run() in %s", __FILE__);
     }
   }
+  uint32_t AddPlace() {
+    return count ^ 0x01;
+  }
+  uint32_t ProcessPlace() {
+    return count & 0x01;
+  }
 };
 
 RunnableQueuePtr
@@ -81,7 +85,7 @@ void
 RunnableQueue::AddRunnable(JNIEnv* aEnv, jobject aRunnable) {
   jobject runnable = aEnv->NewGlobalRef(aRunnable);
   MutexAutoLock lock(m.lock);
-  m.list[m.add].push_back(runnable);
+  m.list[m.AddPlace()].push_back(runnable);
 }
 
 void
@@ -101,15 +105,15 @@ RunnableQueue::ProcessRunnables() {
   {
     MutexAutoLock lock(m.lock);
     // Switch lists
-    m.add = m.add ^ 0x01;
-    m.process = m.process ^ 0x01;
+    m.count++;
   }
-  for (jobject& runnable: m.list[m.process]) {
+  const uint32_t place = m.ProcessPlace();
+  for (jobject& runnable: m.list[place]) {
     m.processEnv->CallVoidMethod(runnable, m.runMethod);
     m.processEnv->DeleteGlobalRef(runnable);
     runnable = nullptr;
   }
-  m.list[m.process].clear();
+  m.list[place].clear();
 }
 
 RunnableQueue::RunnableQueue(State& aState) : m(aState) {}
