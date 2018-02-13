@@ -25,6 +25,38 @@ public:
       0.0f, 0.0f, 0.0f, 1.0f);
   }
 
+  static Matrix FromColumnMajor(const float aData[4][4]) {
+    return Matrix(
+      aData[0][0], aData[1][0], aData[2][0], aData[3][0],
+      aData[0][1], aData[1][1], aData[2][1], aData[3][1],
+      aData[0][2], aData[1][2], aData[2][2], aData[3][2],
+      aData[0][3], aData[1][3], aData[2][3], aData[3][3]);
+  }
+
+  static Matrix FromColumnMajor(const float aData[16]) {
+    return Matrix(
+      aData[0], aData[1], aData[2], aData[3],
+      aData[4], aData[5], aData[6], aData[7],
+      aData[8], aData[9], aData[10], aData[11],
+      aData[12], aData[13], aData[14], aData[15]);
+  }
+
+  static Matrix FromRowMajor(const float aData[4][4]) {
+    return Matrix(
+      aData[0][0], aData[0][1], aData[0][2], aData[0][3],
+      aData[1][0], aData[1][1], aData[1][2], aData[1][3],
+      aData[2][0], aData[2][1], aData[2][2], aData[2][3],
+      aData[3][0], aData[3][1], aData[3][2], aData[3][3]);
+  }
+
+  static Matrix FromRowMajor(const float aData[16]) {
+    return Matrix(
+      aData[0], aData[4], aData[8], aData[12],
+      aData[1], aData[5], aData[9], aData[13],
+      aData[2], aData[6], aData[10], aData[14],
+      aData[3], aData[7], aData[11], aData[15]);
+  }
+
   static Matrix Position(const Vector& aPosition) {
     return Identity().TranslateInPlace(aPosition);
   }
