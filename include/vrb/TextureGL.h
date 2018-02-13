@@ -11,7 +11,7 @@
 #include "vrb/ResourceGL.h"
 #include "vrb/Texture.h"
 
-#include <GLES2/gl2.h>
+#include "vrb/gl.h"
 #include <string>
 
 namespace vrb {

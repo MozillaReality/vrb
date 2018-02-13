@@ -11,7 +11,7 @@
 #include "vrb/Logger.h"
 #include "vrb/private/ResourceGLState.h"
 
-#include <GLES2/gl2.h>
+#include "vrb/gl.h"
 #include <cstring>
 #include <vector>
 

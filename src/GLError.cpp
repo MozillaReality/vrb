@@ -5,7 +5,7 @@
 
 #include "vrb/GLError.h"
 
-#include <GLES2/gl2.h>
+#include "vrb/gl.h"
 
 namespace vrb {
 

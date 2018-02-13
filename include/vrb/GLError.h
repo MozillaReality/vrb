@@ -6,7 +6,7 @@
 #ifndef VRB_GL_ERROR_DOT_H
 #define VRB_GL_ERROR_DOT_H
 
-#include <GLES2/gl2.h>
+#include "vrb/gl.h"
 #include <android/log.h>
 
 namespace vrb {

@@ -12,7 +12,7 @@
 #include "vrb/ResourceGL.h"
 #include "vrb/Updatable.h"
 
-#include <GLES2/gl2.h>
+#include "vrb/gl.h"
 #include <jni.h>
 #include <string>
 

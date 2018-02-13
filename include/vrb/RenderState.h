@@ -10,7 +10,7 @@
 #include "vrb/MacroUtils.h"
 #include "vrb/ResourceGL.h"
 
-#include <GLES2/gl2.h>
+#include "vrb/gl.h"
 
 namespace vrb{
 

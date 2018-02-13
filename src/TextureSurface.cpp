@@ -12,8 +12,7 @@
 #include "vrb/Logger.h"
 #include "vrb/SurfaceTextureFactory.h"
 
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include "vrb/gl.h"
 
 namespace {
 

@@ -20,7 +20,7 @@
 #include "vrb/VertexArray.h"
 #include "vrb/Vector.h"
 
-#include <GLES2/gl2.h>
+#include "vrb/gl.h"
 #include <vector>
 
 namespace {

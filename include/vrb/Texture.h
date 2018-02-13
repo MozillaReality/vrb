@@ -9,7 +9,7 @@
 #include "vrb/Forward.h"
 #include "vrb/MacroUtils.h"
 
-#include <GLES2/gl2.h>
+#include "vrb/gl.h"
 #include <string>
 
 namespace vrb {

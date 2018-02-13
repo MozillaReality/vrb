@@ -17,7 +17,7 @@
 #endif // defined(ANDROID)
 #include "vrb/Vector.h"
 
-#include <GLES2/gl2.h>
+#include "vrb/gl.h"
 #include <string>
 #include <vector>
 

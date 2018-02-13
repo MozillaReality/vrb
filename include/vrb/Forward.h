@@ -31,6 +31,9 @@ typedef std::shared_ptr<Drawable> DrawablePtr;
 class DrawableList;
 typedef std::shared_ptr<DrawableList> DrawableListPtr;
 
+class FBO;
+typedef std::shared_ptr<FBO> FBOPtr;
+
 class FileHandler;
 typedef std::shared_ptr<FileHandler> FileHandlerPtr;
 
