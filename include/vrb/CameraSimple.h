@@ -18,11 +18,11 @@ public:
   static CameraSimplePtr Create(ContextWeak& aContext);
   // Camera interface
   const Matrix& GetTransform() const override;
-  void SetTransform(const Matrix& aTransform) override;
   const Matrix& GetView() const override;
   const Matrix& GetPerspective() const override;
 
   // CameraSimple interface
+  void SetTransform(const Matrix& aTransform);
   float GetNearClip() const;
   float GetFarClip() const;
   void SetClipRange(const float aNear, const float aFar);

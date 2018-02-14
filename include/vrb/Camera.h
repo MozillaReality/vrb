@@ -14,7 +14,6 @@ namespace vrb {
 class Camera {
 public:
   virtual const Matrix& GetTransform() const = 0;
-  virtual void SetTransform(const Matrix& aTransform) = 0;
   virtual const Matrix& GetView() const = 0;
   virtual const Matrix& GetPerspective() const = 0;
 

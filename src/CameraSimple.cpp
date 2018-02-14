@@ -44,12 +44,6 @@ CameraSimple::GetTransform() const {
   return m.transform;
 }
 
-void
-CameraSimple::SetTransform(const Matrix& aTransform) {
-  m.transform = aTransform;
-  m.view = m.transform.Inverse();
-}
-
 const Matrix&
 CameraSimple::GetView() const {
   return m.view;
@@ -61,6 +55,12 @@ CameraSimple::GetPerspective() const {
 }
 
 // CameraSimple interface
+void
+CameraSimple::SetTransform(const Matrix& aTransform) {
+  m.transform = aTransform;
+  m.view = m.transform.Inverse();
+}
+
 float
 CameraSimple::GetNearClip() const {
   return m.nearClip;

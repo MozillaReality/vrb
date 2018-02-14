@@ -13,6 +13,9 @@ namespace vrb {
 class Camera;
 typedef std::shared_ptr<Camera> CameraPtr;
 
+class CameraEye;
+typedef std::shared_ptr<CameraEye> CameraEyePtr;
+
 class CameraSimple;
 typedef std::shared_ptr<CameraSimple> CameraSimplePtr;
 
