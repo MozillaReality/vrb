@@ -7,6 +7,7 @@
 #define VRB_MATRIX_DOT_H
 
 #include "vrb/Vector.h"
+#include "vrb/Quaternion.h"
 #include "vrb/Logger.h"
 
 #include <cmath>
@@ -87,6 +88,41 @@ public:
 
     return result;
   }
+
+  static Matrix Rotation(const Quaternion & aQuat) {
+    Matrix result;
+
+    const float  qxx = aQuat.x() * aQuat.x();
+    const float  qyy = aQuat.y() * aQuat.y();
+    const float  qzz = aQuat.z() * aQuat.z();
+    const float  qxz = aQuat.x() * aQuat.z();
+    const float  qxy = aQuat.x() * aQuat.y();
+    const float  qyz = aQuat.y() * aQuat.z();
+    const float  qwx = aQuat.w() * aQuat.x();
+    const float  qwy = aQuat.w() * aQuat.y();
+    const float  qwz = aQuat.w() * aQuat.z();
+
+    auto & m = result.m.m;
+    m[0][0] = 1.0f - 2.0f * (qyy +  qzz);
+    m[0][1] = 2.0f * (qxy + qwz);
+    m[0][2] = 2.0f * (qxz - qwy);
+    m[0][3] = 0.0f;
+    m[1][0] = 2.0f * (qxy - qwz);
+    m[1][1] = 1.0f - 2.0f * (qxx +  qzz);
+    m[1][2] = 2.0f * (qyz + qwx);
+    m[1][3] = 0.0f;
+    m[2][0] = 2.0f * (qxz + qwy);
+    m[2][1] = 2.0f * (qyz - qwx);
+    m[2][2] = 1.0f - 2.0f * (qxx +  qyy);
+    m[2][3] = 0.0f;
+    m[3][0] = 0.0f;
+    m[3][1] = 0.0f;
+    m[3][2] = 0.0f;
+    m[3][3] = 1.0f;
+
+    return result;
+  }
+
 
   static Matrix PerspectiveMatrix(
       const float aLeft, const float aRight, const float aTop, const float aBottom,
