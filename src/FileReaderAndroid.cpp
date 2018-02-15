@@ -191,6 +191,13 @@ JNI_METHOD(void, ProcessImage)
   memcpy(image.get(), array, imageSize);
   env->ReleaseIntArrayElements(aPixels, array, 0);
 
+  // We need to swap red and blue channels
+  for (int ix = 0; ix < imageSize; ix += 4) {
+    uint8_t red = image[ix];
+    image[ix] = image[ix + 2];
+    image[ix + 2] = red;
+  }
+
   reader->ProcessImageFile(aFileTrackingHandle, image, width, height);
 }
 
