@@ -214,6 +214,21 @@ public:
       a20, a21, a22, a23,
       a30, a31, a32, a33) {}
 
+  float& At(const int32_t aColumn, const int32_t aRow) {
+    if ((aColumn < 0) || (aColumn > 3) || (aRow < 0) || (aRow > 3)) {
+      static float sDummy;
+      return sDummy;
+    }
+    return m.m[aColumn][aRow];
+  }
+
+  float At(const int32_t aColumn, const int32_t aRow) const {
+    if ((aColumn < 0) || (aColumn > 3) || (aRow < 0) || (aRow > 3)) {
+      return 0.0f;
+    }
+    return m.m[aColumn][aRow];
+  }
+
   Matrix(const Matrix& aValue) : m(aValue.m) {}
 
   Matrix& operator=(const Matrix& aMatrix) {
@@ -221,7 +236,7 @@ public:
     return *this;
   }
 
-  Vector MultiplyPosition(const Vector& aPosition) {
+  Vector MultiplyPosition(const Vector& aPosition) const {
     Vector result;
     result.x() = m.m00 * aPosition.x() + m.m10 * aPosition.y() + m.m20 * aPosition.z() + m.m30;
     result.y() = m.m01 * aPosition.x() + m.m11 * aPosition.y() + m.m21 * aPosition.z() + m.m31;
@@ -234,7 +249,7 @@ public:
     return result;
   }
 
-  Vector MultiplyDirection(const Vector& aDirection) {
+  Vector MultiplyDirection(const Vector& aDirection) const {
     Vector result;
     result.x() = m.m00 * aDirection.x() + m.m10 * aDirection.y() + m.m20 * aDirection.z();
     result.y() = m.m01 * aDirection.x() + m.m11 * aDirection.y() + m.m21 * aDirection.z();
@@ -297,11 +312,19 @@ public:
       m.m03, m.m13, m.m23, m.m33);
   }
 
+  Vector GetTranslation() const {
+    return Vector(m.m[3][0], m.m[3][1], m.m[3][2]);
+  }
+
   Matrix& TranslateInPlace(const Vector& aOffset) {
     m.m[3][0] += aOffset.x();
     m.m[3][1] += aOffset.y();
     m.m[3][2] += aOffset.z();
     return *this;
+  }
+
+  Vector GetScale() const {
+    return Vector(m.m[0][0], m.m[1][1], m.m[2][2]);
   }
 
   Matrix& ScaleInPlace(const Vector& aScale) {

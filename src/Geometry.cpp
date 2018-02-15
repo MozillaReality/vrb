@@ -205,7 +205,7 @@ Geometry::InitializeGL(Context& aContext) {
     }
     const GLushort vertexIndex = face.vertices[0] - 1;
     const GLushort normalIndex = face.normals[0] - 1;
-    const GLushort uvIndex = face.uvs[0] - 1;
+    const GLushort uvIndex = (kUseTextureCoords ? face.uvs[0] - 1 : -1);
     const Vector& firstVertex = m.vertexArray->GetVertex(vertexIndex);
     const Vector& firstNormal = m.vertexArray->GetNormal(normalIndex);
     const Vector& firstUV = m.vertexArray->GetUV(uvIndex);

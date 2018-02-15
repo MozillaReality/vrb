@@ -22,6 +22,7 @@ public:
   void Unbind();
   std::string GetName() const;
   void SetName(const std::string& aName);
+  void SetTextureParameter(GLenum aName, GLint aParam);
 protected:
   struct State;
   Texture(State& aState, ContextWeak& aContext);

@@ -116,11 +116,10 @@ TextureGL::State::CreateTexture() {
       mipMap.type,
       (void*)mipMap.data.get()));
   }
-  VRB_CHECK(glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
-  VRB_CHECK(glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-  VRB_CHECK(glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-  VRB_CHECK(glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-  VRB_CHECK(glBindTexture(target, 0));
+
+  for (auto param = intMap.begin(); param != intMap.end(); param++) {
+    VRB_CHECK(glTexParameteri(target, param->first, param->second));
+  }
   dirty = false;
 }
 

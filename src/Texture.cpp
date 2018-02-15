@@ -37,6 +37,14 @@ Texture::SetName(const std::string& aName) {
   m.name = aName;
 }
 
+void
+Texture::SetTextureParameter(GLenum aName, GLint aParam) {
+  m.intMap[aName] = aParam;
+  if (!m.texture) { return; }
+  VRB_CHECK(glBindTexture(m.target, m.texture));
+  VRB_CHECK(glTexParameteri(m.target, aName, aParam));
+  VRB_CHECK(glBindTexture(m.target, 0));
+}
 
 Texture::Texture(State& aState, ContextWeak& aContext) : m(aState) {}
 Texture::~Texture() {}
