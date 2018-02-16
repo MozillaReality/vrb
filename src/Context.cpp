@@ -10,6 +10,7 @@
 #include "vrb/ConcreteClass.h"
 #if defined(ANDROID)
 #include "vrb/FileReaderAndroid.h"
+#include "vrb/ClassLoaderAndroid.h"
 #endif // defined(ANDROID)
 #include "vrb/Logger.h"
 #include "vrb/ResourceGL.h"
@@ -133,6 +134,7 @@ struct Context::State {
 #if defined(ANDROID)
   FileReaderAndroidPtr fileReader;
   SurfaceTextureFactoryPtr surfaceTextureFactory;
+  ClassLoaderAndroidPtr classLoader;
 #endif // defined(ANDROID)
   UpdatableAnchor updatableHead;
   UpdatableAnchorTail updatableTail;
@@ -157,6 +159,7 @@ Context::Create() {
 #if defined(ANDROID)
   result->m.fileReader = FileReaderAndroid::Create(result->m.self);
   result->m.surfaceTextureFactory = SurfaceTextureFactory::Create(result->m.self);
+  result->m.classLoader = ClassLoaderAndroid::Create(result->m.self);
 #endif // defined(ANDROID)
 
   return result;
@@ -164,14 +167,16 @@ Context::Create() {
 
 #if defined(ANDROID)
 void
-Context::InitializeJava(JNIEnv* aEnv, jobject& aAssetManager) {
-  if (m.fileReader) { m.fileReader->Init(aEnv, aAssetManager); }
+Context::InitializeJava(JNIEnv* aEnv, jobject & aActivity, jobject& aAssetManager) {
+  if (m.classLoader) { m.classLoader->Init(aEnv, aActivity); }
+  if (m.fileReader) { m.fileReader->Init(aEnv, aAssetManager, m.classLoader); }
   if (m.surfaceTextureFactory) { m.surfaceTextureFactory->InitializeJava(aEnv); }
 }
 
 void
 Context::ShutdownJava() {
   if (m.fileReader) { m.fileReader->Shutdown(); }
+  if (m.classLoader) { m.classLoader->Shutdown(); }
 }
 #endif // defined(ANDROID)
 

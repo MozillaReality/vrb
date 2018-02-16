@@ -20,7 +20,7 @@ public:
   static FileReaderAndroidPtr Create(ContextWeak& aContext);
   void ReadRawFile(const std::string& aFileName, FileHandlerPtr aHandler) override;
   void ReadImageFile(const std::string& aFileName, FileHandlerPtr aHandler) override;
-  void Init(JNIEnv* aEnv, jobject& aAssetManager);
+  void Init(JNIEnv* aEnv, jobject& aAssetManager, const ClassLoaderAndroidPtr& classLoader);
   void Shutdown();
   void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight);
   void ImageFileLoadFailed(const int aFileHandle, const std::string& aReason);

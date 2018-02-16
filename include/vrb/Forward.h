@@ -19,6 +19,11 @@ typedef std::shared_ptr<CameraEye> CameraEyePtr;
 class CameraSimple;
 typedef std::shared_ptr<CameraSimple> CameraSimplePtr;
 
+#if defined(ANDROID)
+class ClassLoaderAndroid;
+typedef std::shared_ptr<ClassLoaderAndroid> ClassLoaderAndroidPtr;
+#endif // defined(ANDROID)
+
 class Color;
 
 class Context;
