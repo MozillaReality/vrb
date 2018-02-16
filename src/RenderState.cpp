@@ -72,11 +72,11 @@ calculate_light(int index) {
   float ndotl;
   float ndoth;
   result += u_lights[index].ambient * u_material.ambient;
-  ndotl = max(0.0f, dot(normal, direction));
+  ndotl = max(0.0, dot(normal, direction));
   result += (ndotl * u_lights[index].diffuse * u_material.diffuse);
-  hvec = normalize(direction + vec4(0.0f, 0.0f, 1.0f, 0.0f));
+  hvec = normalize(direction + vec4(0.0, 0.0, 1.0, 0.0));
   ndoth = dot(normal, hvec);
-  if (ndoth > 0.0f) {
+  if (ndoth > 0.0) {
     result += (pow(ndoth, u_material.specularExponent) * u_material.specular * u_lights[index].specular);
   }
   return result;
@@ -105,6 +105,7 @@ void main(void) {
 )SHADER";
 
 static const char* sFragmentShaderSource = R"SHADER(
+precision mediump float;
 
 varying vec4 v_color;
 
@@ -115,6 +116,7 @@ void main() {
 )SHADER";
 
 static const char* sFragmentTextureShaderSource = R"SHADER(
+precision mediump float;
 
 uniform sampler2D u_texture0;
 varying vec4 v_color;
@@ -128,6 +130,8 @@ void main() {
 
 static const char* sFragmentSurfaceTextureShaderSource = R"SHADER(
 #extension GL_OES_EGL_image_external : require
+precision mediump float;
+
 uniform samplerExternalOES u_texture0;
 varying vec4 v_color;
 varying vec2 v_uv;
