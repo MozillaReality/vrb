@@ -19,7 +19,7 @@ public:
   static ContextPtr Create();
 
 #if defined(ANDROID)
-  void InitializeJava(JNIEnv* aEnv, jobject& aAssetManager);
+  void InitializeJava(JNIEnv* aEnv, jobject& aActivity, jobject& aAssetManager);
   void ShutdownJava();
 #endif // defined(ANDROID)
   bool InitializeGL();

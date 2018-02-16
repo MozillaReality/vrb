@@ -7,6 +7,7 @@
 
 #include "vrb/ConcreteClass.h"
 #include "vrb/Logger.h"
+#include "vrb/ClassLoaderAndroid.h"
 
 #include <jni.h>
 #include <vector>
@@ -109,14 +110,14 @@ FileReaderAndroid::ReadImageFile(const std::string& aFileName, FileHandlerPtr aH
 }
 
 void
-FileReaderAndroid::Init(JNIEnv* aEnv, jobject &aAssetManager) {
+FileReaderAndroid::Init(JNIEnv* aEnv, jobject &aAssetManager, const ClassLoaderAndroidPtr& classLoader) {
   m.env = aEnv;
   if (!m.env) {
     return;
   }
   m.jassetManager = m.env->NewGlobalRef(aAssetManager);
   m.am = AAssetManager_fromJava(m.env, m.jassetManager);
-  jclass localImageLoaderClass = m.env->FindClass("org/mozilla/vrb/ImageLoader");
+  jclass localImageLoaderClass = classLoader->FindClass("org/mozilla/vrb/ImageLoader");
   m.imageLoaderClass = (jclass)m.env->NewGlobalRef(localImageLoaderClass);
   m.loadFromAssets = m.env->GetStaticMethodID(m.imageLoaderClass, "loadFromAssets", "(Landroid/content/res/AssetManager;Ljava/lang/String;JI)V");
   if (!m.loadFromAssets) {
