@@ -8,13 +8,14 @@ package org.mozilla.vrb;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.content.res.AssetManager;
+import android.support.annotation.Keep;
 import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 class ImageLoader {
+    @Keep
     private static void loadFromAssets(final AssetManager aAssets, final String aFileName, final long aFileReader, final int aTrackingHandle) {
         try {
             InputStream in = aAssets.open(aFileName, AssetManager.ACCESS_STREAMING);
