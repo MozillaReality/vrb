@@ -6,6 +6,7 @@
 #include "vrb/Context.h"
 #include "vrb/private/ResourceGLState.h"
 #include "vrb/private/UpdatableState.h"
+#include "vrb/GLExtensions.h"
 
 #include "vrb/ConcreteClass.h"
 #if defined(ANDROID)
@@ -131,6 +132,7 @@ struct Context::State {
   std::weak_ptr<Context> self;
   EGLContext eglContext;
   TextureCachePtr textureCache;
+  GLExtensionsPtr glExtensions;
 #if defined(ANDROID)
   FileReaderAndroidPtr fileReader;
   SurfaceTextureFactoryPtr surfaceTextureFactory;
@@ -156,6 +158,7 @@ Context::Create() {
   ContextPtr result = std::make_shared<ConcreteClass<Context, Context::State> >();
   result->m.self = result;
   result->m.textureCache = TextureCache::Create(result->m.self);
+  result->m.glExtensions = GLExtensions::Create(result->m.self);
 #if defined(ANDROID)
   result->m.fileReader = FileReaderAndroid::Create(result->m.self);
   result->m.surfaceTextureFactory = SurfaceTextureFactory::Create(result->m.self);
@@ -196,6 +199,7 @@ Context::InitializeGL() {
   m.eglContext = current;
 
   m.resourcesHead.InitializeGL(*this);
+  m.glExtensions->Initialize();
   return true;
 }
 
@@ -236,6 +240,11 @@ Context::AddResourceGL(ResourceGL* aResource) {
 TextureCachePtr
 Context::GetTextureCache() {
   return m.textureCache;
+}
+
+GLExtensionsPtr
+Context::GetGLExtensions() const {
+  return m.glExtensions;
 }
 
 #if defined(ANDROID)

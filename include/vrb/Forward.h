@@ -56,6 +56,9 @@ typedef std::shared_ptr<FileReaderAndroid> FileReaderAndroidPtr;
 class Geometry;
 typedef std::shared_ptr<Geometry> GeometryPtr;
 
+class GLExtensions;
+typedef std::shared_ptr<GLExtensions> GLExtensionsPtr;
+
 class Group;
 typedef std::shared_ptr<Group> GroupPtr;
 
