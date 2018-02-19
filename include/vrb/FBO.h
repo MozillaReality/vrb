@@ -10,11 +10,22 @@ namespace vrb {
 
 class FBO {
 public:
+  struct Attributes {
+    Attributes();
+    Attributes(bool aDepth, bool aMultiview, int aSamples);
+    bool depth;
+    bool multiview;
+    int samples;
+  };
   static FBOPtr Create(ContextWeak& aContext);
   bool IsValid() const;
-  void SetTextureHandle(const GLuint aHandle, const int32_t aWidth, const int32_t aHeight);
+  void SetTextureHandle(const GLuint aHandle,
+                        const int32_t aWidth,
+                        const int32_t aHeight,
+                        const FBO::Attributes& aAttributtes = {});
   void Bind();
   void Unbind();
+  const FBO::Attributes& GetAttributes() const;
 protected:
   struct State;
   FBO(State& aState, ContextWeak& aContext);

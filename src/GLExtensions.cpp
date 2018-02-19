@@ -7,7 +7,7 @@
 #include <string>
 
 #if defined(ANDROID)
-  #include <EGL/egl.h>
+#include <EGL/egl.h>
 #endif
 
 namespace vrb {
@@ -28,7 +28,7 @@ struct GLExtensions::State {
     ADD_EXT("GL_EXT_multisampled_render_to_texture", Ext::EXT_multisampled_render_to_texture);
     ADD_EXT("GL_OVR_multiview", Ext::OVR_multiview);
     ADD_EXT("GL_OVR_multiview2", Ext::OVR_multiview2);
-    ADD_EXT("OVR_multiview_multisampled_render_to_texture", Ext ::OVR_multiview_multisampled_render_to_texture);
+    ADD_EXT("OVR_multiview_multisampled_render_to_texture", Ext::OVR_multiview_multisampled_render_to_texture);
 
 #if defined(ANDROID)
 #define GET_PROC(n) functions.n = (decltype(functions.n))eglGetProcAddress(#n);
@@ -61,6 +61,6 @@ GLExtensions::GetFunctions() const {
 }
 
 GLExtensions::GLExtensions(State& aState, ContextWeak& aContext) : m(aState) {}
-GLExtensions::~GLExtensions() { }
+GLExtensions::~GLExtensions() {}
 
 } // namespace vrb
