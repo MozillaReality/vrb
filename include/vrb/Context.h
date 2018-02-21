@@ -30,6 +30,7 @@ public:
   void AddUpdatable(Updatable* aUpdatable);
   FileReaderPtr GetFileReader();
   TextureCachePtr GetTextureCache();
+  GLExtensionsPtr GetGLExtensions() const;
 #if defined(ANDROID)
   SurfaceTextureFactoryPtr GetSurfaceTextureFactory();
 #endif // defined(ANDROID)
