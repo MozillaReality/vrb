@@ -115,6 +115,9 @@ class TextureSurface;
 typedef std::shared_ptr<TextureSurface> TextureSurfacePtr;
 #endif // defined(ANDROID)
 
+class Toggle;
+typedef std::shared_ptr<Toggle> TogglePtr;
+
 class Transform;
 typedef std::shared_ptr<Transform> TransformPtr;
 

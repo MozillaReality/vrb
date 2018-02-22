@@ -17,6 +17,7 @@ struct Group::State : public Node::State {
   std::vector<LightPtr> lights;
   bool Contains(const Node& aNode);
   bool Contains(const Light& aLight);
+  virtual bool IsEnabled(const Node&) { return true; }
 };
 
 }

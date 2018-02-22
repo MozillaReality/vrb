@@ -23,7 +23,7 @@ public:
   void AddLight(LightPtr aLight);
   void RemoveLight(const Light& aLight);
   void AddNode(NodePtr aNode);
-  void RemoveNode(const Node& aNode);
+  virtual void RemoveNode(const Node& aNode);
 
 protected:
   struct State;

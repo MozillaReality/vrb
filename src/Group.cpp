@@ -45,7 +45,9 @@ Group::Cull(CullVisitor& aVisitor, DrawableList& aDrawables) {
     aDrawables.PushLight(*light);
   }
   for (NodePtr& node: m.children) {
-    node->Cull(aVisitor, aDrawables);
+    if (m.IsEnabled(*node)) {
+      node->Cull(aVisitor, aDrawables);
+    }
   }
   aDrawables.PopLights(m.lights.size());
 }
