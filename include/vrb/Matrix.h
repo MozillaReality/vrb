@@ -102,7 +102,7 @@ public:
     const float  qwy = aQuat.w() * aQuat.y();
     const float  qwz = aQuat.w() * aQuat.z();
 
-    auto & m = result.m.m;
+    auto& m = result.m.m;
     m[0][0] = 1.0f - 2.0f * (qyy +  qzz);
     m[0][1] = 2.0f * (qxy + qwz);
     m[0][2] = 2.0f * (qxz - qwy);
