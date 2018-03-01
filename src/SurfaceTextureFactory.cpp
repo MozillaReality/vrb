@@ -20,6 +20,7 @@ struct SurfaceTextureRecord {
   vrb::SurfaceTextureObserverPtr observer;
   jobject surface;
   GLuint texture;
+  bool attached;
 
   SurfaceTextureRecord() : surface(nullptr), texture(0) {}
   SurfaceTextureRecord(const std::string& aName, const vrb::SurfaceTextureObserverPtr& aObserver)
@@ -27,6 +28,7 @@ struct SurfaceTextureRecord {
       , observer(aObserver)
       , surface(nullptr)
       , texture(0)
+      , attached(false)
   {}
   SurfaceTextureRecord(SurfaceTextureRecord&& aRecord)
       : name(aRecord.name)
@@ -254,6 +256,7 @@ SurfaceTextureFactory::UpdateResource(Context& aContext) {
           continue;
         }
         record.surface = m.env->NewGlobalRef(localSurface);
+        record.attached = true;
         m.env->DeleteLocalRef(localSurface);
         if (record.observer) {
           record.observer->SurfaceTextureCreated(record.name, record.texture, record.surface);
@@ -263,7 +266,7 @@ SurfaceTextureFactory::UpdateResource(Context& aContext) {
         }
       }
     }
-    if (record.surface && m.updateTexImageMethod) {
+    if (record.surface && record.attached && m.updateTexImageMethod) {
       m.env->CallVoidMethod(record.surface, m.updateTexImageMethod);
     }
   }
@@ -272,10 +275,12 @@ SurfaceTextureFactory::UpdateResource(Context& aContext) {
 // ResourceGL interface
 void
 SurfaceTextureFactory::InitializeGL(Context& aContext) {
+  VRB_LOG("***** SurfaceTextureFactory::InitializeGL");
   for(SurfaceTextureRecord& record: m.textures) {
-    if (record.surface) {
+    if (record.surface && !record.attached) {
       VRB_CHECK(glGenTextures(1, &record.texture));
       m.env->CallVoidMethod(record.surface, m.attachToGLContextMethod, record.texture);
+      record.attached = true;
       if (record.observer) {
         record.observer->SurfaceTextureHandleUpdated(record.name, record.texture);
       }
@@ -288,10 +293,12 @@ SurfaceTextureFactory::InitializeGL(Context& aContext) {
 
 void
 SurfaceTextureFactory::ShutdownGL(Context& aContext) {
+  VRB_LOG("***** SurfaceTextureFactory::ShutdownGL");
   for(SurfaceTextureRecord& record: m.textures) {
-    if (record.surface) {
+    if (record.surface && record.attached) {
       m.env->CallVoidMethod(record.surface, m.detachFromGLContextMethod);
       record.texture = 0;
+      record.attached = false;
       if (record.observer) {
         record.observer->SurfaceTextureHandleUpdated(record.name, record.texture);
       }

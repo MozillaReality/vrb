@@ -214,6 +214,10 @@ Context::Update() {
 
 void
 Context::ShutdownGL() {
+  EGLContext current = eglGetCurrentContext();
+  if (current == EGL_NO_CONTEXT) {
+    VRB_LOG("Unable to shutdown VRB context: EGLContext is not valid.");
+  }
   m.resourcesHead.ShutdownGL(*this);
   m.eglContext = EGL_NO_CONTEXT;
 }

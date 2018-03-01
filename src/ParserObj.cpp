@@ -267,7 +267,6 @@ struct ParserObj::State {
       : objFileHandle(0)
       , mtlFileHandle(0)
     {
-VRB_LOG("STATE CONSTRUCTOR!");
 }
 
   std::string* GetBuffer(const int aFileHandle);

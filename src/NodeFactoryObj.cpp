@@ -145,19 +145,16 @@ NodeFactoryObj::SetMaterialName(const std::string& aName) {
 
 void
 NodeFactoryObj::AddVertex(const Vector& aPoint, const float aW) {
-  // VRB_LOG("AddVertex %s", aPoint.ToString().c_str());
   m.vertices->AppendVertex(aPoint);
 }
 
 void
 NodeFactoryObj::AddNormal(const Vector& aNormal) {
-  // VRB_LOG("AddNormal %s", aNormal.ToString().c_str());
   m.vertices->AppendNormal(aNormal);
 }
 
 void
 NodeFactoryObj::AddUV(const float aU, const float aV, const float aW) {
-  // VRB_LOG("AddUV %f %f %f", aU, aV, aW);
   m.vertices->AppendUV(Vector(aU, aV, aW));
 }
 
@@ -179,23 +176,23 @@ NodeFactoryObj::AddFace(
 
 void
 NodeFactoryObj::StartMaterialFile(const std::string& aFileName) {
-  VRB_LOG("StartMaterialFile: '%s'", aFileName.c_str());
+  //VRB_LOG("StartMaterialFile: '%s'", aFileName.c_str());
 }
 
 void
 NodeFactoryObj::FinishMaterialFile() {
-  VRB_LOG("FinishMaterialFile");
+  //VRB_LOG("FinishMaterialFile");
 }
 
 void
 NodeFactoryObj::CreateMaterial(const std::string& aName ) {
-  VRB_LOG("CreateMaterial: '%s'", aName.c_str());
+  //VRB_LOG("CreateMaterial: '%s'", aName.c_str());
   m.currentMaterial = &m.materials[aName];
 }
 
 void
 NodeFactoryObj::SetAmbientColor(const Vector& aColor) {
-  VRB_LOG("SetAmbientColor: %s", aColor.ToString().c_str());
+  //VRB_LOG("SetAmbientColor: %s", aColor.ToString().c_str());
   if (m.currentMaterial) {
     m.currentMaterial->ambient = aColor;
   }
@@ -203,7 +200,7 @@ NodeFactoryObj::SetAmbientColor(const Vector& aColor) {
 
 void
 NodeFactoryObj::SetDiffuseColor(const Vector& aColor) {
-  VRB_LOG("SetDiffuseColor: %s", aColor.ToString().c_str());
+  //VRB_LOG("SetDiffuseColor: %s", aColor.ToString().c_str());
   if (m.currentMaterial) {
     m.currentMaterial->diffuse = aColor;
   }
@@ -211,7 +208,7 @@ NodeFactoryObj::SetDiffuseColor(const Vector& aColor) {
 
 void
 NodeFactoryObj::SetSpecularColor(const Vector& aColor) {
-  VRB_LOG("SetSpecularColor: %s", aColor.ToString().c_str());
+  //VRB_LOG("SetSpecularColor: %s", aColor.ToString().c_str());
   if (m.currentMaterial) {
     m.currentMaterial->specular = aColor;
   }
@@ -219,7 +216,7 @@ NodeFactoryObj::SetSpecularColor(const Vector& aColor) {
 
 void
 NodeFactoryObj::SetSpecularExponent(const float aValue) {
-  VRB_LOG("SetSpecularExponent: %f", aValue);
+  //VRB_LOG("SetSpecularExponent: %f", aValue);
   if (m.currentMaterial) {
     m.currentMaterial->specularExponent = aValue;
   }
@@ -227,7 +224,7 @@ NodeFactoryObj::SetSpecularExponent(const float aValue) {
 
 void
 NodeFactoryObj::SetIlluniationModel(const int aValue) {
-  VRB_LOG("SetIlluniationModel: %d", aValue);
+  //VRB_LOG("SetIlluniationModel: %d", aValue);
   if (m.currentMaterial) {
 
   }
@@ -235,7 +232,7 @@ NodeFactoryObj::SetIlluniationModel(const int aValue) {
 
 void
 NodeFactoryObj::SetAmbientTexture(const std::string& aFileName) {
-  VRB_LOG("SetAmbientTexture: '%s'", aFileName.c_str());
+  //VRB_LOG("SetAmbientTexture: '%s'", aFileName.c_str());
   if (m.currentMaterial) {
     m.currentMaterial->ambientTextureName = aFileName;
   }
@@ -243,7 +240,7 @@ NodeFactoryObj::SetAmbientTexture(const std::string& aFileName) {
 
 void
 NodeFactoryObj::SetDiffuseTexture(const std::string& aFileName) {
-  VRB_LOG("SetDiffuseTexture: '%s'", aFileName.c_str());
+  //VRB_LOG("SetDiffuseTexture: '%s'", aFileName.c_str());
   if (m.currentMaterial) {
     m.currentMaterial->diffuseTextureName = aFileName;
   }
@@ -251,7 +248,7 @@ NodeFactoryObj::SetDiffuseTexture(const std::string& aFileName) {
 
 void
 NodeFactoryObj::SetSpecularTexture(const std::string& aFileName) {
-  VRB_LOG("SetSpecularTexture: '%s'", aFileName.c_str());
+  //VRB_LOG("SetSpecularTexture: '%s'", aFileName.c_str());
   if (m.currentMaterial) {
     m.currentMaterial->specularTextureName = aFileName;
   }
