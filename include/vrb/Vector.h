@@ -35,6 +35,20 @@ public:
     return *this;
   }
 
+  Vector& operator+=(const Vector& aValue) {
+    m.mX += aValue.m.mX;
+    m.mY += aValue.m.mY;
+    m.mZ += aValue.m.mZ;
+    return *this;
+  }
+
+  Vector& operator-=(const Vector& aValue) {
+    m.mX -= aValue.m.mX;
+    m.mY -= aValue.m.mY;
+    m.mZ -= aValue.m.mZ;
+    return *this;
+  }
+
   Vector& operator*=(const float aValue) {
     m.mX *= aValue;
     m.mY *= aValue;

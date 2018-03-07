@@ -323,6 +323,12 @@ public:
     return *this;
   }
 
+  Matrix Translate(const Vector& aOffset) const {
+    Matrix result(*this);
+    result.TranslateInPlace(aOffset);
+    return result;
+  }
+
   Vector GetScale() const {
     return Vector(m.m[0][0], m.m[1][1], m.m[2][2]);
   }
@@ -332,6 +338,12 @@ public:
     m.m[1][1] *= aScale.y();
     m.m[2][2] *= aScale.z();
     return *this;
+  }
+
+  Matrix Scale(const Vector& aScale) const {
+    Matrix result(*this);
+    result.ScaleInPlace(aScale);
+    return result;
   }
 
   Matrix AfineInverse() const {
