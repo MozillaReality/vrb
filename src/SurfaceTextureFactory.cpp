@@ -268,6 +268,8 @@ SurfaceTextureFactory::UpdateResource(Context& aContext) {
     }
     if (record.surface && record.attached && m.updateTexImageMethod) {
       m.env->CallVoidMethod(record.surface, m.updateTexImageMethod);
+    } else if (record.surface && !record.attached) {
+      VRB_LOG("********* SurfaceTexture not active!");
     }
   }
 }

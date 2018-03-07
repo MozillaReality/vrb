@@ -16,14 +16,14 @@ CameraEye::State::State()
     , eyeTransform(Matrix::Identity())
     , perspective(Matrix::Identity())
     , transform(Matrix::Identity())
-    , view(transform.Inverse())
+    , view(transform.AfineInverse())
 {}
 
 void
 CameraEye::State::Update() {
   dirty = false;
   transform = headTransform.PostMultiply(eyeTransform);
-  view = transform.Inverse();
+  view = transform.AfineInverse();
 }
 
 CameraEyePtr

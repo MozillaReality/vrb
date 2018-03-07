@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "vrb/CameraSimple.h"
-#include "vrb/private//CameraSimpleState.h"
+#include "vrb/private/CameraSimpleState.h"
 
 #include "vrb/ConcreteClass.h"
 
@@ -18,7 +18,7 @@ CameraSimple::State::State()
     , horizontalFOV(60.f)
     , verticalFOV(-1.0f)
     , transform(Matrix::Identity())
-    , view(transform.Inverse())
+    , view(transform.AfineInverse())
     , perspective(Matrix::PerspectiveMatrixWithResolutionDegrees(
         width, height,
         horizontalFOV, verticalFOV,
@@ -58,7 +58,7 @@ CameraSimple::GetPerspective() const {
 void
 CameraSimple::SetTransform(const Matrix& aTransform) {
   m.transform = aTransform;
-  m.view = m.transform.Inverse();
+  m.view = m.transform.AfineInverse();
 }
 
 float
@@ -76,6 +76,16 @@ CameraSimple::SetClipRange(const float aNear, const float aFar) {
   m.nearClip = aNear;
   m.farClip = aFar;
   m.UpdatePerspective();
+}
+
+float
+CameraSimple::GetViewportWidth() const {
+  return m.width;
+}
+
+float
+CameraSimple::GetViewportHeight() const {
+  return m.height;
 }
 
 void

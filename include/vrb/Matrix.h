@@ -334,7 +334,7 @@ public:
     return *this;
   }
 
-  Matrix Inverse() const {
+  Matrix AfineInverse() const {
     const float c00 =   m.m11 * m.m22 - m.m12 * m.m21;
     const float c10 = -(m.m01 * m.m22 - m.m02 * m.m21);
     const float c20 =   m.m01 * m.m12 - m.m02 * m.m11;
@@ -361,6 +361,139 @@ public:
         -(i01 * m.m30 + i11 * m.m31 + i21 * m.m32),
         -(i02 * m.m30 + i12 * m.m31 + i22 * m.m32),
         1);
+  }
+
+  Matrix Inverse() const {
+    Matrix result;
+    float *inv = result.Data();
+    const float *data = Data();
+    float det = 0.0f;
+
+    inv[0] = data[5]  * data[10] * data[15] -
+             data[5]  * data[11] * data[14] -
+             data[9]  * data[6]  * data[15] +
+             data[9]  * data[7]  * data[14] +
+             data[13] * data[6]  * data[11] -
+             data[13] * data[7]  * data[10];
+
+    inv[4] = -data[4]  * data[10] * data[15] +
+              data[4]  * data[11] * data[14] +
+              data[8]  * data[6]  * data[15] -
+              data[8]  * data[7]  * data[14] -
+              data[12] * data[6]  * data[11] +
+              data[12] * data[7]  * data[10];
+
+    inv[8] = data[4]  * data[9] * data[15] -
+             data[4]  * data[11] * data[13] -
+             data[8]  * data[5] * data[15] +
+             data[8]  * data[7] * data[13] +
+             data[12] * data[5] * data[11] -
+             data[12] * data[7] * data[9];
+
+    inv[12] = -data[4]  * data[9] * data[14] +
+               data[4]  * data[10] * data[13] +
+               data[8]  * data[5] * data[14] -
+               data[8]  * data[6] * data[13] -
+               data[12] * data[5] * data[10] +
+               data[12] * data[6] * data[9];
+
+    inv[1] = -data[1]  * data[10] * data[15] +
+              data[1]  * data[11] * data[14] +
+              data[9]  * data[2] * data[15] -
+              data[9]  * data[3] * data[14] -
+              data[13] * data[2] * data[11] +
+              data[13] * data[3] * data[10];
+
+    inv[5] = data[0]  * data[10] * data[15] -
+             data[0]  * data[11] * data[14] -
+             data[8]  * data[2] * data[15] +
+             data[8]  * data[3] * data[14] +
+             data[12] * data[2] * data[11] -
+             data[12] * data[3] * data[10];
+
+    inv[9] = -data[0]  * data[9] * data[15] +
+              data[0]  * data[11] * data[13] +
+              data[8]  * data[1] * data[15] -
+              data[8]  * data[3] * data[13] -
+              data[12] * data[1] * data[11] +
+              data[12] * data[3] * data[9];
+
+    inv[13] = data[0]  * data[9] * data[14] -
+              data[0]  * data[10] * data[13] -
+              data[8]  * data[1] * data[14] +
+              data[8]  * data[2] * data[13] +
+              data[12] * data[1] * data[10] -
+              data[12] * data[2] * data[9];
+
+    inv[2] = data[1]  * data[6] * data[15] -
+             data[1]  * data[7] * data[14] -
+             data[5]  * data[2] * data[15] +
+             data[5]  * data[3] * data[14] +
+             data[13] * data[2] * data[7] -
+             data[13] * data[3] * data[6];
+
+    inv[6] = -data[0]  * data[6] * data[15] +
+              data[0]  * data[7] * data[14] +
+              data[4]  * data[2] * data[15] -
+              data[4]  * data[3] * data[14] -
+              data[12] * data[2] * data[7] +
+              data[12] * data[3] * data[6];
+
+    inv[10] = data[0]  * data[5] * data[15] -
+              data[0]  * data[7] * data[13] -
+              data[4]  * data[1] * data[15] +
+              data[4]  * data[3] * data[13] +
+              data[12] * data[1] * data[7] -
+              data[12] * data[3] * data[5];
+
+    inv[14] = -data[0]  * data[5] * data[14] +
+               data[0]  * data[6] * data[13] +
+               data[4]  * data[1] * data[14] -
+               data[4]  * data[2] * data[13] -
+               data[12] * data[1] * data[6] +
+               data[12] * data[2] * data[5];
+
+    inv[3] = -data[1] * data[6] * data[11] +
+              data[1] * data[7] * data[10] +
+              data[5] * data[2] * data[11] -
+              data[5] * data[3] * data[10] -
+              data[9] * data[2] * data[7] +
+              data[9] * data[3] * data[6];
+
+    inv[7] = data[0] * data[6] * data[11] -
+             data[0] * data[7] * data[10] -
+             data[4] * data[2] * data[11] +
+             data[4] * data[3] * data[10] +
+             data[8] * data[2] * data[7] -
+             data[8] * data[3] * data[6];
+
+    inv[11] = -data[0] * data[5] * data[11] +
+               data[0] * data[7] * data[9] +
+               data[4] * data[1] * data[11] -
+               data[4] * data[3] * data[9] -
+               data[8] * data[1] * data[7] +
+               data[8] * data[3] * data[5];
+
+    inv[15] = data[0] * data[5] * data[10] -
+              data[0] * data[6] * data[9] -
+              data[4] * data[1] * data[10] +
+              data[4] * data[2] * data[9] +
+              data[8] * data[1] * data[6] -
+              data[8] * data[2] * data[5];
+
+    det = data[0] * inv[0] + data[1] * inv[4] + data[2] * inv[8] + data[3] * inv[12];
+
+    if (det == 0.0f) {
+        return Identity();
+    }
+
+    det = 1.0 / det;
+
+    for (int ix = 0; ix < 16; ix++) {
+        inv[ix] = inv[ix] * det;
+    }
+
+    return result;
   }
 
   float* Data() { return reinterpret_cast<float*>(&(m.m)); }

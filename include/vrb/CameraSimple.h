@@ -26,6 +26,8 @@ public:
   float GetNearClip() const;
   float GetFarClip() const;
   void SetClipRange(const float aNear, const float aFar);
+  float GetViewportWidth() const;
+  float GetViewportHeight() const;
   void SetViewport(const int aWidth, const int aHeight);
   void SetFieldOfView(const float aHorizontal, const float aVertical);
 protected:
