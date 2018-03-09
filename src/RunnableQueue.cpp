@@ -67,7 +67,7 @@ struct RunnableQueue::State {
     }
   }
   uint32_t AddPlace() {
-    return count ^ 0x01;
+    return ~count & 0x01;
   }
   uint32_t ProcessPlace() {
     return count & 0x01;
