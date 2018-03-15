@@ -142,7 +142,7 @@ Geometry::AddFace(
       indices += " ";
       indices += std::to_string(ix);
     }
-    VRB_LOG("ERROR! Face with only %d vertices:%s", face.vertices.size(), indices.c_str());
+    VRB_LOG("ERROR! Face with only %d vertices:%s", (int)face.vertices.size(), indices.c_str());
   }
   if (aUVs.size() > 0) {
     CopyIndecies(face.uvs, aUVs);
