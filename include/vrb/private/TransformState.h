@@ -14,6 +14,8 @@ namespace vrb {
 
 struct Transform::State : public Group::State {
   Matrix transform;
+
+  State() : transform(Matrix::Identity()) {}
 };
 
 }
