@@ -7,12 +7,15 @@
 #define VRB_NODE_STATE_DOT_H
 
 #include "vrb/Node.h"
+#include "vrb/Group.h"
 
 #include <string>
+#include <vector>
 
 namespace vrb {
 struct Node::State {
   std::string name;
+  std::vector<GroupPtr> parents;
 };
 
 }

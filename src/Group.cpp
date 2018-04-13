@@ -36,7 +36,9 @@ Group::State::Contains(const Light& aLight) {
 
 GroupPtr
 Group::Create(ContextWeak& aContext) {
-  return std::make_shared<ConcreteClass<Group, Group::State> >(aContext);
+  GroupPtr group = std::make_shared<ConcreteClass<Group, Group::State> >(aContext);
+  group->m.self = group;
+  return group;
 }
 
 void

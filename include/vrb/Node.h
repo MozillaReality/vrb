@@ -17,6 +17,8 @@ class Node {
 public:
   const std::string& GetName() const;
   void SetName(const std::string& aName);
+  void RemoveFromParents();
+  void GetParents(std::vector<GroupPtr>& aParents) const;
   virtual void Cull(CullVisitor& aVisitor, DrawableList& aDrawables) = 0;
 protected:
   struct State;

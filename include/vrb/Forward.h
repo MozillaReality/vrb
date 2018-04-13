@@ -60,6 +60,7 @@ class GLExtensions;
 typedef std::shared_ptr<GLExtensions> GLExtensionsPtr;
 
 class Group;
+typedef std::weak_ptr<Group> GroupWeak;
 typedef std::shared_ptr<Group> GroupPtr;
 
 class Light;
