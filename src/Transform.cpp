@@ -15,7 +15,9 @@ namespace vrb {
 
 TransformPtr
 Transform::Create(ContextWeak& aContext) {
-  return std::make_shared<ConcreteClass<Transform, Transform::State> > (aContext);
+  TransformPtr transform = std::make_shared<ConcreteClass<Transform, Transform::State> > (aContext);
+  transform->m.self = transform;
+  return transform;
 }
 
 void

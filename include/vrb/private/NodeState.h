@@ -15,7 +15,7 @@
 namespace vrb {
 struct Node::State {
   std::string name;
-  std::vector<GroupPtr> parents;
+  std::vector<GroupWeak> parents;
 };
 
 }

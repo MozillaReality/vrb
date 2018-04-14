@@ -16,24 +16,53 @@ void
 Node::SetName(const std::string& aName) { m.name = aName; }
 
 void
+Node::GetParents(std::vector<GroupPtr>& aParents) {
+  for (GroupWeak& weak: m.parents) {
+    if (GroupPtr parent = weak.lock()) {
+      aParents.push_back(std::move(parent));
+    } else {
+      VRB_LOG("Deleted weak parent found in parent list in Node::GetParents Node: %s", m.name.c_str());
+    }
+  }
+}
+
+void
 Node::RemoveFromParents() {
-  for (GroupPtr& parent: m.parents) {
-    parent->RemoveNode(*this);
+  for (GroupWeak& weak: m.parents) {
+    if (GroupPtr parent = weak.lock()) {
+      parent->RemoveNode(*this);
+    } else {
+      VRB_LOG("Deleted weak parent found in parent list in Node::RemoveFromParents Node: %s", m.name.c_str());
+    }
   }
   if (m.parents.size() != 0) {
     VRB_LOG("Node::RemoveFromParents failed to remove all parents for Node: %s", m.name.c_str());
   }
 }
 
-void
-Node::GetParents(std::vector<GroupPtr>& aParents) const {
-  aParents = m.parents;
-}
-
 Node::Node(State& aState, ContextWeak& aContext) : m(aState) {}
 Node::~Node() {
   if (m.parents.size() != 0) {
     VRB_LOG("Node: %s destructor called with parent count != 0", m.name.c_str());
+  }
+}
+
+void
+Node::AddToParents(GroupWeak& aParent, Node& aChild) {
+  aChild.m.parents.push_back(aParent);
+}
+
+void
+Node::RemoveFromParents(GroupWeak& aParent, Node& aChild) {
+  GroupPtr parent = aParent.lock();
+  if (!parent) {
+    return;
+  }
+  for (auto it = aChild.m.parents.begin(); it != aChild.m.parents.end(); it++) {
+    if (it->lock() == parent) {
+      aChild.m.parents.erase(it);
+      return;
+    }
   }
 }
 

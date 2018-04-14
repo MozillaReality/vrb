@@ -18,12 +18,14 @@ struct Toggle::State : public Group::State {
 
 TogglePtr
 Toggle::Create(ContextWeak& aContext) {
-  return std::make_shared<ConcreteClass<Toggle, Toggle::State> >(aContext);
+  TogglePtr toggle = std::make_shared<ConcreteClass<Toggle, Toggle::State> >(aContext);
+  toggle->m.self = toggle;
+  return toggle;
 }
 
 // Group interface
 void
-Toggle::RemoveNode(const Node& aNode) {
+Toggle::RemoveNode(Node& aNode) {
   m.toggledOff.erase(&aNode);
   Super::RemoveNode(aNode);
 }

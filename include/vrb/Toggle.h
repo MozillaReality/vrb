@@ -17,7 +17,7 @@ public:
   static TogglePtr Create(ContextWeak& aContext);
 
   // Group interface
-  void RemoveNode(const Node& aNode) override;
+  void RemoveNode(Node& aNode) override;
 
   // Toggle interface
   void ToggleAll(const bool aEnabled);

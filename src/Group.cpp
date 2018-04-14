@@ -9,6 +9,7 @@
 #include "vrb/ConcreteClass.h"
 #include "vrb/DrawableList.h"
 #include "vrb/Light.h"
+#include "vrb/Logger.h"
 
 #include <memory>
 
@@ -74,21 +75,27 @@ Group::RemoveLight(const Light& aLight) {
 void
 Group::AddNode(NodePtr aNode) {
   if (!m.Contains(*aNode)) {
+    AddToParents(m.self, *aNode);
     m.children.push_back(std::move(aNode));
   }
 }
 
 void
-Group::RemoveNode(const Node& aNode) {
-  for (auto it = m.children.begin(); it != m.children.end(); it++) {
-    if (it->get() == &aNode) {
-      m.children.erase(it);
+Group::RemoveNode(Node& aNode) {
+  for (auto childIt = m.children.begin(); childIt != m.children.end(); childIt++) {
+    if (childIt->get() == &aNode) {
+      m.children.erase(childIt);
+      RemoveFromParents(m.self, aNode);
       return;
     }
   }
 }
 
 Group::Group(State& aState, ContextWeak& aContext) : Node(aState, aContext), m(aState) {}
-Group::~Group() {}
+Group::~Group() {
+  for (NodePtr& child: m.children) {
+    RemoveFromParents(m.self, *child);
+  }
+}
 
 }

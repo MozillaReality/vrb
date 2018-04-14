@@ -10,6 +10,7 @@
 #include "vrb/MacroUtils.h"
 
 #include <string>
+#include <vector>
 
 namespace vrb {
 
@@ -17,13 +18,15 @@ class Node {
 public:
   const std::string& GetName() const;
   void SetName(const std::string& aName);
+  void GetParents(std::vector<GroupPtr>& aParents);
   void RemoveFromParents();
-  void GetParents(std::vector<GroupPtr>& aParents) const;
   virtual void Cull(CullVisitor& aVisitor, DrawableList& aDrawables) = 0;
 protected:
   struct State;
   Node(State& aState, ContextWeak& aContext);
   virtual ~Node();
+  void AddToParents(GroupWeak& aParent, Node& aChild);
+  void RemoveFromParents(GroupWeak& aParent, Node& aChild);
 private:
   State& m;
   Node() = delete;
