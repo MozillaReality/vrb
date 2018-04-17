@@ -27,6 +27,26 @@ Transform::Cull(CullVisitor& aVisitor, DrawableList& aDrawables) {
   aVisitor.PopTransform();
 }
 
+const Matrix
+Transform::GetWorldTransform() const {
+  Matrix result = m.transform;
+  std::vector<GroupPtr> parents;
+  GetParents(parents);
+  while (parents.size() > 0) {
+    if (parents.size() > 1) {
+      VRB_LOG("Warning: Calculating world transform where node has more than one parent");
+    }
+    GroupPtr parent = parents[0];
+    TransformPtr transform = std::dynamic_pointer_cast<Transform>(parent);
+    if (transform) {
+      result.PreMultiply(transform->GetTransform());
+    }
+    parents.clear();
+    parent->GetParents(parents);
+  }
+  return result;
+}
+
 const Matrix&
 Transform::GetTransform() const {
   return m.transform;

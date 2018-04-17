@@ -18,6 +18,7 @@ public:
   // Node interface
   void Cull(CullVisitor& aVisitor, DrawableList& aDrawables) override;
   // Transform interface
+  const Matrix GetWorldTransform() const;
   const Matrix& GetTransform() const;
   void SetTransform(const Matrix& aTransform);
 protected:

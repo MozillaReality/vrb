@@ -16,7 +16,7 @@ void
 Node::SetName(const std::string& aName) { m.name = aName; }
 
 void
-Node::GetParents(std::vector<GroupPtr>& aParents) {
+Node::GetParents(std::vector<GroupPtr>& aParents) const {
   for (GroupWeak& weak: m.parents) {
     if (GroupPtr parent = weak.lock()) {
       aParents.push_back(std::move(parent));
