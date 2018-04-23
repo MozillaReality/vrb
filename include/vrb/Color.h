@@ -32,7 +32,7 @@ public:
   Color& operator=(const Vector& aColor) {
     m.red = aColor.x();
     m.green = aColor.y();
-    m.blue = aColor.y();
+    m.blue = aColor.z();
     m.alpha = 1.0f;
     m.Clip();
     return *this;
