@@ -17,6 +17,10 @@ public:
   Color(const Color& aColor) : m(aColor.m) {}
   Color(const float aRed, const float aGreen, const float aBlue, const float aAlpha) : m(aRed, aGreen, aBlue, aAlpha) {}
   Color(const float aRed, const float aGreen, const float aBlue) : m(aRed, aGreen, aBlue, 1.0f) {}
+  Color(const int32_t aHexColor) : m(((aHexColor & 0xFF000000) >> 24) / 255.0f,
+                                     ((aHexColor & 0xFF0000) >> 16) / 255.0f,
+                                     ((aHexColor & 0xFF00) >> 8) / 255.0f,
+                                     (aHexColor & 0xFF) / 255.0f) {}
 
   bool HasAlpha() const { return m.alpha < 1.0f; }
   bool IsBlack() const { return (m.red == 0.0f) && (m.green == 0.0f) && (m.blue == 0.0f); }
