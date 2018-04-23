@@ -25,6 +25,7 @@ public:
   void ResetLights(const uint32_t aId);
   void AddLight(const Vector& aDirection, const Color& aAmbient, const Color& aDiffuse, const Color& aSpecular);
   void SetMaterial(const Color& aAmbient, const Color& aDiffuse, const Color& aSpecular, const float aSpecularExponent);
+  void GetMaterial(Color& aAmbient, Color& aDiffuse, Color& aSpecular, float& aSpecularExponent) const;
   void SetTexture(const TexturePtr& aTexture);
   bool HasTexture() const;
   bool Enable(const Matrix& aPerspective, const Matrix& aView, const Matrix& aModel);
