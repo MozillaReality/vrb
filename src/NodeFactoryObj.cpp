@@ -107,6 +107,7 @@ void
 NodeFactoryObj::SetGroupNames(const std::vector<std::string>& aNames) {
   if (!m.root) { return; }
   m.currentGeometry = Geometry::Create(m.context);
+  m.currentGeometry->SetName(aNames.front());
   m.root->AddNode(m.currentGeometry);
   m.currentGeometry->SetVertexArray(m.vertices);
   if (!m.defaultRenderState) {
