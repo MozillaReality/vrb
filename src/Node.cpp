@@ -66,4 +66,17 @@ Node::RemoveFromParents(GroupWeak& aParent, Node& aChild) {
   }
 }
 
+bool
+Node::Traverse(const NodePtr& aRootNode, const TraverseFunction& aTraverseFunction) {
+  if (aTraverseFunction(aRootNode, nullptr)) {
+    return true;
+  }
+  return aRootNode->Traverse(std::dynamic_pointer_cast<Group>(aRootNode), aTraverseFunction);
+}
+
+bool
+Node::Traverse(const GroupPtr& aParent, const TraverseFunction& aTraverseFunction) {
+  return false;
+}
+
 }
