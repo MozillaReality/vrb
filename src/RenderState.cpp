@@ -289,6 +289,14 @@ RenderState::SetMaterial(const Color& aAmbient, const Color& aDiffuse, const Col
 }
 
 void
+RenderState::GetMaterial(Color& aAmbient, Color& aDiffuse, Color& aSpecular, float& aSpecularExponent) const {
+  aAmbient = m.ambient;
+  aDiffuse = m.diffuse;
+  aSpecular = m.specular;
+  aSpecularExponent = m.specularExponent;
+}
+
+void
 RenderState::SetTexture(const TexturePtr& aTexture) {
   m.texture = aTexture;
 }
