@@ -26,6 +26,7 @@ public:
   virtual void RemoveNode(Node& aNode);
 
 protected:
+  bool Traverse(const GroupPtr& aParent, const Node::TraverseFunction& aTraverseFunction) override;
   struct State;
   Group(State& aState, ContextWeak& aContext);
   ~Group();

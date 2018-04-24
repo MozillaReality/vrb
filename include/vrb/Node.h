@@ -9,6 +9,7 @@
 #include "vrb/Forward.h"
 #include "vrb/MacroUtils.h"
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -21,12 +22,15 @@ public:
   void GetParents(std::vector<GroupPtr>& aParents) const;
   void RemoveFromParents();
   virtual void Cull(CullVisitor& aVisitor, DrawableList& aDrawables) = 0;
+  using TraverseFunction = std::function<bool(const NodePtr& aNode, const GroupPtr& aTraversingFrom)>;
+  static bool Traverse(const NodePtr& aRootNode, const TraverseFunction& aTraverseFunction);
 protected:
   struct State;
   Node(State& aState, ContextWeak& aContext);
   virtual ~Node();
   static void AddToParents(GroupWeak& aParent, Node& aChild);
   static void RemoveFromParents(GroupWeak& aParent, Node& aChild);
+  virtual bool Traverse(const GroupPtr& aParent, const TraverseFunction& aTraverseFunction);
 private:
   State& m;
   Node() = delete;

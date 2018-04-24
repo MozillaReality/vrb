@@ -91,6 +91,17 @@ Group::RemoveNode(Node& aNode) {
   }
 }
 
+bool
+Group::Traverse(const GroupPtr& aParent, const Node::TraverseFunction& aTraverseFunction) {
+  for (NodePtr& child: m.children) {
+    if (aTraverseFunction(child, aParent)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 Group::Group(State& aState, ContextWeak& aContext) : Node(aState, aContext), m(aState) {}
 Group::~Group() {
   for (NodePtr& child: m.children) {
