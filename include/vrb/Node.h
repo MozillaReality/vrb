@@ -25,8 +25,8 @@ protected:
   struct State;
   Node(State& aState, ContextWeak& aContext);
   virtual ~Node();
-  void AddToParents(GroupWeak& aParent, Node& aChild);
-  void RemoveFromParents(GroupWeak& aParent, Node& aChild);
+  static void AddToParents(GroupWeak& aParent, Node& aChild);
+  static void RemoveFromParents(GroupWeak& aParent, Node& aChild);
 private:
   State& m;
   Node() = delete;
