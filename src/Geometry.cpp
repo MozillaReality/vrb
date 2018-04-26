@@ -20,16 +20,9 @@
 #include "vrb/VertexArray.h"
 #include "vrb/Vector.h"
 
-#include "vrb/gl.h"
 #include <vector>
 
 namespace {
-
-struct Face {
-  std::vector<GLushort> vertices;
-  std::vector<GLushort> uvs;
-  std::vector<GLushort> normals;
-};
 
 static void
 CopyIndecies(std::vector<GLushort> &aTarget, const std::vector<int> &aSource) {
@@ -167,6 +160,16 @@ Geometry::AddFace(
   }
 
   m.faces.push_back(std::move(face));
+}
+
+int32_t
+Geometry::GetFaceCount() const {
+  return m.faces.size();
+}
+
+const Geometry::Face&
+Geometry::GetFace(int32_t aIndex) const {
+  return m.faces[aIndex];
 }
 
 Geometry::Geometry(State& aState, ContextWeak& aContext) :

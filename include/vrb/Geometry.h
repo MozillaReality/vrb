@@ -11,6 +11,7 @@
 #include "vrb/Drawable.h"
 #include "vrb/Node.h"
 #include "vrb/ResourceGL.h"
+#include "vrb/gl.h"
 
 #include <vector>
 
@@ -19,6 +20,11 @@ namespace vrb {
 class Geometry : public Node, public Drawable, protected ResourceGL {
 public:
   static GeometryPtr Create(ContextWeak& aContext);
+  struct Face {
+    std::vector<GLushort> vertices;
+    std::vector<GLushort> uvs;
+    std::vector<GLushort> normals;
+  };
 
   // Node interface
   void Cull(CullVisitor& aVisitor, DrawableList& aDrawables) override;
@@ -36,6 +42,9 @@ public:
     const std::vector<int> &aVerticies,
     const std::vector<int> &aUVs,
     const std::vector<int> &aNormals);
+
+  int32_t GetFaceCount() const;
+  const Face& GetFace(int32_t aIndex) const;
 
 protected:
   struct State;
