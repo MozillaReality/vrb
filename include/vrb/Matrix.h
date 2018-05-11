@@ -28,26 +28,26 @@ public:
 
   static Matrix FromColumnMajor(const float aData[4][4]) {
     return Matrix(
-      aData[0][0], aData[1][0], aData[2][0], aData[3][0],
-      aData[0][1], aData[1][1], aData[2][1], aData[3][1],
-      aData[0][2], aData[1][2], aData[2][2], aData[3][2],
-      aData[0][3], aData[1][3], aData[2][3], aData[3][3]);
+        aData[0][0], aData[0][1], aData[0][2], aData[0][3],
+        aData[1][0], aData[1][1], aData[1][2], aData[1][3],
+        aData[2][0], aData[2][1], aData[2][2], aData[2][3],
+        aData[3][0], aData[3][1], aData[3][2], aData[3][3]);
   }
 
   static Matrix FromColumnMajor(const float aData[16]) {
     return Matrix(
-      aData[0], aData[1], aData[2], aData[3],
-      aData[4], aData[5], aData[6], aData[7],
-      aData[8], aData[9], aData[10], aData[11],
-      aData[12], aData[13], aData[14], aData[15]);
+        aData[0], aData[1], aData[2], aData[3],
+        aData[4], aData[5], aData[6], aData[7],
+        aData[8], aData[9], aData[10], aData[11],
+        aData[12], aData[13], aData[14], aData[15]);
   }
 
   static Matrix FromRowMajor(const float aData[4][4]) {
     return Matrix(
-      aData[0][0], aData[0][1], aData[0][2], aData[0][3],
-      aData[1][0], aData[1][1], aData[1][2], aData[1][3],
-      aData[2][0], aData[2][1], aData[2][2], aData[2][3],
-      aData[3][0], aData[3][1], aData[3][2], aData[3][3]);
+        aData[0][0], aData[1][0], aData[2][0], aData[3][0],
+        aData[0][1], aData[1][1], aData[2][1], aData[3][1],
+        aData[0][2], aData[1][2], aData[2][2], aData[3][2],
+        aData[0][3], aData[1][3], aData[2][3], aData[3][3]);
   }
 
   static Matrix FromRowMajor(const float aData[16]) {
@@ -360,7 +360,7 @@ public:
     const float det = m.m00*c00 + m.m10*c10 + m.m20 * c20;
     if (std::fabsf(det) < 0.00001) {
       return Matrix::Identity();
-   }
+    }
     const float i00 = c00 / det,  i10 = c01 / det,  i20 = c02 / det;
     const float i01 = c10 / det,  i11 = c11 / det,  i21 = c12 / det;
     const float i02 = c20 / det,  i12 = c21 / det,  i22 = c22 / det;
