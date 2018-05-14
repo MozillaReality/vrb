@@ -78,28 +78,28 @@ Geometry::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
   if (m.renderState->Enable(aCamera.GetPerspective(), aCamera.GetView(), aModelTransform)) {
     bool kUseTextureCoords = m.renderState->HasTexture();
     const GLsizei kSize = kUseTextureCoords ? 8 * sizeof(GLfloat) : 6 * sizeof(GLfloat);
-    VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
-    VRB_CHECK(glVertexAttribPointer(m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, kSize, nullptr));
-    VRB_CHECK(glVertexAttribPointer(m.renderState->AttributeNormal(), 3, GL_FLOAT, GL_FALSE, kSize, (void*)(3 * sizeof(GLfloat))));
+    VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
+    VRB_GL_CHECK(glVertexAttribPointer(m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, kSize, nullptr));
+    VRB_GL_CHECK(glVertexAttribPointer(m.renderState->AttributeNormal(), 3, GL_FLOAT, GL_FALSE, kSize, (void*)(3 * sizeof(GLfloat))));
     if (kUseTextureCoords) {
-      VRB_CHECK(glVertexAttribPointer(m.renderState->AttributeUV(), 2, GL_FLOAT, GL_FALSE, kSize, (void*)(6 * sizeof(GLfloat))));
+      VRB_GL_CHECK(glVertexAttribPointer(m.renderState->AttributeUV(), 2, GL_FLOAT, GL_FALSE, kSize, (void*)(6 * sizeof(GLfloat))));
     }
 
-    VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
-    VRB_CHECK(glEnableVertexAttribArray(m.renderState->AttributePosition()));
-    VRB_CHECK(glEnableVertexAttribArray(m.renderState->AttributeNormal()));
+    VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
+    VRB_GL_CHECK(glEnableVertexAttribArray(m.renderState->AttributePosition()));
+    VRB_GL_CHECK(glEnableVertexAttribArray(m.renderState->AttributeNormal()));
     if (kUseTextureCoords) {
-      VRB_CHECK(glEnableVertexAttribArray(m.renderState->AttributeUV()));
+      VRB_GL_CHECK(glEnableVertexAttribArray(m.renderState->AttributeUV()));
     }
-    VRB_CHECK(glDrawElements(GL_TRIANGLES, m.triangleCount * 3, GL_UNSIGNED_SHORT, 0));
-    VRB_CHECK(glDisableVertexAttribArray(m.renderState->AttributePosition()));
-    VRB_CHECK(glDisableVertexAttribArray(m.renderState->AttributeNormal()));
+    VRB_GL_CHECK(glDrawElements(GL_TRIANGLES, m.triangleCount * 3, GL_UNSIGNED_SHORT, 0));
+    VRB_GL_CHECK(glDisableVertexAttribArray(m.renderState->AttributePosition()));
+    VRB_GL_CHECK(glDisableVertexAttribArray(m.renderState->AttributeNormal()));
     if (kUseTextureCoords) {
-      VRB_CHECK(glDisableVertexAttribArray(m.renderState->AttributeUV()));
+      VRB_GL_CHECK(glDisableVertexAttribArray(m.renderState->AttributeUV()));
     }
     m.renderState->Disable();
-    VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-    VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
   }
 }
 
@@ -186,10 +186,10 @@ Geometry::InitializeGL(Context& aContext) {
     VRB_LOG("Unable to initialize Geometry Node. No RenderState set");
   }
   const bool kUseTextureCoords = m.renderState->HasTexture();
-  VRB_CHECK(glGenBuffers(1, &m.vertexObjectId));
-  VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
+  VRB_GL_CHECK(glGenBuffers(1, &m.vertexObjectId));
+  VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
   GLsizei kSize = kUseTextureCoords ? 24 : 18;
-  VRB_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * kSize * m.triangleCount, nullptr, GL_STATIC_DRAW));
+  VRB_GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * kSize * m.triangleCount, nullptr, GL_STATIC_DRAW));
   VRB_LOG("Allocate: %d", sizeof(GLfloat) * kSize * m.triangleCount);
   std::vector<GLushort> indices;
   GLushort count = 0;
@@ -214,13 +214,13 @@ Geometry::InitializeGL(Context& aContext) {
     const Vector& firstUV = m.vertexArray->GetUV(uvIndex);
     for (int ix = 1; ix <= face.vertices.size() - 2; ix++) {
       std::string out;
-      VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstVertex.Data()));
+      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstVertex.Data()));
       offset += kVectorSize;
-      VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstNormal.Data()));
+      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstNormal.Data()));
       offset += kVectorSize;
       out += " " + firstVertex.ToString() + firstNormal.ToString();
       if (kUseTextureCoords) {
-        VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, firstUV.Data()));
+        VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, firstUV.Data()));
         offset += kUVSize;
         out += firstUV.ToString();
       }
@@ -229,14 +229,14 @@ Geometry::InitializeGL(Context& aContext) {
 
       const Vector v1 = m.vertexArray->GetVertex(face.vertices[ix] - 1);
       const Vector n1 = m.vertexArray->GetNormal(face.normals[ix] - 1);
-      VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, v1.Data()));
+      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, v1.Data()));
       offset += kVectorSize;
-      VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, n1.Data()));
+      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, n1.Data()));
       offset += kVectorSize;
       out += "/" + v1.ToString() + n1.ToString();
       if (kUseTextureCoords) {
         const Vector uv1 = m.vertexArray->GetUV(face.uvs[ix] - 1);
-        VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv1.Data()));
+        VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv1.Data()));
         offset += kUVSize;
         out += uv1.ToString();
       }
@@ -245,14 +245,14 @@ Geometry::InitializeGL(Context& aContext) {
 
       const Vector v2 = m.vertexArray->GetVertex(face.vertices[ix + 1] - 1);
       const Vector n2 = m.vertexArray->GetNormal(face.normals[ix + 1] - 1);
-      VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, v2.Data()));
+      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, v2.Data()));
       offset += kVectorSize;
-      VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, n2.Data()));
+      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, n2.Data()));
       offset += kVectorSize;
       out += "/" + v2.ToString() + n2.ToString();
       if (kUseTextureCoords) {
         const Vector uv2 = m.vertexArray->GetUV(face.uvs[ix + 1] - 1);
-        VRB_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv2.Data()));
+        VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv2.Data()));
         offset += kUVSize;
         out += uv2.ToString();
       }
@@ -263,11 +263,11 @@ Geometry::InitializeGL(Context& aContext) {
   }
   VRB_LOG("indices: %d vertex: %d tricount: %d", indices.size(), m.vertexCount, m.triangleCount);
 
-  VRB_CHECK(glGenBuffers(1, &m.indexObjectId));
-  VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
-  VRB_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * indices.size(), indices.data(), GL_STATIC_DRAW));
-  VRB_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-  VRB_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+  VRB_GL_CHECK(glGenBuffers(1, &m.indexObjectId));
+  VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
+  VRB_GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * indices.size(), indices.data(), GL_STATIC_DRAW));
+  VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+  VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
 void

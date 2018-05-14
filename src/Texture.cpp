@@ -20,12 +20,12 @@ Texture::Create(ContextWeak& aContext) {
 void
 Texture::Bind() {
   AboutToBind();
-  VRB_CHECK(glBindTexture(m.target, m.texture));
+  VRB_GL_CHECK(glBindTexture(m.target, m.texture));
 }
 
 void
 Texture::Unbind() {
-  VRB_CHECK(glBindTexture(m.target, 0));
+  VRB_GL_CHECK(glBindTexture(m.target, 0));
 }
 
 std::string
@@ -41,9 +41,9 @@ void
 Texture::SetTextureParameter(GLenum aName, GLint aParam) {
   m.intMap[aName] = aParam;
   if (!m.texture) { return; }
-  VRB_CHECK(glBindTexture(m.target, m.texture));
-  VRB_CHECK(glTexParameteri(m.target, aName, aParam));
-  VRB_CHECK(glBindTexture(m.target, 0));
+  VRB_GL_CHECK(glBindTexture(m.target, m.texture));
+  VRB_GL_CHECK(glTexParameteri(m.target, aName, aParam));
+  VRB_GL_CHECK(glBindTexture(m.target, 0));
 }
 
 Texture::Texture(State& aState, ContextWeak& aContext) : m(aState) {}

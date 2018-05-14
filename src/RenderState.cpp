@@ -144,7 +144,7 @@ void main() {
 
 static GLint
 getUniformLocation(GLuint aProgram, const char* aName) {
-  GLint result = VRB_CHECK(glGetUniformLocation(aProgram, aName));
+  GLint result = VRB_GL_CHECK(glGetUniformLocation(aProgram, aName));
   if (result < 0) {
     VRB_LOG("Failed to glGetUniformLocation for '%s'", aName);
   }
@@ -309,34 +309,34 @@ RenderState::HasTexture() const {
 bool
 RenderState::Enable(const Matrix& aPerspective, const Matrix& aView, const Matrix& aModel) {
   if (!m.program) { return false; }
-  VRB_CHECK(glUseProgram(m.program));
+  VRB_GL_CHECK(glUseProgram(m.program));
   if (m.updateLights) {
     m.updateLights = false;
     int lightCount = 0;
     for (State::Light& light: m.lights) {
-      VRB_CHECK(glUniform3f(m.uLights[lightCount].direction, light.direction.x(), light.direction.y(), light.direction.z()));
-      VRB_CHECK(glUniform4fv(m.uLights[lightCount].ambient, 1, light.ambient.Data()));
-      VRB_CHECK(glUniform4fv(m.uLights[lightCount].diffuse, 1, light.diffuse.Data()));
-      VRB_CHECK(glUniform4fv(m.uLights[lightCount].specular, 1, light.specular.Data()));
+      VRB_GL_CHECK(glUniform3f(m.uLights[lightCount].direction, light.direction.x(), light.direction.y(), light.direction.z()));
+      VRB_GL_CHECK(glUniform4fv(m.uLights[lightCount].ambient, 1, light.ambient.Data()));
+      VRB_GL_CHECK(glUniform4fv(m.uLights[lightCount].diffuse, 1, light.diffuse.Data()));
+      VRB_GL_CHECK(glUniform4fv(m.uLights[lightCount].specular, 1, light.specular.Data()));
       lightCount++;
     }
-    VRB_CHECK(glUniform1i(m.uLightCount, lightCount));
+    VRB_GL_CHECK(glUniform1i(m.uLightCount, lightCount));
   }
   if (m.updateMaterial) {
     m.updateMaterial = false;
-     VRB_CHECK(glUniform4fv(m.uMatterialAmbient, 1, m.ambient.Data()));
-     VRB_CHECK(glUniform4fv(m.uMatterialDiffuse, 1, m.diffuse.Data()));
-     VRB_CHECK(glUniform4fv(m.uMatterialSpecular, 1, m.specular.Data()));
-     VRB_CHECK(glUniform1f(m.uMatterialSpecularExponent, m.specularExponent));
+     VRB_GL_CHECK(glUniform4fv(m.uMatterialAmbient, 1, m.ambient.Data()));
+     VRB_GL_CHECK(glUniform4fv(m.uMatterialDiffuse, 1, m.diffuse.Data()));
+     VRB_GL_CHECK(glUniform4fv(m.uMatterialSpecular, 1, m.specular.Data()));
+     VRB_GL_CHECK(glUniform1f(m.uMatterialSpecularExponent, m.specularExponent));
   }
   if (m.texture) {
     glActiveTexture(GL_TEXTURE0);
     m.texture->Bind();
     glUniform1i(m.uTexture0, 0);
   }
-  VRB_CHECK(glUniformMatrix4fv(m.uPerspective, 1, GL_FALSE, aPerspective.Data()));
-  VRB_CHECK(glUniformMatrix4fv(m.uView, 1, GL_FALSE, aView.Data()));
-  VRB_CHECK(glUniformMatrix4fv(m.uModel, 1, GL_FALSE, aModel.Data()));
+  VRB_GL_CHECK(glUniformMatrix4fv(m.uPerspective, 1, GL_FALSE, aPerspective.Data()));
+  VRB_GL_CHECK(glUniformMatrix4fv(m.uView, 1, GL_FALSE, aView.Data()));
+  VRB_GL_CHECK(glUniformMatrix4fv(m.uModel, 1, GL_FALSE, aModel.Data()));
   return true;
 }
 
@@ -379,20 +379,20 @@ RenderState::InitializeGL(Context& aContext) {
   }
   if (m.fragmentShader && m.vertexShader) {
     m.program = glCreateProgram();
-    VRB_CHECK(glAttachShader(m.program, m.vertexShader));
-    VRB_CHECK(glAttachShader(m.program, m.fragmentShader));
-    VRB_CHECK(glLinkProgram(m.program));
+    VRB_GL_CHECK(glAttachShader(m.program, m.vertexShader));
+    VRB_GL_CHECK(glAttachShader(m.program, m.fragmentShader));
+    VRB_GL_CHECK(glLinkProgram(m.program));
     GLint linked = 0;
-    VRB_CHECK(glGetProgramiv(m.program, GL_LINK_STATUS, &linked));
+    VRB_GL_CHECK(glGetProgramiv(m.program, GL_LINK_STATUS, &linked));
     if (!linked) {
       GLint length = 0;
-      VRB_CHECK(glGetProgramiv(m.program, GL_INFO_LOG_LENGTH, &length));
+      VRB_GL_CHECK(glGetProgramiv(m.program, GL_INFO_LOG_LENGTH, &length));
       if (length > 1) {
         std::unique_ptr<char[]> log = std::make_unique<char[]>(length);
-        VRB_CHECK(glGetProgramInfoLog(m.program, length, nullptr, log.get()));
+        VRB_GL_CHECK(glGetProgramInfoLog(m.program, length, nullptr, log.get()));
         VRB_LOG("Failed to link program:\n%s", log.get());
       }
-      VRB_CHECK(glDeleteProgram(m.program));
+      VRB_GL_CHECK(glDeleteProgram(m.program));
       m.program = 0;
     }
   }
@@ -433,18 +433,18 @@ RenderState::InitializeGL(Context& aContext) {
       m.uTexture0 = getUniformLocation(m.program, texture0);
     }
     const char* positionName = "a_position";
-    m.aPosition = VRB_CHECK(glGetAttribLocation(m.program, positionName));
+    m.aPosition = VRB_GL_CHECK(glGetAttribLocation(m.program, positionName));
     if (m.aPosition < 0) {
       VRB_LOG("Unable to glGetAttribLocation for '%s'", positionName);
     }
     const char* normalName = "a_normal";
-    m.aNormal = VRB_CHECK(glGetAttribLocation(m.program, normalName));
+    m.aNormal = VRB_GL_CHECK(glGetAttribLocation(m.program, normalName));
     if (m.aNormal < 0) {
       VRB_LOG("Unable to glGetAttribLocation for '%s'", normalName);
     }
     if (kEnableTexturing) {
       const char* uvName = "a_uv";
-      m.aUV = VRB_CHECK(glGetAttribLocation(m.program, uvName));
+      m.aUV = VRB_GL_CHECK(glGetAttribLocation(m.program, uvName));
       if (m.aUV < 0) {
         VRB_LOG("Unable to glGetAttribLocation for '%s'", uvName);
       }
@@ -468,17 +468,17 @@ RenderState::LoadShader(GLenum type, const char* src) {
     VRB_LOG("FAILDED to create shader of type: %s", (type == GL_VERTEX_SHADER ? "vertex shader" : "fragment shader"));
   }
 
-  VRB_CHECK(glShaderSource(result, 1, &src, nullptr));
-  VRB_CHECK(glCompileShader(result));
+  VRB_GL_CHECK(glShaderSource(result, 1, &src, nullptr));
+  VRB_GL_CHECK(glCompileShader(result));
   GLint compiled = 0;
-  VRB_CHECK(glGetShaderiv(result, GL_COMPILE_STATUS, &compiled));
+  VRB_GL_CHECK(glGetShaderiv(result, GL_COMPILE_STATUS, &compiled));
 
   if (!compiled) {
     GLint length = 0;
     glGetShaderiv(result, GL_INFO_LOG_LENGTH, &length);
     if (length > 1) {
       std::unique_ptr<char[]> log = std::make_unique<char[]>(length);
-      VRB_CHECK(glGetShaderInfoLog(result, length, nullptr, log.get()));
+      VRB_GL_CHECK(glGetShaderInfoLog(result, length, nullptr, log.get()));
       VRB_LOG("FAILED TO COMPILE SHADER:\n%s", log.get());
       VRB_LOG("From source:\n%s", src);
     }

@@ -58,7 +58,7 @@ SurfaceTextureRecord::Release(JNIEnv* aEnv) {
     surface = nullptr;
   }
   if (texture) {
-    VRB_CHECK(glDeleteTextures(1, &texture));
+    VRB_GL_CHECK(glDeleteTextures(1, &texture));
     texture = 0;
   }
 }
@@ -231,7 +231,7 @@ SurfaceTextureFactory::UpdateResource(Context& aContext) {
   for(SurfaceTextureRecord& record: m.textures) {
     if (!record.surface) {
       if (!record.texture) {
-        VRB_CHECK(glGenTextures(1, &record.texture));
+        VRB_GL_CHECK(glGenTextures(1, &record.texture));
       }
       if (!record.texture) {
         const std::string reason("glGenTextures failed to return valid texture handle.");
@@ -280,7 +280,7 @@ SurfaceTextureFactory::InitializeGL(Context& aContext) {
   VRB_LOG("***** SurfaceTextureFactory::InitializeGL");
   for(SurfaceTextureRecord& record: m.textures) {
     if (record.surface && !record.attached) {
-      VRB_CHECK(glGenTextures(1, &record.texture));
+      VRB_GL_CHECK(glGenTextures(1, &record.texture));
       m.env->CallVoidMethod(record.surface, m.attachToGLContextMethod, record.texture);
       record.attached = true;
       if (record.observer) {

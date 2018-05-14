@@ -65,23 +65,23 @@ struct FBO::State {
 
     if (attributes.depth) {
       // Create the depth buffer texture.
-      VRB_CHECK(glGenTextures(1, &depth));
-      VRB_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, depth));
-      VRB_CHECK(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT24, aWidth, aHeight, 2));
-      VRB_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, 0));
+      VRB_GL_CHECK(glGenTextures(1, &depth));
+      VRB_GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, depth));
+      VRB_GL_CHECK(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT24, aWidth, aHeight, 2));
+      VRB_GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, 0));
     }
 
-    VRB_CHECK(glGenFramebuffers(1, &fbo));
-    VRB_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo));
+    VRB_GL_CHECK(glGenFramebuffers(1, &fbo));
+    VRB_GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo));
     if (attributes.samples > 1) {
-      VRB_CHECK(ext.glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+      VRB_GL_CHECK(ext.glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                                                 depth, 0, attributes.samples, 0 , 2));
-      VRB_CHECK(ext.glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+      VRB_GL_CHECK(ext.glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                                                 aHandle, 0, attributes.samples, 0, 2));
     } else {
-      VRB_CHECK(ext.glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+      VRB_GL_CHECK(ext.glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                                      depth, 0, 0 , 2));
-      VRB_CHECK(ext.glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+      VRB_GL_CHECK(ext.glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                                      aHandle, 0, 0, 2));
     }
   }
@@ -90,24 +90,24 @@ struct FBO::State {
     ContextPtr ctx = context.lock();
     const GLExtensions::Functions& ext = ctx->GetGLExtensions()->GetFunctions();
 
-    VRB_CHECK(glGenFramebuffers(1, &fbo));
-    VRB_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
+    VRB_GL_CHECK(glGenFramebuffers(1, &fbo));
+    VRB_GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
 
     if (attributes.depth) {
-      VRB_CHECK(glGenRenderbuffers(1, &depth));
-      VRB_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, depth));
+      VRB_GL_CHECK(glGenRenderbuffers(1, &depth));
+      VRB_GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, depth));
       if (attributes.samples > 1) {
-        VRB_CHECK(ext.glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER, attributes.samples, GL_DEPTH_COMPONENT24, aWidth, aHeight));
+        VRB_GL_CHECK(ext.glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER, attributes.samples, GL_DEPTH_COMPONENT24, aWidth, aHeight));
       } else {
-        VRB_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, aWidth, aHeight));
+        VRB_GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, aWidth, aHeight));
       }
-      VRB_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
+      VRB_GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
     }
 
     if (attributes.samples > 1) {
-      VRB_CHECK(ext.glFramebufferTexture2DMultisampleEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, aHandle, 0, attributes.samples));
+      VRB_GL_CHECK(ext.glFramebufferTexture2DMultisampleEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, aHandle, 0, attributes.samples));
     } else {
-      VRB_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, aHandle, 0));
+      VRB_GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, aHandle, 0));
     }
   }
 };
@@ -160,12 +160,12 @@ FBO::SetTextureHandle(const GLuint aHandle,
 void
 FBO::Bind() {
   if (!m.valid) { return; }
-  VRB_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, m.fbo));
+  VRB_GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, m.fbo));
 }
 
 void
 FBO::Unbind() {
-  VRB_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+  VRB_GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
 
 const FBO::Attributes&

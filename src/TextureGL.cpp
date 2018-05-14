@@ -98,14 +98,14 @@ TextureGL::State::CreateTexture() {
   if (!dirty) {
     return;
   }
-  VRB_CHECK(glGenTextures(1, &texture));
-  VRB_CHECK(glBindTexture(target, texture));
+  VRB_GL_CHECK(glGenTextures(1, &texture));
+  VRB_GL_CHECK(glBindTexture(target, texture));
   for (MipMap& mipMap: mipMaps) {
     if (!mipMap.data) {
       continue;
     }
 
-    VRB_CHECK(glTexImage2D(
+    VRB_GL_CHECK(glTexImage2D(
       mipMap.target,
       mipMap.level,
       mipMap.internalFormat,
@@ -118,7 +118,7 @@ TextureGL::State::CreateTexture() {
   }
 
   for (auto param = intMap.begin(); param != intMap.end(); param++) {
-    VRB_CHECK(glTexParameteri(target, param->first, param->second));
+    VRB_GL_CHECK(glTexParameteri(target, param->first, param->second));
   }
   dirty = false;
 }
@@ -126,7 +126,7 @@ TextureGL::State::CreateTexture() {
 void
 TextureGL::State::DestroyTexture() {
   if (texture > 0) {
-    VRB_CHECK(glDeleteTextures(1, &texture));
+    VRB_GL_CHECK(glDeleteTextures(1, &texture));
     texture = 0;
   }
   dirty = true;

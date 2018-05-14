@@ -14,7 +14,7 @@ namespace vrb {
 const char* GLErrorString(GLenum aError);
 const char* GLErrorCheck();
 
-#define VRB_CHECK(X) X;                                     \
+#define VRB_GL_CHECK(X) X;                                  \
 {                                                           \
   const char* str = vrb::GLErrorCheck();                    \
   if (str) {                                                \
