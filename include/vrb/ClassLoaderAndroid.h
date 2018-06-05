@@ -17,7 +17,6 @@ namespace vrb {
 
 class ClassLoaderAndroid {
 public:
-  static ClassLoaderAndroidPtr Create(ContextWeak& aContext);
   static ClassLoaderAndroidPtr Create();
   void Init(JNIEnv* aEnv, jobject& aActivity);
   void Shutdown();

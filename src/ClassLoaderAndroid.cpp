@@ -43,11 +43,6 @@ struct ClassLoaderAndroid::State {
 };
 
 ClassLoaderAndroidPtr
-ClassLoaderAndroid::Create(ContextWeak& aContext) {
-  return Create();
-}
-
-ClassLoaderAndroidPtr
 ClassLoaderAndroid::Create() {
   return std::make_shared<ConcreteClass<ClassLoaderAndroid, ClassLoaderAndroid::State>>();
 }

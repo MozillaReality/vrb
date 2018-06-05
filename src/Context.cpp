@@ -162,7 +162,7 @@ Context::Create() {
 #if defined(ANDROID)
   result->m.fileReader = FileReaderAndroid::Create(result->m.self);
   result->m.surfaceTextureFactory = SurfaceTextureFactory::Create(result->m.self);
-  result->m.classLoader = ClassLoaderAndroid::Create(result->m.self);
+  result->m.classLoader = ClassLoaderAndroid::Create();
 #endif // defined(ANDROID)
 
   return result;
