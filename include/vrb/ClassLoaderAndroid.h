@@ -18,12 +18,13 @@ namespace vrb {
 class ClassLoaderAndroid {
 public:
   static ClassLoaderAndroidPtr Create(ContextWeak& aContext);
+  static ClassLoaderAndroidPtr Create();
   void Init(JNIEnv* aEnv, jobject& aActivity);
   void Shutdown();
   jclass FindClass(const std::string& aClassName) const;
 protected:
   struct State;
-  ClassLoaderAndroid(State& aState, ContextWeak& aContext);
+  ClassLoaderAndroid(State& aState);
   ~ClassLoaderAndroid();
 private:
   State& m;

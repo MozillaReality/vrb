@@ -44,7 +44,12 @@ struct ClassLoaderAndroid::State {
 
 ClassLoaderAndroidPtr
 ClassLoaderAndroid::Create(ContextWeak& aContext) {
-  return std::make_shared<ConcreteClass<ClassLoaderAndroid, ClassLoaderAndroid::State>>(aContext);
+  return Create();
+}
+
+ClassLoaderAndroidPtr
+ClassLoaderAndroid::Create() {
+  return std::make_shared<ConcreteClass<ClassLoaderAndroid, ClassLoaderAndroid::State>>();
 }
 
 void
@@ -62,10 +67,15 @@ ClassLoaderAndroid::FindClass(const std::string& aClassName) const {
   jstring name = m.env->NewStringUTF(aClassName.c_str());
   jclass result = (jclass)(m.env->CallObjectMethod(m.classLoader, m.findClass, name));
   m.env->DeleteLocalRef(name);
+  if (m.env->ExceptionCheck() == JNI_TRUE) {
+    m.env->ExceptionClear();
+    VRB_LOG("Failed to find java class: %s", aClassName.c_str());
+    return nullptr;
+  }
   return result;
 }
 
-ClassLoaderAndroid::ClassLoaderAndroid(State& aState, ContextWeak& aContext) : m(aState) {}
+ClassLoaderAndroid::ClassLoaderAndroid(State& aState) : m(aState) {}
 ClassLoaderAndroid::~ClassLoaderAndroid() {
   m.Shutdown();
 }
