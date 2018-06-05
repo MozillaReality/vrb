@@ -16,8 +16,6 @@ namespace vrb {
 
 class Texture {
 public:
-  static TexturePtr Create(ContextWeak& aContext);
-
   void Bind();
   void Unbind();
   std::string GetName() const;

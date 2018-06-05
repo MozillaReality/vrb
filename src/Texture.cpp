@@ -12,11 +12,6 @@
 
 namespace vrb {
 
-TexturePtr
-Texture::Create(ContextWeak& aContext) {
-  return std::make_shared<ConcreteClass<Texture, Texture::State> >(aContext);
-}
-
 void
 Texture::Bind() {
   AboutToBind();
