@@ -17,6 +17,7 @@
 #include "vrb/Logger.h"
 #include "vrb/Matrix.h"
 #include "vrb/RenderState.h"
+#include "vrb/Texture.h"
 #include "vrb/VertexArray.h"
 #include "vrb/Vector.h"
 
@@ -49,6 +50,32 @@ struct Geometry::State : public Node::State, public ResourceGL::State, public Dr
   GLuint indexObjectId;
 
   State() : vertexCount(0), triangleCount(0), vertexObjectId(0), indexObjectId(0) {}
+
+
+  GLsizei UVLength() const {
+    vrb::TexturePtr texture = renderState->GetTexture();
+    if (!texture) {
+      return 0;
+    }
+    return texture && texture->GetTarget() == GL_TEXTURE_CUBE_MAP ? 3 : 2;
+  }
+
+  GLsizei UVSize() const {
+    return UVLength() * sizeof(float);
+  }
+
+  GLsizei PositionSize() const {
+    return 3 * sizeof(float);
+  }
+
+  GLsizei NormalSize() const {
+    return 3 * sizeof(float);
+  }
+
+  GLsizei VertexSize() const {
+    return PositionSize() + NormalSize() + UVSize();
+  }
+
 };
 
 GeometryPtr
@@ -77,12 +104,15 @@ void
 Geometry::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
   if (m.renderState->Enable(aCamera.GetPerspective(), aCamera.GetView(), aModelTransform)) {
     bool kUseTextureCoords = m.renderState->HasTexture();
-    const GLsizei kSize = kUseTextureCoords ? 8 * sizeof(GLfloat) : 6 * sizeof(GLfloat);
+    const GLsizei kSize = m.VertexSize();
+    const GLsizei kPositionSize = m.PositionSize();
+    const GLsizei kNormalSize = m.NormalSize();
+    const GLsizei kUVLength = m.UVLength();
     VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
     VRB_GL_CHECK(glVertexAttribPointer(m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, kSize, nullptr));
-    VRB_GL_CHECK(glVertexAttribPointer(m.renderState->AttributeNormal(), 3, GL_FLOAT, GL_FALSE, kSize, (void*)(3 * sizeof(GLfloat))));
+    VRB_GL_CHECK(glVertexAttribPointer(m.renderState->AttributeNormal(), 3, GL_FLOAT, GL_FALSE, kSize, (void*)kPositionSize));
     if (kUseTextureCoords) {
-      VRB_GL_CHECK(glVertexAttribPointer(m.renderState->AttributeUV(), 2, GL_FLOAT, GL_FALSE, kSize, (void*)(6 * sizeof(GLfloat))));
+      VRB_GL_CHECK(glVertexAttribPointer(m.renderState->AttributeUV(), kUVLength, GL_FLOAT, GL_FALSE, kSize, (void*)(kPositionSize + kNormalSize)));
     }
 
     VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
@@ -188,14 +218,16 @@ Geometry::InitializeGL(Context& aContext) {
   const bool kUseTextureCoords = m.renderState->HasTexture();
   VRB_GL_CHECK(glGenBuffers(1, &m.vertexObjectId));
   VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
-  GLsizei kSize = kUseTextureCoords ? 24 : 18;
-  VRB_GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * kSize * m.triangleCount, nullptr, GL_STATIC_DRAW));
-  VRB_LOG("Allocate: %d", sizeof(GLfloat) * kSize * m.triangleCount);
+  GLsizei kTriangleSize = m.VertexSize() * 3;
+  const GLintptr kVectorSize = m.PositionSize();
+  GLintptr kUVSize = m.UVSize();
+
+  VRB_GL_CHECK(glBufferData(GL_ARRAY_BUFFER, kTriangleSize * m.triangleCount, nullptr, GL_STATIC_DRAW));
+  VRB_LOG("Allocate: %d", kTriangleSize * m.triangleCount);
   std::vector<GLushort> indices;
   GLushort count = 0;
   GLintptr offset = 0;
-  const GLintptr kVectorSize = sizeof(GLfloat) * 3;
-  const GLintptr kUVSize = sizeof(GLfloat) * 2;
+
   for (auto& face: m.faces) {
     if (face.vertices.size() == 0) {
       break;

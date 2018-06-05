@@ -30,6 +30,7 @@ static const char* sVertexShaderSource = R"SHADER(
 
 #define MAX_LIGHTS 2
 #define VRB_USE_TEXTURE VRB_TEXTURE_STATE
+#define VRB_UV_TYPE VRB_TEXTURE_UV_TYPE
 
 struct Light {
   vec3 direction;
@@ -58,8 +59,8 @@ attribute vec3 a_normal;
 varying vec4 v_color;
 
 #ifdef VRB_USE_TEXTURE
-attribute vec2 a_uv;
-varying vec2 v_uv;
+attribute VRB_UV_TYPE a_uv;
+varying VRB_UV_TYPE v_uv;
 #endif // VRB_USE_TEXTURE
 
 vec4 normal;
@@ -138,6 +139,19 @@ varying vec2 v_uv;
 
 void main() {
   gl_FragColor = texture2D(u_texture0, v_uv) * v_color;
+}
+
+)SHADER";
+
+static const char* sFragmentCubeMapTextureShaderSource = R"SHADER(
+precision mediump float;
+
+uniform samplerCube u_texture0;
+varying vec4 v_color;
+varying vec3 v_uv;
+
+void main() {
+  gl_FragColor = textureCube(u_texture0, v_uv) * v_color;
 }
 
 )SHADER";
@@ -296,6 +310,11 @@ RenderState::GetMaterial(Color& aAmbient, Color& aDiffuse, Color& aSpecular, flo
   aSpecularExponent = m.specularExponent;
 }
 
+TexturePtr
+RenderState::GetTexture() const {
+  return m.texture;
+}
+
 void
 RenderState::SetTexture(const TexturePtr& aTexture) {
   m.texture = aTexture;
@@ -355,6 +374,12 @@ void
 RenderState::InitializeGL(Context& aContext) {
   const bool kEnableTexturing = m.texture != nullptr;
   std::string vertexShaderSource = sVertexShaderSource;
+  const std::string kTextureUVMacro("VRB_TEXTURE_UV_TYPE");
+  const size_t kUVStart = vertexShaderSource.find(kTextureUVMacro);
+  if (kUVStart != std::string::npos) {
+    vertexShaderSource.replace(kUVStart, kTextureUVMacro.length(), m.texture && m.texture->GetTarget() == GL_TEXTURE_CUBE_MAP ? "vec3" : "vec2");
+  }
+
   const std::string kTextureMacro("VRB_TEXTURE_STATE");
   const size_t kStart = vertexShaderSource.find(kTextureMacro);
   if (kEnableTexturing) {
@@ -363,6 +388,9 @@ RenderState::InitializeGL(Context& aContext) {
     }
     m.vertexShader = LoadShader(GL_VERTEX_SHADER, vertexShaderSource.c_str());
     const char* frag = sFragmentTextureShaderSource;
+    if (m.texture->GetTarget() == GL_TEXTURE_CUBE_MAP) {
+      frag = sFragmentCubeMapTextureShaderSource;
+    }
 #if defined(ANDROID)
     // SurfaceTexture requires usage of fragment shader extension.
     if (dynamic_cast<TextureSurface*>(m.texture.get()) != nullptr) {

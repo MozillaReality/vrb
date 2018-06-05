@@ -32,6 +32,12 @@ std::string
 Texture::GetName() const {
   return m.name;
 }
+
+GLenum
+Texture::GetTarget() const {
+  return m.target;
+}
+
 void
 Texture::SetName(const std::string& aName) {
   m.name = aName;

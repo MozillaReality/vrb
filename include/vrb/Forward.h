@@ -108,6 +108,9 @@ typedef std::shared_ptr<Texture> TexturePtr;
 class TextureCache;
 typedef std::shared_ptr<TextureCache> TextureCachePtr;
 
+class TextureCubeMap;
+typedef std::shared_ptr<TextureCubeMap> TextureCubeMapPtr;
+
 class TextureGL;
 typedef std::shared_ptr<TextureGL> TextureGLPtr;
 

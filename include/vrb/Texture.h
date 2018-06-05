@@ -21,6 +21,7 @@ public:
   void Bind();
   void Unbind();
   std::string GetName() const;
+  GLenum GetTarget() const;
   void SetName(const std::string& aName);
   void SetTextureParameter(GLenum aName, GLint aParam);
 protected:
