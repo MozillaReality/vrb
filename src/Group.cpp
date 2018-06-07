@@ -9,6 +9,7 @@
 #include "vrb/ConcreteClass.h"
 #include "vrb/DrawableList.h"
 #include "vrb/Light.h"
+#include <algorithm>
 #include "vrb/Logger.h"
 
 #include <memory>
@@ -89,6 +90,11 @@ Group::RemoveNode(Node& aNode) {
       return;
     }
   }
+}
+
+void
+Group::SortNodes(const std::function<bool(const vrb::NodePtr&, const vrb::NodePtr&)>& aFunction) {
+  std::sort(m.children.begin(), m.children.end(), aFunction);
 }
 
 bool
