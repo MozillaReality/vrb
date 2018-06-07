@@ -15,6 +15,8 @@
 namespace vrb {
 
 const float PI_FLOAT = float(M_PI);
+const float ToRadians = PI_FLOAT / 180.0f;
+const float ToDegrees = 180.0f / PI_FLOAT;
 
 class Matrix {
 public:
@@ -162,8 +164,8 @@ public:
       const float aLeft, const float aRight, const float aTop, const float aBottom,
       const float aNear, const float aFar) {
     return PerspectiveMatrix(
-        aLeft * PI_FLOAT / 180.0f, aRight * PI_FLOAT / 180.0f,
-        aTop * PI_FLOAT / 180.0f, aBottom * PI_FLOAT / 180.0f,
+        aLeft * ToRadians, aRight * ToRadians,
+        aTop * ToRadians, aBottom * ToRadians,
         aNear, aFar);
   }
 
@@ -192,8 +194,8 @@ public:
       const float aNear, const float aFar) {
     return PerspectiveMatrixWithResolution(
         aWidth, aHeight,
-        aFovX > 0.0f ? aFovX * PI_FLOAT / 180.0f : aFovX,
-        aFovY > 0.0f ? aFovY * PI_FLOAT / 180.0f : aFovY,
+        aFovX > 0.0f ? aFovX * ToRadians : aFovX,
+        aFovY > 0.0f ? aFovY * ToRadians : aFovY,
         aNear, aFar);
   }
 
@@ -506,6 +508,23 @@ public:
     }
 
     return result;
+  }
+
+  void DecomposePerspective(float& aLeft, float& aRight, float& aTop, float& aBottom, float& aNear, float& aFar) {
+    aNear   = m.m[3][2] / (m.m[2][2] - 1.0f);
+    aFar    = m.m[3][2] / (m.m[2][2] + 1.0f);
+    aBottom = -atanf((m.m[2][1] - 1.0f) / m.m[1][1]);
+    aTop    = atanf((m.m[2][1] + 1.0f) / m.m[1][1]);
+    aLeft   = -atanf((m.m[2][0] - 1.0f) / m.m[0][0]);
+    aRight  = atanf((m.m[2][0] + 1.0f) / m.m[0][0]);
+  }
+
+  void DecomposePerspectiveDegrees(float& aLeft, float& aRight, float& aTop, float& aBottom, float& aNear, float& aFar) {
+    DecomposePerspective(aLeft, aRight, aTop, aBottom, aNear, aFar);
+    aTop *= ToDegrees;
+    aRight *= ToDegrees;
+    aBottom *= ToDegrees;
+    aLeft *= ToDegrees;
   }
 
   float* Data() { return reinterpret_cast<float*>(&(m.m)); }
