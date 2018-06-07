@@ -24,6 +24,7 @@ public:
   void RemoveLight(const Light& aLight);
   void AddNode(NodePtr aNode);
   virtual void RemoveNode(Node& aNode);
+  void SortNodes(const std::function<bool(const vrb::NodePtr&, const vrb::NodePtr&)>& aFunction);
 
 protected:
   bool Traverse(const GroupPtr& aParent, const Node::TraverseFunction& aTraverseFunction) override;
