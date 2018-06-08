@@ -513,10 +513,10 @@ public:
   void DecomposePerspective(float& aLeft, float& aRight, float& aTop, float& aBottom, float& aNear, float& aFar) {
     aNear   = m.m[3][2] / (m.m[2][2] - 1.0f);
     aFar    = m.m[3][2] / (m.m[2][2] + 1.0f);
-    aBottom = -atanf((m.m[2][1] - 1.0f) / m.m[1][1]);
-    aTop    = atanf((m.m[2][1] + 1.0f) / m.m[1][1]);
-    aLeft   = -atanf((m.m[2][0] - 1.0f) / m.m[0][0]);
-    aRight  = atanf((m.m[2][0] + 1.0f) / m.m[0][0]);
+    aBottom = -atan2f((m.m[2][1] - 1.0f), m.m[1][1]);
+    aTop    = atan2f((m.m[2][1] + 1.0f), m.m[1][1]);
+    aLeft   = -atan2f((m.m[2][0] - 1.0f), m.m[0][0]);
+    aRight  = atan2f((m.m[2][0] + 1.0f), m.m[0][0]);
   }
 
   void DecomposePerspectiveDegrees(float& aLeft, float& aRight, float& aTop, float& aBottom, float& aNear, float& aFar) {
