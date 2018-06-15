@@ -38,7 +38,7 @@ void
 CullVisitor::PushTransform(const Matrix& aTransform) {
   State::TransformNode* node = new State::TransformNode;
   if (m.transformList) {
-    node->transform = m.transformList->transform.PreMultiply(aTransform);
+    node->transform = m.transformList->transform.PostMultiply(aTransform);
   } else {
     node->transform = aTransform;
   }
