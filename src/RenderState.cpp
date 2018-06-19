@@ -11,6 +11,7 @@
 #include "vrb/Logger.h"
 #include "vrb/GLError.h"
 #include "vrb/Matrix.h"
+#include "vrb/ShaderUtil.h"
 #include "vrb/Texture.h"
 #if defined(ANDROID)
 #include "vrb/TextureSurface.h"
@@ -406,23 +407,7 @@ RenderState::InitializeGL(Context& aContext) {
     m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, sFragmentShaderSource);
   }
   if (m.fragmentShader && m.vertexShader) {
-    m.program = glCreateProgram();
-    VRB_GL_CHECK(glAttachShader(m.program, m.vertexShader));
-    VRB_GL_CHECK(glAttachShader(m.program, m.fragmentShader));
-    VRB_GL_CHECK(glLinkProgram(m.program));
-    GLint linked = 0;
-    VRB_GL_CHECK(glGetProgramiv(m.program, GL_LINK_STATUS, &linked));
-    if (!linked) {
-      GLint length = 0;
-      VRB_GL_CHECK(glGetProgramiv(m.program, GL_INFO_LOG_LENGTH, &length));
-      if (length > 1) {
-        std::unique_ptr<char[]> log = std::make_unique<char[]>(length);
-        VRB_GL_CHECK(glGetProgramInfoLog(m.program, length, nullptr, log.get()));
-        VRB_LOG("Failed to link program:\n%s", log.get());
-      }
-      VRB_GL_CHECK(glDeleteProgram(m.program));
-      m.program = 0;
-    }
+    m.program = CreateProgram(m.vertexShader, m.fragmentShader);
   }
   if (m.program) {
     m.uPerspective = getUniformLocation(m.program, "u_perspective");
@@ -484,35 +469,6 @@ RenderState::InitializeGL(Context& aContext) {
 void
 RenderState::ShutdownGL(Context& aContext) {
 
-}
-
-GLuint
-RenderState::LoadShader(GLenum type, const char* src) {
-  GLuint result = 0;
-
-  result = glCreateShader(type);
-
-  if (result == 0) {
-    VRB_LOG("FAILDED to create shader of type: %s", (type == GL_VERTEX_SHADER ? "vertex shader" : "fragment shader"));
-  }
-
-  VRB_GL_CHECK(glShaderSource(result, 1, &src, nullptr));
-  VRB_GL_CHECK(glCompileShader(result));
-  GLint compiled = 0;
-  VRB_GL_CHECK(glGetShaderiv(result, GL_COMPILE_STATUS, &compiled));
-
-  if (!compiled) {
-    GLint length = 0;
-    glGetShaderiv(result, GL_INFO_LOG_LENGTH, &length);
-    if (length > 1) {
-      std::unique_ptr<char[]> log = std::make_unique<char[]>(length);
-      VRB_GL_CHECK(glGetShaderInfoLog(result, length, nullptr, log.get()));
-      VRB_LOG("FAILED TO COMPILE SHADER:\n%s", log.get());
-      VRB_LOG("From source:\n%s", src);
-    }
-  }
-
-  return result;
 }
 
 } // namespace vrb

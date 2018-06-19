@@ -40,9 +40,6 @@ protected:
   void InitializeGL(Context& aContext) override;
   void ShutdownGL(Context& aContext) override;
 
-  // RenderState interface
-  GLuint LoadShader(GLenum type, const char* src);
-
 private:
   State& m;
   RenderState() = delete;
