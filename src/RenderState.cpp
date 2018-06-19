@@ -157,20 +157,6 @@ void main() {
 
 )SHADER";
 
-static GLint
-getUniformLocation(GLuint aProgram, const char* aName) {
-  GLint result = VRB_GL_CHECK(glGetUniformLocation(aProgram, aName));
-  if (result < 0) {
-    VRB_LOG("Failed to glGetUniformLocation for '%s'", aName);
-  }
-  return result;
-}
-
-static GLint
-getUniformLocation(GLuint aProgram, const std::string& aName) {
-  return getUniformLocation(aProgram, aName.c_str());
-}
-
 }
 
 namespace vrb {
@@ -410,10 +396,10 @@ RenderState::InitializeGL(Context& aContext) {
     m.program = CreateProgram(m.vertexShader, m.fragmentShader);
   }
   if (m.program) {
-    m.uPerspective = getUniformLocation(m.program, "u_perspective");
-    m.uView = getUniformLocation(m.program, "u_view");
-    m.uModel = getUniformLocation(m.program, "u_model");
-    m.uLightCount = getUniformLocation(m.program, "u_lightCount");
+    m.uPerspective = GetUniformLocation(m.program, "u_perspective");
+    m.uView = GetUniformLocation(m.program, "u_view");
+    m.uModel = GetUniformLocation(m.program, "u_model");
+    m.uLightCount = GetUniformLocation(m.program, "u_lightCount");
     const std::string structNameOpen("u_lights[");
     const std::string structNameClose("].");
     const std::string directionName("direction");
@@ -426,10 +412,10 @@ RenderState::InitializeGL(Context& aContext) {
       const std::string ambient = structName + ambientName;
       const std::string diffuse = structName + diffuseName;
       const std::string specular = structName + specularName;
-      m.uLights[ix].direction = getUniformLocation(m.program, direction);
-      m.uLights[ix].ambient = getUniformLocation(m.program, ambient);
-      m.uLights[ix].diffuse = getUniformLocation(m.program, diffuse);
-      m.uLights[ix].specular = getUniformLocation(m.program, specular);
+      m.uLights[ix].direction = GetUniformLocation(m.program, direction);
+      m.uLights[ix].ambient = GetUniformLocation(m.program, ambient);
+      m.uLights[ix].diffuse = GetUniformLocation(m.program, diffuse);
+      m.uLights[ix].specular = GetUniformLocation(m.program, specular);
     }
     const std::string materialName("u_material.");
     const std::string specularExponentName("specularExponent");
@@ -437,30 +423,18 @@ RenderState::InitializeGL(Context& aContext) {
     const std::string diffuse = materialName + diffuseName;
     const std::string specular = materialName + specularName;
     const std::string specularExponent = materialName + specularExponentName;
-    m.uMatterialAmbient = getUniformLocation(m.program, ambient);
-    m.uMatterialDiffuse = getUniformLocation(m.program, diffuse);
-    m.uMatterialSpecular = getUniformLocation(m.program, specular);
-    m.uMatterialSpecularExponent = getUniformLocation(m.program, specularExponent);
+    m.uMatterialAmbient = GetUniformLocation(m.program, ambient);
+    m.uMatterialDiffuse = GetUniformLocation(m.program, diffuse);
+    m.uMatterialSpecular = GetUniformLocation(m.program, specular);
+    m.uMatterialSpecularExponent = GetUniformLocation(m.program, specularExponent);
     if (kEnableTexturing) {
       const std::string texture0("u_texture0");
-      m.uTexture0 = getUniformLocation(m.program, texture0);
+      m.uTexture0 = GetUniformLocation(m.program, texture0);
     }
-    const char* positionName = "a_position";
-    m.aPosition = VRB_GL_CHECK(glGetAttribLocation(m.program, positionName));
-    if (m.aPosition < 0) {
-      VRB_LOG("Unable to glGetAttribLocation for '%s'", positionName);
-    }
-    const char* normalName = "a_normal";
-    m.aNormal = VRB_GL_CHECK(glGetAttribLocation(m.program, normalName));
-    if (m.aNormal < 0) {
-      VRB_LOG("Unable to glGetAttribLocation for '%s'", normalName);
-    }
+    m.aPosition = GetAttributeLocation(m.program, "a_position");
+    m.aNormal = GetAttributeLocation(m.program, "a_normal");
     if (kEnableTexturing) {
-      const char* uvName = "a_uv";
-      m.aUV = VRB_GL_CHECK(glGetAttribLocation(m.program, uvName));
-      if (m.aUV < 0) {
-        VRB_LOG("Unable to glGetAttribLocation for '%s'", uvName);
-      }
+      m.aUV = GetAttributeLocation(m.program, "a_uv");
     }
     m.updateMaterial = true;
   }

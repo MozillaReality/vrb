@@ -6,6 +6,34 @@
 
 namespace vrb {
 
+GLint
+GetAttributeLocation(GLuint aProgram, const char* aName) {
+  GLint result = VRB_GL_CHECK(glGetAttribLocation(aProgram, aName));
+  if (result < 0) {
+    VRB_LOG("Failed to glGetAttributLocation for '%s'", aName);
+  }
+  return result;
+}
+
+GLint
+GetAttributeLocation(GLuint aProgram, const std::string& aName) {
+  return GetAttributeLocation(aProgram, aName.c_str());
+}
+
+GLint
+GetUniformLocation(GLuint aProgram, const char* aName) {
+  GLint result = VRB_GL_CHECK(glGetUniformLocation(aProgram, aName));
+  if (result < 0) {
+    VRB_LOG("Failed to glGetUniformLocation for '%s'", aName);
+  }
+  return result;
+}
+
+GLint
+GetUniformLocation(GLuint aProgram, const std::string& aName) {
+  return GetUniformLocation(aProgram, aName.c_str());
+}
+
 GLuint
 LoadShader(GLenum aType, const char* aSrc) {
   GLuint shader = VRB_GL_CHECK(glCreateShader(aType));
