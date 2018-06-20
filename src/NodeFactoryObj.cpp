@@ -170,6 +170,7 @@ NodeFactoryObj::AddFace(
     const std::vector<int>& aNormals) {
   if (!m.currentGeometry) {
     std::vector<std::string> names;
+    names.push_back("");
     SetGroupNames(names);
   }
   m.currentGeometry->AddFace(aVerticies, aUVs, aNormals);
