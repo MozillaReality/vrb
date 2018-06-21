@@ -212,6 +212,7 @@ struct RenderState::State : public ResourceGL::State {
   uint32_t lightId;
   bool updateLights;
   bool updateMaterial;
+  bool lightsEnabled;
 
   State()
       : vertexShader(0)
@@ -235,6 +236,7 @@ struct RenderState::State : public ResourceGL::State {
       , lightId(0)
       , updateLights(false)
       , updateMaterial(true)
+      , lightsEnabled(true)
   {}
 };
 
@@ -319,12 +321,14 @@ RenderState::Enable(const Matrix& aPerspective, const Matrix& aView, const Matri
   if (m.updateLights) {
     m.updateLights = false;
     int lightCount = 0;
-    for (State::Light& light: m.lights) {
-      VRB_GL_CHECK(glUniform3f(m.uLights[lightCount].direction, light.direction.x(), light.direction.y(), light.direction.z()));
-      VRB_GL_CHECK(glUniform4fv(m.uLights[lightCount].ambient, 1, light.ambient.Data()));
-      VRB_GL_CHECK(glUniform4fv(m.uLights[lightCount].diffuse, 1, light.diffuse.Data()));
-      VRB_GL_CHECK(glUniform4fv(m.uLights[lightCount].specular, 1, light.specular.Data()));
-      lightCount++;
+    if (m.lightsEnabled) {
+      for (State::Light& light: m.lights) {
+        VRB_GL_CHECK(glUniform3f(m.uLights[lightCount].direction, light.direction.x(), light.direction.y(), light.direction.z()));
+        VRB_GL_CHECK(glUniform4fv(m.uLights[lightCount].ambient, 1, light.ambient.Data()));
+        VRB_GL_CHECK(glUniform4fv(m.uLights[lightCount].diffuse, 1, light.diffuse.Data()));
+        VRB_GL_CHECK(glUniform4fv(m.uLights[lightCount].specular, 1, light.specular.Data()));
+        lightCount++;
+      }
     }
     VRB_GL_CHECK(glUniform1i(m.uLightCount, lightCount));
   }
@@ -352,6 +356,11 @@ RenderState::Disable() {
     glActiveTexture(GL_TEXTURE0);
     m.texture->Unbind();
   }
+}
+
+void
+RenderState::SetLightsEnabled(bool aEnabled) {
+  m.lightsEnabled = aEnabled;
 }
 
 RenderState::RenderState(State& aState, ContextWeak& aContext) : ResourceGL(aState, aContext), m(aState) {}
