@@ -145,6 +145,91 @@ Geometry::SetVertexArray(const VertexArrayPtr& aVertexArray) {
 }
 
 void
+Geometry::UpdateBuffers() {
+  const bool kUseTextureCoords = m.renderState->HasTexture();
+  VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
+  const GLintptr kVectorSize = m.PositionSize();
+  GLintptr kUVSize = m.UVSize();
+
+  std::vector<GLushort> indices;
+  GLushort count = 0;
+  GLintptr offset = 0;
+
+  for (auto& face: m.faces) {
+    if (face.vertices.size() == 0) {
+      break;
+    }
+    if (face.vertices.size() < 3) {
+      std::string message;
+      for (auto index: face.vertices) { message += " "; message += std::to_string(index); }
+      VRB_LOG("ERROR! Face with only %d vertices:%s", face.vertices.size(), message.c_str());
+      continue;
+    }
+    const GLushort vertexIndex = face.vertices[0] - 1;
+    const GLushort normalIndex = face.normals[0] - 1;
+    const GLushort uvIndex = (kUseTextureCoords ? face.uvs[0] - 1 : -1);
+    const Vector& firstVertex = m.vertexArray->GetVertex(vertexIndex);
+    const Vector& firstNormal = m.vertexArray->GetNormal(normalIndex);
+    const Vector& firstUV = m.vertexArray->GetUV(uvIndex);
+    for (int ix = 1; ix <= face.vertices.size() - 2; ix++) {
+      std::string out;
+      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstVertex.Data()));
+      offset += kVectorSize;
+      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstNormal.Data()));
+      offset += kVectorSize;
+      out += " " + firstVertex.ToString() + firstNormal.ToString();
+      if (kUseTextureCoords) {
+        VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, firstUV.Data()));
+        offset += kUVSize;
+        out += firstUV.ToString();
+      }
+      indices.push_back(count);
+      count++;
+
+      const Vector v1 = m.vertexArray->GetVertex(face.vertices[ix] - 1);
+      const Vector n1 = m.vertexArray->GetNormal(face.normals[ix] - 1);
+      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, v1.Data()));
+      offset += kVectorSize;
+      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, n1.Data()));
+      offset += kVectorSize;
+      out += "/" + v1.ToString() + n1.ToString();
+      if (kUseTextureCoords) {
+        const Vector uv1 = m.vertexArray->GetUV(face.uvs[ix] - 1);
+        VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv1.Data()));
+        offset += kUVSize;
+        out += uv1.ToString();
+      }
+      indices.push_back(count);
+      count++;
+
+      const Vector v2 = m.vertexArray->GetVertex(face.vertices[ix + 1] - 1);
+      const Vector n2 = m.vertexArray->GetNormal(face.normals[ix + 1] - 1);
+      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, v2.Data()));
+      offset += kVectorSize;
+      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, n2.Data()));
+      offset += kVectorSize;
+      out += "/" + v2.ToString() + n2.ToString();
+      if (kUseTextureCoords) {
+        const Vector uv2 = m.vertexArray->GetUV(face.uvs[ix + 1] - 1);
+        VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv2.Data()));
+        offset += kUVSize;
+        out += uv2.ToString();
+      }
+      indices.push_back(count);
+      count++;
+//      VRB_LOG("array buffer[%d] o:%d c:%d : %s", ix, (int)offset, count, out.c_str());
+    }
+  }
+
+  VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
+  VRB_GL_CHECK(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(GLushort) * indices.size(), indices.data()));
+
+
+  VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+  VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+}
+
+void
 Geometry::AddFace(
     const std::vector<int>& aVertices,
     const std::vector<int>& aUVs,
@@ -215,91 +300,19 @@ Geometry::InitializeGL(Context& aContext) {
   if (!m.renderState) {
     VRB_LOG("Unable to initialize Geometry Node. No RenderState set");
   }
-  const bool kUseTextureCoords = m.renderState->HasTexture();
   VRB_GL_CHECK(glGenBuffers(1, &m.vertexObjectId));
   VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
   GLsizei kTriangleSize = m.VertexSize() * 3;
-  const GLintptr kVectorSize = m.PositionSize();
-  GLintptr kUVSize = m.UVSize();
 
   VRB_GL_CHECK(glBufferData(GL_ARRAY_BUFFER, kTriangleSize * m.triangleCount, nullptr, GL_STATIC_DRAW));
-  VRB_LOG("Allocate: %d", kTriangleSize * m.triangleCount);
-  std::vector<GLushort> indices;
-  GLushort count = 0;
-  GLintptr offset = 0;
-
-  for (auto& face: m.faces) {
-    if (face.vertices.size() == 0) {
-      break;
-    }
-    if (face.vertices.size() < 3) {
-      std::string message;
-      for (auto index: face.vertices) { message += " "; message += std::to_string(index); }
-      VRB_LOG("ERROR! Face with only %d vertices:%s", face.vertices.size(), message.c_str());
-      continue;
-    }
-    const GLushort vertexIndex = face.vertices[0] - 1;
-    const GLushort normalIndex = face.normals[0] - 1;
-    const GLushort uvIndex = (kUseTextureCoords ? face.uvs[0] - 1 : -1);
-    const Vector& firstVertex = m.vertexArray->GetVertex(vertexIndex);
-    const Vector& firstNormal = m.vertexArray->GetNormal(normalIndex);
-    const Vector& firstUV = m.vertexArray->GetUV(uvIndex);
-    for (int ix = 1; ix <= face.vertices.size() - 2; ix++) {
-      std::string out;
-      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstVertex.Data()));
-      offset += kVectorSize;
-      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstNormal.Data()));
-      offset += kVectorSize;
-      out += " " + firstVertex.ToString() + firstNormal.ToString();
-      if (kUseTextureCoords) {
-        VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, firstUV.Data()));
-        offset += kUVSize;
-        out += firstUV.ToString();
-      }
-      indices.push_back(count);
-      count++;
-
-      const Vector v1 = m.vertexArray->GetVertex(face.vertices[ix] - 1);
-      const Vector n1 = m.vertexArray->GetNormal(face.normals[ix] - 1);
-      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, v1.Data()));
-      offset += kVectorSize;
-      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, n1.Data()));
-      offset += kVectorSize;
-      out += "/" + v1.ToString() + n1.ToString();
-      if (kUseTextureCoords) {
-        const Vector uv1 = m.vertexArray->GetUV(face.uvs[ix] - 1);
-        VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv1.Data()));
-        offset += kUVSize;
-        out += uv1.ToString();
-      }
-      indices.push_back(count);
-      count++;
-
-      const Vector v2 = m.vertexArray->GetVertex(face.vertices[ix + 1] - 1);
-      const Vector n2 = m.vertexArray->GetNormal(face.normals[ix + 1] - 1);
-      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, v2.Data()));
-      offset += kVectorSize;
-      VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, n2.Data()));
-      offset += kVectorSize;
-      out += "/" + v2.ToString() + n2.ToString();
-      if (kUseTextureCoords) {
-        const Vector uv2 = m.vertexArray->GetUV(face.uvs[ix + 1] - 1);
-        VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv2.Data()));
-        offset += kUVSize;
-        out += uv2.ToString();
-      }
-      indices.push_back(count);
-      count++;
-//      VRB_LOG("array buffer[%d] o:%d c:%d : %s", ix, (int)offset, count, out.c_str());
-    }
-  }
-  VRB_LOG("indices: %d vertex: %d tricount: %d", indices.size(), m.vertexCount, m.triangleCount);
+  VRB_LOG("Allocate: %d for GL_ARRAY_BUFFER", kTriangleSize * m.triangleCount);
 
   VRB_GL_CHECK(glGenBuffers(1, &m.indexObjectId));
   VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
-  VRB_GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * indices.size(), indices.data(), GL_STATIC_DRAW));
-  VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-  VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+  VRB_GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * m.triangleCount * 3, nullptr, GL_STATIC_DRAW));
+  VRB_LOG("Allocate: %d for GL_ELEMENT_ARRAY_BUFFER", sizeof(GLushort) * m.triangleCount * 3);
+
+  UpdateBuffers();
 }
 
 void
