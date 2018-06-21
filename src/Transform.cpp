@@ -39,7 +39,7 @@ Transform::GetWorldTransform() const {
     GroupPtr parent = parents[0];
     TransformPtr transform = std::dynamic_pointer_cast<Transform>(parent);
     if (transform) {
-      result.PreMultiply(transform->GetTransform());
+      result.PreMultiplyInPlace(transform->GetTransform());
     }
     parents.clear();
     parent->GetParents(parents);
