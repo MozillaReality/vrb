@@ -37,6 +37,7 @@ public:
   // Geometry interface
   VertexArrayPtr GetVertexArray() const;
   void SetVertexArray(const VertexArrayPtr& aVertexArray);
+  void UpdateBuffers();
 
   void AddFace(
     const std::vector<int> &aVerticies,
