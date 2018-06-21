@@ -24,6 +24,9 @@ public:
   void RemoveLight(const Light& aLight);
   void AddNode(NodePtr aNode);
   virtual void RemoveNode(Node& aNode);
+  void InsertNode(NodePtr aNode, uint32_t aIndex);
+  const NodePtr& GetNode(uint32_t aIndex) const;
+  int32_t GetNodeCount() const;
   void SortNodes(const std::function<bool(const vrb::NodePtr&, const vrb::NodePtr&)>& aFunction);
 
 protected:

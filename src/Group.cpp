@@ -93,6 +93,24 @@ Group::RemoveNode(Node& aNode) {
 }
 
 void
+Group::InsertNode(NodePtr aNode, uint32_t aIndex) {
+  if (!m.Contains(*aNode)) {
+    AddToParents(m.self, *aNode);
+    m.children.insert(m.children.begin() + aIndex, std::move(aNode));
+  }
+}
+
+const NodePtr&
+Group::GetNode(uint32_t aIndex) const {
+  return m.children.at(aIndex);
+}
+
+int32_t
+Group::GetNodeCount() const {
+  return m.children.size();
+}
+
+void
 Group::SortNodes(const std::function<bool(const vrb::NodePtr&, const vrb::NodePtr&)>& aFunction) {
   std::sort(m.children.begin(), m.children.end(), aFunction);
 }
