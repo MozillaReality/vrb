@@ -31,6 +31,7 @@ public:
   bool HasTexture() const;
   bool Enable(const Matrix& aPerspective, const Matrix& aView, const Matrix& aModel);
   void Disable();
+  void SetLightsEnabled(bool aEnabled);
 protected:
   struct State;
   RenderState(State& aState, ContextWeak& aContext);
