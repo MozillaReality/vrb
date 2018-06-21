@@ -103,7 +103,7 @@ Geometry::SetRenderState(const RenderStatePtr& aRenderState) {
 void
 Geometry::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
   if (m.renderState->Enable(aCamera.GetPerspective(), aCamera.GetView(), aModelTransform)) {
-    bool kUseTextureCoords = m.renderState->HasTexture();
+    const bool kUseTextureCoords = m.renderState->HasTexture();
     const GLsizei kSize = m.VertexSize();
     const GLsizei kPositionSize = m.PositionSize();
     const GLsizei kNormalSize = m.NormalSize();

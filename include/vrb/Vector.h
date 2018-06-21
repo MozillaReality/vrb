@@ -24,6 +24,12 @@ public:
   float x() const { return m.mX; }
   float y() const { return m.mY; }
   float z() const { return m.mZ; }
+  Vector& Set(const float aX, const float aY, const float aZ) {
+    m.mX = aX;
+    m.mY = aY;
+    m.mZ = aZ;
+    return *this;
+  }
 
   Vector operator-() const {
     Vector result(-m.mX, -m.mY, -m.mZ);
