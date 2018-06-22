@@ -291,6 +291,19 @@ RenderState::SetMaterial(const Color& aAmbient, const Color& aDiffuse, const Col
   m.updateMaterial = true;
 }
 
+
+void
+RenderState::SetAmbient(const Color& aColor) {
+  m.ambient = aColor;
+  m.updateMaterial = true;
+}
+
+void
+RenderState::SetDiffuse(const Color& aColor) {
+  m.diffuse = aColor;
+  m.updateMaterial = true;
+}
+
 void
 RenderState::GetMaterial(Color& aAmbient, Color& aDiffuse, Color& aSpecular, float& aSpecularExponent) const {
   aAmbient = m.ambient;
