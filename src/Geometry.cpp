@@ -146,6 +146,9 @@ Geometry::SetVertexArray(const VertexArrayPtr& aVertexArray) {
 
 void
 Geometry::UpdateBuffers() {
+  if (m.vertexObjectId == 0 || m.indexObjectId == 0) {
+    return;
+  }
   const bool kUseTextureCoords = m.renderState->HasTexture();
   VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
   const GLintptr kVectorSize = m.PositionSize();
