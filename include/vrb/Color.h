@@ -71,6 +71,10 @@ public:
     return result;
   }
 
+  bool operator==(const Color& aColor) const {
+    return m.red == aColor.m.red && m.green == aColor.m.green && m.blue == aColor.m.blue && m.alpha == aColor.m.alpha;
+  }
+
   float Red() const { return m.red; }
   float Green() const { return m.green; }
   float Blue() const { return m.blue; }

@@ -93,6 +93,10 @@ public:
     return Vector(*this) /= aValue;
   }
 
+  bool operator==(const Vector& aVector) const {
+    return m.mX == aVector.m.mX && m.mY == aVector.m.mY && aVector.m.mZ == aVector.m.mZ;
+  }
+
   float Magnitude() const {
     return std::sqrt(
         (m.mX * m.mX) +
