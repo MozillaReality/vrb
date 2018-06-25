@@ -95,6 +95,15 @@ public:
     m.Clip();
   }
 
+  void SetAlpha(const float aAlpha) {
+    m.alpha = aAlpha;
+    if (m.alpha > 1.0f) {
+      m.alpha = 1.0f;
+    } else if (m.alpha < 0.0f) {
+      m.alpha = 0.0f;
+    }
+  }
+
   std::string ToString() {
     std::string result("(");
     result += std::to_string(m.red) + ", "
