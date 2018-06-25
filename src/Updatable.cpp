@@ -5,12 +5,12 @@
 
 #include "vrb/Updatable.h"
 
-#include "vrb/Context.h"
+#include "vrb/CreationContext.h"
 
 namespace vrb {
 
-Updatable::Updatable(State& aState, ContextWeak& aContext) : m(aState) {
-  aContext.lock()->AddUpdatable(this);
+Updatable::Updatable(State& aState, CreationContextPtr& aContext) : m(aState) {
+  aContext->AddUpdatable(this);
 }
 Updatable::Updatable(State& aState) : m(aState) {}
 

@@ -47,7 +47,7 @@ Texture::SetTextureParameter(GLenum aName, GLint aParam) {
   VRB_GL_CHECK(glBindTexture(m.target, 0));
 }
 
-Texture::Texture(State& aState, ContextWeak& aContext) : m(aState) {}
+Texture::Texture(State& aState, CreationContextPtr& aContext) : m(aState) {}
 Texture::~Texture() {}
 
 } // namespace vrb

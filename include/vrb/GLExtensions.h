@@ -31,13 +31,13 @@ public:
     PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC glFramebufferTextureMultisampleMultiviewOVR;
   };
 
-  static GLExtensionsPtr Create(ContextWeak& aContext);
+  static GLExtensionsPtr Create(RenderContextPtr& aContext);
   void Initialize();
   bool IsExtensionSupported(GLExtensions::Ext aExtension) const;
   const GLExtensions::Functions & GetFunctions() const;
 protected:
   struct State;
-  GLExtensions(State& aState, ContextWeak& aContext);
+  GLExtensions(State& aState);
   ~GLExtensions();
 private:
   State& m;

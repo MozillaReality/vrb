@@ -55,7 +55,7 @@ private:
 
 class ParserObj : public FileHandler {
 public:
-  static ParserObjPtr Create(ContextWeak& aContext);
+  static ParserObjPtr Create(CreationContextPtr& aContext);
   // FileHandler Interface
   void BindFileHandle(const std::string& aFileName, const int aFileHandle) override ;
   void LoadFailed(const int aFileHandle, const std::string& aReason) override ;
@@ -71,7 +71,7 @@ public:
 
 protected:
   struct State;
-  ParserObj(State& aState, ContextWeak& aContext);
+  ParserObj(State& aState, CreationContextPtr& aContext);
   ~ParserObj();
 private:
   State& m;

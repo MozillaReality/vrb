@@ -17,7 +17,7 @@ namespace vrb {
 
 class FileReaderAndroid : public FileReader {
 public:
-  static FileReaderAndroidPtr Create(ContextWeak& aContext);
+  static FileReaderAndroidPtr Create();
   void ReadRawFile(const std::string& aFileName, FileHandlerPtr aHandler) override;
   void ReadImageFile(const std::string& aFileName, FileHandlerPtr aHandler) override;
   void Init(JNIEnv* aEnv, jobject& aAssetManager, const ClassLoaderAndroidPtr& classLoader);
@@ -26,7 +26,7 @@ public:
   void ImageFileLoadFailed(const int aFileHandle, const std::string& aReason);
 protected:
   struct State;
-  FileReaderAndroid(State& aState, ContextWeak& aContext);
+  FileReaderAndroid(State& aState);
   ~FileReaderAndroid();
 private:
   State& m;

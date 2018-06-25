@@ -15,14 +15,15 @@ namespace vrb {
 
 class TextureCache {
 public:
-  static TextureCachePtr Create(ContextWeak& aContext);
-  void Init();
+  static TextureCachePtr Create();
+  void Init(CreationContextPtr& aContext);
   void Shutdown();
-  TexturePtr LoadTexture(const std::string& aFileName);
-  TexturePtr GetDefaultTexture();
+  TextureGLPtr FindTexture(const std::string& aTextureName);
+  void AddTexture(const std::string& aTextureName, TextureGLPtr& aTexture);
+  TextureGLPtr GetDefaultTexture();
 protected:
   struct State;
-  TextureCache(State& aState, ContextWeak& aContext);
+  TextureCache(State& aState);
   ~TextureCache();
 private:
   State &m;

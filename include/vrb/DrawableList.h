@@ -13,7 +13,7 @@ namespace vrb {
 
 class DrawableList {
 public:
-  static DrawableListPtr Create(ContextWeak& aContext);
+  static DrawableListPtr Create(CreationContextPtr& aContext);
 
   void Reset();
   void PushLight(const Light& aLight);
@@ -23,7 +23,7 @@ public:
 
 protected:
   struct State;
-  DrawableList(State& aState, ContextWeak& aContext);
+  DrawableList(State& aState, CreationContextPtr& aContext);
   ~DrawableList();
 
 private:

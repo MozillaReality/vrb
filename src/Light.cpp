@@ -12,7 +12,7 @@
 namespace vrb {
 
 LightPtr
-Light::Create(ContextWeak& aContext) {
+Light::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<Light, Light::State> >(aContext);
 }
 
@@ -58,7 +58,7 @@ Light::SetSpecularColor(const Color& aColor) {
   m.specular = aColor;
 }
 
-Light::Light(State& aState, ContextWeak& aContext) : m(aState) {}
+Light::Light(State& aState, CreationContextPtr& aContext) : m(aState) {}
 Light::~Light() {}
 
 } // namespace vrb

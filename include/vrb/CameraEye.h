@@ -15,7 +15,7 @@ namespace vrb {
 
 class CameraEye : public Camera {
 public:
-  static CameraEyePtr Create(ContextWeak& aContext);
+  static CameraEyePtr Create(CreationContextPtr& aContext);
   // Camera interface
   const Matrix& GetTransform() const override;
   const Matrix& GetView() const override;
@@ -29,8 +29,8 @@ public:
   void SetEyeTransform(const Matrix& aTransform);
 protected:
   struct State;
-  CameraEye(State& aState, ContextWeak& aContext);
-  ~CameraEye();
+  CameraEye(State& aState, CreationContextPtr& aContext);
+  virtual ~CameraEye();
 private:
   State& m;
   CameraEye() = delete;

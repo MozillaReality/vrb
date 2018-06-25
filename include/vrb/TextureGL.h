@@ -18,20 +18,20 @@ namespace vrb {
 
 class TextureGL : public Texture, protected ResourceGL {
 public:
-  static TextureGLPtr Create(ContextWeak& aContext);
+  static TextureGLPtr Create(CreationContextPtr& aContext);
 
   void SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight, const int aChannels);
 protected:
   struct State;
-  TextureGL(State& aState, ContextWeak& aContext);
+  TextureGL(State& aState, CreationContextPtr& aContext);
   ~TextureGL();
 
   // Texture interface
   void AboutToBind() override;
 
   // ResourceGL interface
-  void InitializeGL(Context& aContext) override;
-  void ShutdownGL(Context& aContext) override;
+  void InitializeGL(RenderContext& aContext) override;
+  void ShutdownGL(RenderContext& aContext) override;
 
 private:
   State& m;

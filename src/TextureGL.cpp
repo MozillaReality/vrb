@@ -133,7 +133,7 @@ TextureGL::State::DestroyTexture() {
 }
 
 TextureGLPtr
-TextureGL::Create(ContextWeak& aContext) {
+TextureGL::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<TextureGL, TextureGL::State> >(aContext);
 }
 
@@ -162,7 +162,7 @@ TextureGL::SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, cons
   m.dirty = true;
 }
 
-TextureGL::TextureGL(State& aState, ContextWeak& aContext) : Texture(aState, aContext), ResourceGL (aState, aContext), m(aState) {}
+TextureGL::TextureGL(State& aState, CreationContextPtr& aContext) : Texture(aState, aContext), ResourceGL (aState, aContext), m(aState) {}
 TextureGL::~TextureGL() {}
 
 void
@@ -171,12 +171,12 @@ TextureGL::AboutToBind() {
 }
 
 void
-TextureGL::InitializeGL(Context& aContext) {
+TextureGL::InitializeGL(RenderContext& aContext) {
   m.CreateTexture();
 }
 
 void
-TextureGL::ShutdownGL(Context& aContext) {
+TextureGL::ShutdownGL(RenderContext& aContext) {
   m.DestroyTexture();
 }
 

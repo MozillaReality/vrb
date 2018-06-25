@@ -14,7 +14,7 @@ namespace vrb {
 
 class Group : public Node {
 public:
-  static GroupPtr Create(ContextWeak& aContext);
+  static GroupPtr Create(CreationContextPtr& aContext);
 
   // Node interface
   void Cull(CullVisitor& aVisitor, DrawableList& aDrawables) override;
@@ -28,11 +28,12 @@ public:
   const NodePtr& GetNode(uint32_t aIndex) const;
   int32_t GetNodeCount() const;
   void SortNodes(const std::function<bool(const vrb::NodePtr&, const vrb::NodePtr&)>& aFunction);
+  void TakeChildren(GroupPtr& aGroup);
 
 protected:
   bool Traverse(const GroupPtr& aParent, const Node::TraverseFunction& aTraverseFunction) override;
   struct State;
-  Group(State& aState, ContextWeak& aContext);
+  Group(State& aState, CreationContextPtr& aContext);
   ~Group();
 
 private:

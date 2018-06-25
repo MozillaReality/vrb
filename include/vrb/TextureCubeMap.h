@@ -18,24 +18,24 @@ namespace vrb {
 
 class TextureCubeMap : public Texture, protected ResourceGL {
 public:
-  static TextureCubeMapPtr Create(ContextWeak& aContext);
+  static TextureCubeMapPtr Create(CreationContextPtr& aContext);
 
-  static void Load(ContextWeak& aContext, const TextureCubeMapPtr& aTexture,
+  static void Load(CreationContextPtr& aContext, const TextureCubeMapPtr& aTexture,
                    const std::string& aFileXPos, const std::string& aFileXNeg,
                    const std::string& aFileYPos, const std::string& aFileYNeg,
                    const std::string& aFileZPos, const std::string& aFileZNeg);
   void SetRGBData(const GLenum aFaceTarget, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight, const int aChannels);
 protected:
   struct State;
-  TextureCubeMap(State& aState, ContextWeak& aContext);
+  TextureCubeMap(State& aState, CreationContextPtr& aContext);
   ~TextureCubeMap();
 
   // Texture interface
   void AboutToBind() override;
 
   // ResourceGL interface
-  void InitializeGL(Context& aContext) override;
-  void ShutdownGL(Context& aContext) override;
+  void InitializeGL(RenderContext& aContext) override;
+  void ShutdownGL(RenderContext& aContext) override;
 
 private:
   State& m;

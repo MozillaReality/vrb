@@ -13,12 +13,12 @@ namespace vrb {
 
 class ProgramFactory {
 public:
-  static ProgramFactorPtr Create(ContextWeak& aContext);
+  static ProgramFactorPtr Create(CreationContextPtr& aContext);
   ProgramPtr CreatePhongProgram(const bool aEnableTexturing);
   // TODO: Add PBR Program.
 protected:
   struct State;
-  ProgramFactory(ContextWeak& aContext);
+  ProgramFactory(CreationContextPtr& aContext);
 private:
   State& m;
   ProgramFactory() = delete;

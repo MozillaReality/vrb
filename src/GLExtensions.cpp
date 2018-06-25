@@ -46,8 +46,8 @@ struct GLExtensions::State {
 };
 
 GLExtensionsPtr
-GLExtensions::Create(ContextWeak& aContext) {
-  return std::make_shared<ConcreteClass<GLExtensions, GLExtensions::State> >(aContext);
+GLExtensions::Create(RenderContextPtr& aContext) {
+  return std::make_shared<ConcreteClass<GLExtensions, GLExtensions::State> >();
 }
 
 void
@@ -65,7 +65,7 @@ GLExtensions::GetFunctions() const {
   return m.functions;
 }
 
-GLExtensions::GLExtensions(State& aState, ContextWeak& aContext) : m(aState) {}
+GLExtensions::GLExtensions(State& aState) : m(aState) {}
 GLExtensions::~GLExtensions() {}
 
 } // namespace vrb

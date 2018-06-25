@@ -13,7 +13,7 @@ namespace vrb {
 
 class Light {
 public:
-  static LightPtr Create(ContextWeak& aContext);
+  static LightPtr Create(CreationContextPtr& aContext);
 
   const Vector& GetDirection() const;
   const Color& GetAmbientColor() const;
@@ -26,7 +26,7 @@ public:
   void SetSpecularColor(const Color& aColor);
 protected:
   struct State;
-  Light(State& aState, ContextWeak& aContext);
+  Light(State& aState, CreationContextPtr& aContext);
   ~Light();
 private:
   State& m;

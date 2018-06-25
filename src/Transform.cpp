@@ -14,7 +14,7 @@
 namespace vrb {
 
 TransformPtr
-Transform::Create(ContextWeak& aContext) {
+Transform::Create(CreationContextPtr& aContext) {
   TransformPtr transform = std::make_shared<ConcreteClass<Transform, Transform::State> > (aContext);
   transform->m.self = transform;
   return transform;
@@ -57,7 +57,7 @@ Transform::SetTransform(const Matrix& aTransform) {
   m.transform = aTransform;
 }
 
-Transform::Transform(State& aState, ContextWeak& aContext) : Group(aState, aContext), m(aState) {}
+Transform::Transform(State& aState, CreationContextPtr& aContext) : Group(aState, aContext), m(aState) {}
 Transform::~Transform() {}
 
 }

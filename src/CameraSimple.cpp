@@ -34,7 +34,7 @@ CameraSimple::State::UpdatePerspective() {
 }
 
 CameraSimplePtr
-CameraSimple::Create(ContextWeak& aContext) {
+CameraSimple::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<CameraSimple, CameraSimple::State> >(aContext);
 }
 
@@ -102,7 +102,7 @@ CameraSimple::SetFieldOfView(const float aHorizontal, const float aVertical) {
   m.UpdatePerspective();
 }
 
-CameraSimple::CameraSimple(State& aState, ContextWeak& aContext) : m(aState) {}
+CameraSimple::CameraSimple(State& aState, CreationContextPtr& aContext) : m(aState) {}
 CameraSimple::~CameraSimple() {}
 
 

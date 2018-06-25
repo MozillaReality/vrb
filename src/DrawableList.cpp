@@ -33,7 +33,7 @@ DrawableList::State::Reset() {
 }
 
 DrawableListPtr
-DrawableList::Create(ContextWeak& aContext) {
+DrawableList::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<DrawableList, DrawableList::State> >(aContext);
 }
 
@@ -95,7 +95,7 @@ DrawableList::Draw(const Camera& aCamera) {
   }
 }
 
-DrawableList::DrawableList(State& aState, ContextWeak& aContext) : m(aState) {}
+DrawableList::DrawableList(State& aState, CreationContextPtr& aContext) : m(aState) {}
 DrawableList::~DrawableList() {}
 
 } // namespace vrb

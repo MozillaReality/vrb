@@ -21,7 +21,7 @@ CullVisitor::State::Reset() {
 }
 
 CullVisitorPtr
-CullVisitor::Create(ContextWeak& aContext) {
+CullVisitor::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<CullVisitor, CullVisitor::State> >(aContext);
 }
 
@@ -55,7 +55,7 @@ CullVisitor::PopTransform() {
   }
 }
 
-CullVisitor::CullVisitor(State& aState, ContextWeak& aContext) : m(aState) {}
+CullVisitor::CullVisitor(State& aState, CreationContextPtr& aContext) : m(aState) {}
 CullVisitor::~CullVisitor() {}
 
 } // namespace vrb

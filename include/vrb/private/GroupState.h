@@ -19,6 +19,7 @@ struct Group::State : public Node::State {
   bool Contains(const Node& aNode);
   bool Contains(const Light& aLight);
   virtual bool IsEnabled(const Node&) { return true; }
+  virtual void Clear() { children.clear(); }
 };
 
 }

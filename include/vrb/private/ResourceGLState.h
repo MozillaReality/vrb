@@ -19,7 +19,7 @@ struct ResourceGL::State {
     if (prevResource) { prevResource->m.nextResource = nextResource; }
     if (nextResource) { nextResource->m.prevResource = prevResource; }
   }
-  void CallAllInitializeGL(Context& aContext) {
+  void CallAllInitializeGL(RenderContext& aContext) {
     ResourceGL* current = nextResource;
     while(current) {
       ResourceGL* tmp = current;
@@ -27,7 +27,7 @@ struct ResourceGL::State {
       tmp->InitializeGL(aContext);
     }
   }
-  void CallAllShutdownGL(Context& aContext) {
+  void CallAllShutdownGL(RenderContext& aContext) {
     ResourceGL* current = nextResource;
     while(current) {
       ResourceGL* tmp = current;
@@ -63,6 +63,54 @@ struct ResourceGL::State {
 
     aTail.m.prevResource = &aHead;
     aHead.m.nextResource = &aTail;
+  }
+};
+
+class ResourceGLHead : public vrb::ResourceGL {
+public:
+  ResourceGLHead(): vrb::ResourceGL(m) {}
+  ~ResourceGLHead() {}
+
+  // vrb::ResourcGL interface
+  void InitializeGL(RenderContext& aContext) override {
+    m.CallAllInitializeGL(aContext);
+  }
+  void ShutdownGL(RenderContext& aContext) override  {
+    m.CallAllShutdownGL(aContext);
+  }
+
+  // ResourceGLHead interface
+  void BindTail(ResourceGLHead& aTail) {
+    m.nextResource = &aTail;
+    aTail.m.prevResource = this;
+  }
+
+  bool Update(RenderContext& aContext) {
+    if (!m.nextResource) {
+      return false;
+    }
+    m.CallAllInitializeGL(aContext);
+    return true;
+  }
+
+  bool IsDirty(ResourceGLHead& aTail) {
+    return m.nextResource != &aTail;
+  }
+protected:
+  vrb::ResourceGL::State m;
+};
+
+class ResourceGLTail : public ResourceGLHead {
+public:
+  void InitializeGL(RenderContext&) override {} // noop
+  void ShutdownGL(RenderContext&) override {} // noop
+
+  void Prepend(vrb::ResourceGL* aResource)  {
+    m.Prepend(aResource);
+  }
+
+  void PrependAndAdoptList(ResourceGLHead& aHead, ResourceGLHead& aTail)  {
+    m.PrependAndAdoptList(*this, aHead, aTail);
   }
 };
 

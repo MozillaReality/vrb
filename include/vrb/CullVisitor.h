@@ -13,14 +13,14 @@ namespace vrb {
 
 class CullVisitor {
 public:
-  static CullVisitorPtr Create(ContextWeak& aContext);
+  static CullVisitorPtr Create(CreationContextPtr& aContext);
   const Matrix& GetTransform() const;
   void PushTransform(const Matrix& aTransform);
   void PopTransform();
 
 protected:
   struct State;
-  CullVisitor(State& aState, ContextWeak& aContext);
+  CullVisitor(State& aState, CreationContextPtr& aContext);
   ~CullVisitor();
 
 private:

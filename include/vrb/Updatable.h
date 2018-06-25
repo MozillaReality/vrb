@@ -13,10 +13,10 @@ namespace vrb {
 
 class Updatable {
 public:
-  virtual void UpdateResource(Context& aContext) = 0;
+  virtual void UpdateResource(RenderContext& aContext) = 0;
 protected:
   struct State;
-  Updatable(State& aState, ContextWeak& aContext);
+  Updatable(State& aState, CreationContextPtr& aContext);
   Updatable(State& aState);
   virtual ~Updatable();
 private:

@@ -14,7 +14,8 @@ template<class Base, class State>
 class ConcreteClass : private State, public Base {
 public:
   ConcreteClass() : Base(*(State*)this) {}
-  ConcreteClass(ContextWeak& aContext) : Base(*(State*)this, aContext) {}
+  ConcreteClass(CreationContextPtr& aContext) : Base(*(State*)this, aContext) {}
+  ConcreteClass(RenderContextPtr& aContext) : Base(*(State*)this, aContext) {}
 };
 
 } // namespace vrb

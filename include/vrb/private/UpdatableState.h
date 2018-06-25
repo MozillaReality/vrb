@@ -19,7 +19,7 @@ struct Updatable::State {
     if (prevUpdatable) { prevUpdatable->m.nextUpdatable = nextUpdatable; }
     if (nextUpdatable) { nextUpdatable->m.prevUpdatable = prevUpdatable; }
   }
-  void CallAllUpdateResources(Context& aContext) {
+  void CallAllUpdateResources(RenderContext& aContext) {
     Updatable* current = nextUpdatable;
     while(current) {
       Updatable* tmp = current;
@@ -33,6 +33,64 @@ struct Updatable::State {
     aUpdatable->m.prevUpdatable = prevUpdatable;
     prevUpdatable->m.nextUpdatable = aUpdatable;
     prevUpdatable = aUpdatable;
+  }
+
+  void PrependAndAdoptList(Updatable& self, Updatable& aHead, Updatable& aTail) {
+    if (!prevUpdatable) {
+      return;
+    }
+
+    if (!aHead.m.nextUpdatable) {
+      return;
+    }
+
+    if (!aTail.m.prevUpdatable) {
+      return;
+    }
+
+    prevUpdatable->m.nextUpdatable = aHead.m.nextUpdatable;
+    aHead.m.nextUpdatable->m.prevUpdatable = prevUpdatable;
+    prevUpdatable = aTail.m.prevUpdatable;
+    aTail.m.prevUpdatable->m.nextUpdatable = &self;
+
+    aTail.m.prevUpdatable = &aHead;
+    aHead.m.nextUpdatable = &aTail;
+  }
+};
+
+class UpdatableHead : public vrb::Updatable {
+public:
+  UpdatableHead() : vrb::Updatable(m) {}
+  ~UpdatableHead() {}
+
+  // vrb::Updatable interface
+  void UpdateResource(RenderContext& aContext) override  {
+    m.CallAllUpdateResources(aContext);
+  }
+
+  // UpdatableHead interface
+  void BindTail(UpdatableHead& aTail)  {
+    m.nextUpdatable = &aTail;
+    aTail.m.prevUpdatable = this;
+  }
+
+  bool IsDirty(UpdatableHead& aTail) {
+    return m.nextUpdatable != &aTail;
+  }
+protected:
+  vrb::Updatable::State m;
+
+};
+
+class UpdatableTail : public UpdatableHead {
+public:
+  void UpdateResource(RenderContext&) override {} // noop
+  void Prepend(vrb::Updatable* aUpdatable)  {
+    m.Prepend(aUpdatable);
+  }
+
+  void PrependAndAdoptList(UpdatableHead& aHead, UpdatableHead& aTail)  {
+    m.PrependAndAdoptList(*this, aHead, aTail);
   }
 };
 

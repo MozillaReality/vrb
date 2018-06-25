@@ -27,7 +27,7 @@ struct VertexArray::State {
 };
 
 VertexArrayPtr
-VertexArray::Create(ContextWeak& aContext) {
+VertexArray::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<VertexArray, VertexArray::State> >(aContext);
 }
 
@@ -131,7 +131,7 @@ VertexArray::AppendUV(const Vector& aUV) {
   return m.uvs.size() - 1;
 }
 
-VertexArray::VertexArray(State& aState, ContextWeak& aContext) : m(aState) {}
+VertexArray::VertexArray(State& aState, CreationContextPtr& aContext) : m(aState) {}
 VertexArray::~VertexArray() {}
 
 }
