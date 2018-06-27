@@ -31,6 +31,8 @@ public:
   TexturePtr GetTexture() const;
   void SetTexture(const TexturePtr& aTexture);
   bool HasTexture() const;
+  const Color& GetTintColor() const;
+  void SetTintColor(const Color& aColor);
   bool Enable(const Matrix& aPerspective, const Matrix& aView, const Matrix& aModel);
   void Disable();
   void SetLightsEnabled(bool aEnabled);
