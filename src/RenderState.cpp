@@ -53,6 +53,7 @@ uniform mat4 u_model;
 uniform int u_lightCount;
 uniform Light u_lights[MAX_LIGHTS];
 uniform Material u_material;
+uniform vec4 u_tintColor;
 
 attribute vec3 a_position;
 attribute vec3 a_normal;
@@ -98,6 +99,7 @@ void main(void) {
   if (u_lightCount == 0) {
     v_color = u_material.diffuse;
   }
+  v_color *= u_tintColor;
 #ifdef VRB_USE_TEXTURE
   v_uv = a_uv;
 #endif // VRB_USE_TEXTURE
@@ -200,6 +202,7 @@ struct RenderState::State : public ResourceGL::State {
   GLint uMatterialSpecular;
   GLint uMatterialSpecularExponent;
   GLint uTexture0;
+  GLint uTintColor;
   GLint aPosition;
   GLint aNormal;
   GLint aUV;
@@ -209,6 +212,7 @@ struct RenderState::State : public ResourceGL::State {
   Color specular;
   float specularExponent;
   TexturePtr texture;
+  Color tintColor;
   uint32_t lightId;
   bool updateLights;
   bool updateMaterial;
@@ -227,12 +231,14 @@ struct RenderState::State : public ResourceGL::State {
       , uMatterialSpecular(-1)
       , uMatterialSpecularExponent(-1)
       , uTexture0(-1)
+      , uTintColor(-1)
       , aPosition(-1)
       , aNormal(-1)
       , aUV(-1)
       , specularExponent(0.0f)
       , ambient(0.5f, 0.5f, 0.5f, 1.0f) // default to gray
       , diffuse(1.0f, 1.0f, 1.0f, 1.0f) // default to white
+      , tintColor(1.0f, 1.0f, 1.0f, 1.0f)
       , lightId(0)
       , updateLights(false)
       , updateMaterial(true)
@@ -327,6 +333,16 @@ RenderState::HasTexture() const {
   return m.texture != nullptr;
 }
 
+const Color&
+RenderState::GetTintColor() const {
+  return m.tintColor;
+}
+
+void
+RenderState::SetTintColor(const Color& aColor) {
+  m.tintColor = aColor;
+}
+
 bool
 RenderState::Enable(const Matrix& aPerspective, const Matrix& aView, const Matrix& aModel) {
   if (!m.program) { return false; }
@@ -353,10 +369,11 @@ RenderState::Enable(const Matrix& aPerspective, const Matrix& aView, const Matri
      VRB_GL_CHECK(glUniform1f(m.uMatterialSpecularExponent, m.specularExponent));
   }
   if (m.texture) {
-    glActiveTexture(GL_TEXTURE0);
+    VRB_GL_CHECK(glActiveTexture(GL_TEXTURE0));
     m.texture->Bind();
-    glUniform1i(m.uTexture0, 0);
+    VRB_GL_CHECK(glUniform1i(m.uTexture0, 0));
   }
+  VRB_GL_CHECK(glUniform4f(m.uTintColor, m.tintColor.Red(), m.tintColor.Green(), m.tintColor.Blue(), m.tintColor.Alpha()));
   VRB_GL_CHECK(glUniformMatrix4fv(m.uPerspective, 1, GL_FALSE, aPerspective.Data()));
   VRB_GL_CHECK(glUniformMatrix4fv(m.uView, 1, GL_FALSE, aView.Data()));
   VRB_GL_CHECK(glUniformMatrix4fv(m.uModel, 1, GL_FALSE, aModel.Data()));
@@ -453,6 +470,7 @@ RenderState::InitializeGL(Context& aContext) {
       const std::string texture0("u_texture0");
       m.uTexture0 = GetUniformLocation(m.program, texture0);
     }
+    m.uTintColor = GetUniformLocation(m.program, "u_tintColor");
     m.aPosition = GetAttributeLocation(m.program, "a_position");
     m.aNormal = GetAttributeLocation(m.program, "a_normal");
     if (kEnableTexturing) {
