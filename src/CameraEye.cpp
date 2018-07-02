@@ -27,7 +27,7 @@ CameraEye::State::Update() {
 }
 
 CameraEyePtr
-CameraEye::Create(ContextWeak& aContext) {
+CameraEye::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<CameraEye, CameraEye::State> >(aContext);
 }
 
@@ -77,7 +77,7 @@ CameraEye::SetEyeTransform(const Matrix& aTransform) {
   m.dirty = true;
 }
 
-CameraEye::CameraEye(State& aState, ContextWeak& aContext) : m(aState) {}
+CameraEye::CameraEye(State& aState, CreationContextPtr& aContext) : m(aState) {}
 CameraEye::~CameraEye() {}
 
 

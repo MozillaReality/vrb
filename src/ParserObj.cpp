@@ -6,7 +6,7 @@
 #include "vrb/ParserObj.h"
 
 #include "vrb/ConcreteClass.h"
-#include "vrb/Context.h"
+#include "vrb/CreationContext.h"
 #include "vrb/Vector.h"
 
 #include <string>
@@ -391,7 +391,7 @@ ParserObj::State::ParseMtl() {
 }
 
 ParserObjPtr
-ParserObj::Create(ContextWeak& aContext) {
+ParserObj::Create(CreationContextPtr& aContext) {
   ParserObjPtr self = std::make_shared<ConcreteClass<ParserObj, ParserObj::State> >(aContext);
   self->m.self = self;
   return self;
@@ -481,13 +481,8 @@ ParserObj::SetObserver(ParserObserverObjPtr aObserver) {
   m.weakObserver = aObserver;
 }
 
-ParserObj::ParserObj(State& aState, ContextWeak& aContext) : m(aState) {
-  ContextPtr context = aContext.lock();
-  if (context) {
-    m.fileReader = context->GetFileReader();
-  } else {
-    VRB_LOG("ParserObj unable to lock context to obtain FileReader");
-  }
+ParserObj::ParserObj(State& aState, CreationContextPtr& aContext) : m(aState) {
+  m.fileReader = aContext->GetFileReader();
 }
 
 ParserObj::~ParserObj() {}

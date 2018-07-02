@@ -26,7 +26,7 @@ public:
   static bool Traverse(const NodePtr& aRootNode, const TraverseFunction& aTraverseFunction);
 protected:
   struct State;
-  Node(State& aState, ContextWeak& aContext);
+  Node(State& aState, CreationContextPtr& aContext);
   virtual ~Node();
   static void AddToParents(GroupWeak& aParent, Node& aChild);
   static void RemoveFromParents(GroupWeak& aParent, Node& aChild);

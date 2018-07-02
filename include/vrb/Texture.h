@@ -24,7 +24,7 @@ public:
   void SetTextureParameter(GLenum aName, GLint aParam);
 protected:
   struct State;
-  Texture(State& aState, ContextWeak& aContext);
+  Texture(State& aState, CreationContextPtr& aContext);
   virtual ~Texture();
 
   virtual void AboutToBind() {}

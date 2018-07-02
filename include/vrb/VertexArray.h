@@ -13,7 +13,7 @@ namespace vrb {
 
 class VertexArray {
 public:
-  static VertexArrayPtr Create(ContextWeak& aContext);
+  static VertexArrayPtr Create(CreationContextPtr& aContext);
 
   int GetVertexCount() const;
   int GetNormalCount() const;
@@ -37,7 +37,7 @@ public:
 
 protected:
   struct State;
-  VertexArray(State& aState, ContextWeak& aContext);
+  VertexArray(State& aState, CreationContextPtr& aContext);
   ~VertexArray();
 
 private:

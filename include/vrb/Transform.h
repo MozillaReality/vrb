@@ -14,7 +14,7 @@ namespace vrb {
 
 class Transform : public Group {
 public:
-  static TransformPtr Create(ContextWeak& aContext);
+  static TransformPtr Create(CreationContextPtr& aContext);
   // Node interface
   void Cull(CullVisitor& aVisitor, DrawableList& aDrawables) override;
   // Transform interface
@@ -23,7 +23,7 @@ public:
   void SetTransform(const Matrix& aTransform);
 protected:
   struct State;
-  Transform(State& aState, ContextWeak& aContext);
+  Transform(State& aState, CreationContextPtr& aContext);
   ~Transform();
 private:
   State& m;

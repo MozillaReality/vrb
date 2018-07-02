@@ -22,7 +22,7 @@ public:
     bool multiview;
     int samples;
   };
-  static FBOPtr Create(ContextWeak& aContext);
+  static FBOPtr Create(RenderContextPtr& aContext);
   bool IsValid() const;
   void SetTextureHandle(const GLuint aHandle,
                         const int32_t aWidth,
@@ -33,7 +33,7 @@ public:
   const FBO::Attributes& GetAttributes() const;
 protected:
   struct State;
-  FBO(State& aState, ContextWeak& aContext);
+  FBO(State& aState);
   ~FBO();
 private:
   State& m;

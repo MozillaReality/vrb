@@ -37,7 +37,7 @@ Group::State::Contains(const Light& aLight) {
 }
 
 GroupPtr
-Group::Create(ContextWeak& aContext) {
+Group::Create(CreationContextPtr& aContext) {
   GroupPtr group = std::make_shared<ConcreteClass<Group, Group::State> >(aContext);
   group->m.self = group;
   return group;
@@ -115,6 +115,14 @@ Group::SortNodes(const std::function<bool(const vrb::NodePtr&, const vrb::NodePt
   std::sort(m.children.begin(), m.children.end(), aFunction);
 }
 
+void
+Group::TakeChildren(GroupPtr& aSource) {
+  for (NodePtr& child: aSource->m.children) {
+    m.children.push_back(child);
+  }
+  aSource->m.Clear();
+}
+
 bool
 Group::Traverse(const GroupPtr& aParent, const Node::TraverseFunction& aTraverseFunction) {
   for (NodePtr& child: m.children) {
@@ -126,7 +134,7 @@ Group::Traverse(const GroupPtr& aParent, const Node::TraverseFunction& aTraverse
   return false;
 }
 
-Group::Group(State& aState, ContextWeak& aContext) : Node(aState, aContext), m(aState) {}
+Group::Group(State& aState, CreationContextPtr& aContext) : Node(aState, aContext), m(aState) {}
 Group::~Group() {
   for (NodePtr& child: m.children) {
     RemoveFromParents(m.self, *child);

@@ -20,7 +20,7 @@ public:
   virtual void Draw(const Camera& aCamera, const Matrix& aModelTransform) = 0;
 protected:
   struct State;
-  Drawable(State& aState, ContextWeak& aContext);
+  Drawable(State& aState, CreationContextPtr& aContext);
   ~Drawable();
 private:
   State& m;

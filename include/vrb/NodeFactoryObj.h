@@ -16,7 +16,7 @@ namespace vrb {
 
 class NodeFactoryObj : public ParserObserverObj {
 public:
-  static NodeFactoryObjPtr Create(ContextWeak& aContext);
+  static NodeFactoryObjPtr Create(CreationContextPtr& aContext);
 
   // ParserObserverObj interface
   void StartModel(const std::string& aFileName) override;
@@ -52,7 +52,7 @@ public:
 
 protected:
   struct State;
-  NodeFactoryObj(State& aState, ContextWeak& aContext);
+  NodeFactoryObj(State& aState, CreationContextPtr& aContext);
   ~NodeFactoryObj();
 
 private:

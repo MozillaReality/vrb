@@ -7,13 +7,13 @@
 
 #include "vrb/Color.h"
 #include "vrb/ConcreteClass.h"
-#include "vrb/Context.h"
+#include "vrb/CreationContext.h"
 #include "vrb/Geometry.h"
 #include "vrb/Group.h"
 #include "vrb/Mutex.h"
 #include "vrb/RenderState.h"
 #include "vrb/Texture.h"
-#include "vrb/TextureCache.h"
+#include "vrb/TextureGL.h"
 #include "vrb/Vector.h"
 #include "vrb/VertexArray.h"
 
@@ -40,7 +40,7 @@ namespace vrb {
 
 struct NodeFactoryObj::State {
   std::unordered_map<std::string, Material> materials;
-  std::weak_ptr<Context> context;
+  CreationContextWeak context;
   int groupId;
   GroupPtr root;
   VertexArrayPtr vertices;
@@ -67,11 +67,11 @@ NodeFactoryObj::State::CreateRenderState(Material& aMaterial) {
     return;
   }
 
-  aMaterial.state = RenderState::Create(context);
-  if (!aMaterial.diffuseTextureName.empty()) {
-    TextureCachePtr cache = context.lock()->GetTextureCache();
-    if (cache) {
-      TexturePtr texture = cache->LoadTexture(aMaterial.diffuseTextureName);
+  CreationContextPtr creation = context.lock();
+  if (creation) {
+    aMaterial.state = RenderState::Create(creation);
+    if (!aMaterial.diffuseTextureName.empty()) {
+      TexturePtr texture = creation->LoadTexture(aMaterial.diffuseTextureName);
       aMaterial.state->SetTexture(texture);
     }
   }
@@ -79,18 +79,23 @@ NodeFactoryObj::State::CreateRenderState(Material& aMaterial) {
 }
 
 NodeFactoryObjPtr
-NodeFactoryObj::Create(ContextWeak& aContext) {
+NodeFactoryObj::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<NodeFactoryObj, NodeFactoryObj::State> >(aContext);
 }
 
 void
 NodeFactoryObj::StartModel(const std::string& aFileName) {
   FinishModel();
+  CreationContextPtr creation = m.context.lock();
+  if (!creation) {
+    VRB_LOG("Error: failed to lock creation context in NodeFactoryObj::StartModel");
+    return;
+  }
   if (!m.root) {
-    m.root = Group::Create(m.context);
+    m.root = Group::Create(creation);
   }
   m.root->SetName(aFileName);
-  m.vertices = VertexArray::Create(m.context);
+  m.vertices = VertexArray::Create(creation);
 }
 
 void
@@ -106,12 +111,16 @@ NodeFactoryObj::LoadMaterialLibrary(const std::string& aFile) {
 void
 NodeFactoryObj::SetGroupNames(const std::vector<std::string>& aNames) {
   if (!m.root) { return; }
-  m.currentGeometry = Geometry::Create(m.context);
+  CreationContextPtr creation = m.context.lock();
+  if (!creation) {
+    return;
+  }
+  m.currentGeometry = Geometry::Create(creation);
   m.currentGeometry->SetName(aNames.front());
   m.root->AddNode(m.currentGeometry);
   m.currentGeometry->SetVertexArray(m.vertices);
   if (!m.defaultRenderState) {
-    m.defaultRenderState = RenderState::Create(m.context);
+    m.defaultRenderState = RenderState::Create(creation);
   }
   m.currentGeometry->SetRenderState(m.defaultRenderState);
 }
@@ -267,7 +276,7 @@ NodeFactoryObj::GetModelRoot() {
   return m.root;
 }
 
-NodeFactoryObj::NodeFactoryObj(State& aState, ContextWeak& aContext) : m(aState) {
+NodeFactoryObj::NodeFactoryObj(State& aState, CreationContextPtr& aContext) : m(aState) {
   m.context = aContext;
 }
 NodeFactoryObj::~NodeFactoryObj() {}

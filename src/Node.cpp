@@ -40,7 +40,7 @@ Node::RemoveFromParents() {
   }
 }
 
-Node::Node(State& aState, ContextWeak& aContext) : m(aState) {}
+Node::Node(State& aState, CreationContextPtr& aContext) : m(aState) {}
 Node::~Node() {
   if (m.parents.size() != 0) {
     VRB_LOG("Node: %s destructor called with parent count != 0", m.name.c_str());

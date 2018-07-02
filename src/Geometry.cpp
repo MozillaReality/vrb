@@ -79,7 +79,7 @@ struct Geometry::State : public Node::State, public ResourceGL::State, public Dr
 };
 
 GeometryPtr
-Geometry::Create(ContextWeak& aContext) {
+Geometry::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<Geometry, Geometry::State> >(aContext);
 }
 
@@ -109,23 +109,23 @@ Geometry::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
     const GLsizei kNormalSize = m.NormalSize();
     const GLsizei kUVLength = m.UVLength();
     VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
-    VRB_GL_CHECK(glVertexAttribPointer(m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, kSize, nullptr));
-    VRB_GL_CHECK(glVertexAttribPointer(m.renderState->AttributeNormal(), 3, GL_FLOAT, GL_FALSE, kSize, (void*)kPositionSize));
+    VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, kSize, nullptr));
+    VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributeNormal(), 3, GL_FLOAT, GL_FALSE, kSize, (void*)kPositionSize));
     if (kUseTextureCoords) {
-      VRB_GL_CHECK(glVertexAttribPointer(m.renderState->AttributeUV(), kUVLength, GL_FLOAT, GL_FALSE, kSize, (void*)(kPositionSize + kNormalSize)));
+      VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributeUV(), kUVLength, GL_FLOAT, GL_FALSE, kSize, (void*)(kPositionSize + kNormalSize)));
     }
 
     VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
-    VRB_GL_CHECK(glEnableVertexAttribArray(m.renderState->AttributePosition()));
-    VRB_GL_CHECK(glEnableVertexAttribArray(m.renderState->AttributeNormal()));
+    VRB_GL_CHECK(glEnableVertexAttribArray((GLuint)m.renderState->AttributePosition()));
+    VRB_GL_CHECK(glEnableVertexAttribArray((GLuint)m.renderState->AttributeNormal()));
     if (kUseTextureCoords) {
-      VRB_GL_CHECK(glEnableVertexAttribArray(m.renderState->AttributeUV()));
+      VRB_GL_CHECK(glEnableVertexAttribArray((GLuint)m.renderState->AttributeUV()));
     }
     VRB_GL_CHECK(glDrawElements(GL_TRIANGLES, m.triangleCount * 3, GL_UNSIGNED_SHORT, 0));
-    VRB_GL_CHECK(glDisableVertexAttribArray(m.renderState->AttributePosition()));
-    VRB_GL_CHECK(glDisableVertexAttribArray(m.renderState->AttributeNormal()));
+    VRB_GL_CHECK(glDisableVertexAttribArray((GLuint)m.renderState->AttributePosition()));
+    VRB_GL_CHECK(glDisableVertexAttribArray((GLuint)m.renderState->AttributeNormal()));
     if (kUseTextureCoords) {
-      VRB_GL_CHECK(glDisableVertexAttribArray(m.renderState->AttributeUV()));
+      VRB_GL_CHECK(glDisableVertexAttribArray((GLuint)m.renderState->AttributeUV()));
     }
     m.renderState->Disable();
     VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
@@ -168,9 +168,9 @@ Geometry::UpdateBuffers() {
       VRB_LOG("ERROR! Face with only %d vertices:%s", face.vertices.size(), message.c_str());
       continue;
     }
-    const GLushort vertexIndex = face.vertices[0] - 1;
-    const GLushort normalIndex = face.normals[0] - 1;
-    const GLushort uvIndex = (kUseTextureCoords ? face.uvs[0] - 1 : -1);
+    const GLushort vertexIndex = (GLushort)(face.vertices[0] - 1);
+    const GLushort normalIndex = (GLushort)(face.normals[0] - 1);
+    const GLushort uvIndex = (GLushort)(kUseTextureCoords ? face.uvs[0] - 1 : -1);
     const Vector& firstVertex = m.vertexArray->GetVertex(vertexIndex);
     const Vector& firstNormal = m.vertexArray->GetNormal(normalIndex);
     const Vector& firstUV = m.vertexArray->GetUV(uvIndex);
@@ -290,7 +290,7 @@ Geometry::GetFace(int32_t aIndex) const {
   return m.faces[aIndex];
 }
 
-Geometry::Geometry(State& aState, ContextWeak& aContext) :
+Geometry::Geometry(State& aState, CreationContextPtr& aContext) :
     Node(aState, aContext),
     ResourceGL(aState, aContext),
     Drawable(aState, aContext),
@@ -299,7 +299,7 @@ Geometry::~Geometry() {}
 
 // ResourceGL interface
 void
-Geometry::InitializeGL(Context& aContext) {
+Geometry::InitializeGL(RenderContext& aContext) {
   if (!m.renderState) {
     VRB_LOG("Unable to initialize Geometry Node. No RenderState set");
   }
@@ -319,7 +319,7 @@ Geometry::InitializeGL(Context& aContext) {
 }
 
 void
-Geometry::ShutdownGL(Context& aContext) {
+Geometry::ShutdownGL(RenderContext& aContext) {
 
 }
 

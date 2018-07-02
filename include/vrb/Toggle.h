@@ -14,7 +14,7 @@ namespace vrb {
 
 class Toggle : public Group {
 public:
-  static TogglePtr Create(ContextWeak& aContext);
+  static TogglePtr Create(CreationContextPtr& aContext);
 
   // Group interface
   void RemoveNode(Node& aNode) override;
@@ -27,7 +27,7 @@ public:
 protected:
   typedef Group Super;
   struct State;
-  Toggle(State& aState, ContextWeak& aContext);
+  Toggle(State& aState, CreationContextPtr& aContext);
   ~Toggle();
 
 private:

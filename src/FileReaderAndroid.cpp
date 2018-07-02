@@ -59,8 +59,8 @@ private:
 };
 
 FileReaderAndroidPtr
-FileReaderAndroid::Create(ContextWeak& aContext) {
-  return std::make_shared<ConcreteClass<FileReaderAndroid, FileReaderAndroid::State> >(aContext);
+FileReaderAndroid::Create() {
+  return std::make_shared<ConcreteClass<FileReaderAndroid, FileReaderAndroid::State> >();
 }
 
 void
@@ -163,7 +163,7 @@ FileReaderAndroid::ImageFileLoadFailed(const int aFileHandle, const std::string&
   m.imageTarget = nullptr;
 }
 
-FileReaderAndroid::FileReaderAndroid(State& aState, ContextWeak& aContext) : m(aState) {}
+FileReaderAndroid::FileReaderAndroid(State& aState) : m(aState) {}
 FileReaderAndroid::~FileReaderAndroid() {}
 
 } // namespace vrb

@@ -247,7 +247,7 @@ struct RenderState::State : public ResourceGL::State {
 };
 
 RenderStatePtr
-RenderState::Create(ContextWeak& aContext) {
+RenderState::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<RenderState, RenderState::State>>(aContext);
 }
 
@@ -393,11 +393,11 @@ RenderState::SetLightsEnabled(bool aEnabled) {
   m.lightsEnabled = aEnabled;
 }
 
-RenderState::RenderState(State& aState, ContextWeak& aContext) : ResourceGL(aState, aContext), m(aState) {}
+RenderState::RenderState(State& aState, CreationContextPtr& aContext) : ResourceGL(aState, aContext), m(aState) {}
 RenderState::~RenderState() {}
 
 void
-RenderState::InitializeGL(Context& aContext) {
+RenderState::InitializeGL(RenderContext& aContext) {
   const bool kEnableTexturing = m.texture != nullptr;
   std::string vertexShaderSource = sVertexShaderSource;
   const std::string kTextureUVMacro("VRB_TEXTURE_UV_TYPE");
@@ -481,7 +481,7 @@ RenderState::InitializeGL(Context& aContext) {
 }
 
 void
-RenderState::ShutdownGL(Context& aContext) {
+RenderState::ShutdownGL(RenderContext& aContext) {
 
 }
 

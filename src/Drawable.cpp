@@ -13,7 +13,7 @@ Drawable::CreateDrawablePtr() {
   return shared_from_this();
 }
 
-Drawable::Drawable(State& aState, ContextWeak& aContext) : m(aState) {}
+Drawable::Drawable(State& aState, CreationContextPtr& aContext) : m(aState) {}
 Drawable::~Drawable() {}
 
 }

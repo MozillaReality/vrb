@@ -19,7 +19,7 @@ namespace vrb {
 
 class Geometry : public Node, public Drawable, protected ResourceGL {
 public:
-  static GeometryPtr Create(ContextWeak& aContext);
+  static GeometryPtr Create(CreationContextPtr& aContext);
   struct Face {
     std::vector<GLushort> vertices;
     std::vector<GLushort> uvs;
@@ -49,12 +49,12 @@ public:
 
 protected:
   struct State;
-  Geometry(State& aState, ContextWeak& aContext);
+  Geometry(State& aState, CreationContextPtr& aContext);
   ~Geometry();
 
   // From ResourceGL
-  void InitializeGL(Context& aContext) override;
-  void ShutdownGL(Context& aContext) override;
+  void InitializeGL(RenderContext& aContext) override;
+  void ShutdownGL(RenderContext& aContext) override;
 
 private:
   State& m;

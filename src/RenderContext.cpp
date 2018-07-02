@@ -3,29 +3,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vrb/Context.h"
+#include "vrb/RenderContext.h"
+#include "vrb/ConcreteClass.h"
 #include "vrb/private/ResourceGLState.h"
 #include "vrb/private/UpdatableState.h"
-#include "vrb/GLExtensions.h"
 
-#include "vrb/ConcreteClass.h"
+#include "vrb/ContextSynchronizer.h"
+#include "vrb/CreationContext.h"
 #if defined(ANDROID)
-#include "vrb/FileReaderAndroid.h"
 #include "vrb/ClassLoaderAndroid.h"
+#include "vrb/FileReaderAndroid.h"
 #endif // defined(ANDROID)
+#include "vrb/GLExtensions.h"
 #include "vrb/Logger.h"
 #include "vrb/ResourceGL.h"
 #include "vrb/SurfaceTextureFactory.h"
 #include "vrb/TextureCache.h"
 #include "vrb/Updatable.h"
 #include <EGL/egl.h>
+#include <pthread.h>
+#include <vector>
 
 namespace vrb {
 
-struct Context::State {
-  std::weak_ptr<Context> self;
+struct RenderContext::State {
+  pthread_t threadSelf;
   EGLContext eglContext;
   TextureCachePtr textureCache;
+  CreationContextPtr creationContext;
   GLExtensionsPtr glExtensions;
 #if defined(ANDROID)
   FileReaderAndroidPtr fileReader;
@@ -38,47 +43,57 @@ struct Context::State {
   ResourceGLTail addedResourcesTail;
   ResourceGLHead resourcesHead;
   ResourceGLTail resourcesTail;
+  std::vector<ContextSynchronizerPtr> synchronizers;
   State();
 };
 
-Context::State::State() : eglContext(EGL_NO_CONTEXT) {
+RenderContext::State::State() {
+  threadSelf = pthread_self();
+  textureCache = TextureCache::Create();
   updatableHead.BindTail(updatableTail);
   addedResourcesHead.BindTail(addedResourcesTail);
   resourcesHead.BindTail(resourcesTail);
 }
 
-ContextPtr
-Context::Create() {
-  ContextPtr result = std::make_shared<ConcreteClass<Context, Context::State> >();
-  result->m.self = result;
-  result->m.textureCache = TextureCache::Create(result->m.self);
-  result->m.glExtensions = GLExtensions::Create(result->m.self);
+RenderContextPtr
+RenderContext::Create() {
+  RenderContextPtr result = std::make_shared<ConcreteClass<RenderContext, RenderContext::State> >();
+  result->m.creationContext = CreationContext::Create(result);
+  result->m.creationContext->BindToThread();
+  result->m.textureCache->Init(result->m.creationContext);
+  result->m.glExtensions = GLExtensions::Create(result);
 #if defined(ANDROID)
-  result->m.fileReader = FileReaderAndroid::Create(result->m.self);
-  result->m.surfaceTextureFactory = SurfaceTextureFactory::Create(result->m.self);
+  result->m.surfaceTextureFactory = SurfaceTextureFactory::Create(result->m.creationContext);
+  result->m.fileReader = FileReaderAndroid::Create();
+  FileReaderPtr fileReader = result->m.fileReader;
+  result->m.creationContext->SetFileReader(fileReader);
   result->m.classLoader = ClassLoaderAndroid::Create();
 #endif // defined(ANDROID)
-
   return result;
 }
 
 #if defined(ANDROID)
 void
-Context::InitializeJava(JNIEnv* aEnv, jobject & aActivity, jobject& aAssetManager) {
+RenderContext::InitializeJava(JNIEnv* aEnv, jobject& aActivity, jobject& aAssetManager) {
   if (m.classLoader) { m.classLoader->Init(aEnv, aActivity); }
   if (m.fileReader) { m.fileReader->Init(aEnv, aAssetManager, m.classLoader); }
   if (m.surfaceTextureFactory) { m.surfaceTextureFactory->InitializeJava(aEnv); }
 }
 
 void
-Context::ShutdownJava() {
+RenderContext::ShutdownJava() {
   if (m.fileReader) { m.fileReader->Shutdown(); }
   if (m.classLoader) { m.classLoader->Shutdown(); }
 }
 #endif // defined(ANDROID)
 
 bool
-Context::InitializeGL() {
+RenderContext::IsOnRenderThread() {
+  return pthread_equal(m.threadSelf, pthread_self()) > 0;
+}
+
+bool
+RenderContext::InitializeGL() {
   EGLContext current = eglGetCurrentContext();
   if (current == EGL_NO_CONTEXT) {
     VRB_LOG("Unable to initialize VRB context: EGLContext is not valid.");
@@ -91,68 +106,74 @@ Context::InitializeGL() {
     VRB_LOG("*** EGLContext NOT EQUAL %p != %p",(void*)current,(void*)m.eglContext);
   }
   m.eglContext = current;
-
   m.resourcesHead.InitializeGL(*this);
   m.glExtensions->Initialize();
   return true;
 }
 
+void
+RenderContext::ShutdownGL() {
+  m.resourcesHead.ShutdownGL(*this);
+}
 
 void
-Context::Update() {
+RenderContext::Update() {
+  m.creationContext->Synchronize();
+  for(auto iter = m.synchronizers.begin(); iter != m.synchronizers.end();) {
+    bool active = true;
+    (*iter)->Signal(active);
+    if(!active) {
+      iter = m.synchronizers.erase(iter);
+    } else {
+      iter++;
+    }
+  }
   if (m.addedResourcesHead.Update(*this)) {
     m.resourcesTail.PrependAndAdoptList(m.addedResourcesHead, m.addedResourcesTail);
   }
   m.updatableHead.UpdateResource(*this);
 }
 
-void
-Context::ShutdownGL() {
-  EGLContext current = eglGetCurrentContext();
-  if (current == EGL_NO_CONTEXT) {
-    VRB_LOG("Unable to shutdown VRB context: EGLContext is not valid.");
-  }
-  m.resourcesHead.ShutdownGL(*this);
-  m.eglContext = EGL_NO_CONTEXT;
-}
-
-FileReaderPtr
-Context::GetFileReader() {
-#if defined(ANDROID)
-  return m.fileReader;
-#else
-#  error "Platform not supported"
-#endif // defined(ANDROID)
-}
-
-void
-Context::AddUpdatable(Updatable* aUpdatable) {
-  m.updatableTail.Prepend(aUpdatable);
-}
-
-void
-Context::AddResourceGL(ResourceGL* aResource) {
-  m.addedResourcesTail.Prepend(aResource);
-}
-
-TextureCachePtr
-Context::GetTextureCache() {
+TextureCachePtr&
+RenderContext::GetTextureCache() {
   return m.textureCache;
 }
 
+CreationContextPtr&
+RenderContext::GetRenderThreadCreationContext() {
+  return m.creationContext;
+}
+
 GLExtensionsPtr
-Context::GetGLExtensions() const {
+RenderContext::GetGLExtensions() const {
   return m.glExtensions;
 }
 
 #if defined(ANDROID)
 SurfaceTextureFactoryPtr
-Context::GetSurfaceTextureFactory() {
+RenderContext::GetSurfaceTextureFactory() {
   return m.surfaceTextureFactory;
 }
+
 #endif // defined(ANDROID)
 
-Context::Context(State& aState) : m(aState) {}
-Context::~Context() {}
+// Internal interface
+ResourceGLTail&
+RenderContext::GetResourceGLTail() {
+  return m.addedResourcesTail;
+}
+
+UpdatableTail&
+RenderContext::GetUpdatableTail() {
+  return m.updatableTail;
+}
+
+void
+RenderContext::RegisterContextSynchronizer(ContextSynchronizerPtr& aSynchronizer) {
+  m.synchronizers.push_back(aSynchronizer);
+}
+
+RenderContext::RenderContext(State& aState) : m(aState) {}
+RenderContext::~RenderContext() {}
 
 } // namespace vrb

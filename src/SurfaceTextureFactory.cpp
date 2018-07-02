@@ -159,7 +159,7 @@ SurfaceTextureFactory::State::Shutdown() {
 }
 
 SurfaceTextureFactoryPtr
-SurfaceTextureFactory::Create(ContextWeak& aContext) {
+SurfaceTextureFactory::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<SurfaceTextureFactory, SurfaceTextureFactory::State> >(aContext);
 }
 
@@ -220,11 +220,15 @@ SurfaceTextureFactory::LookupSurfaceTexture(const std::string& aName) {
   return nullptr;
 }
 
-SurfaceTextureFactory::SurfaceTextureFactory(State& aState, ContextWeak& aContext) : Updatable(aState, aContext), ResourceGL(aState, aContext), m(aState) {}
+SurfaceTextureFactory::SurfaceTextureFactory(State& aState, CreationContextPtr& aContext)
+    : Updatable(aState, aContext)
+    , ResourceGL(aState, aContext)
+    , m(aState) {}
+
 SurfaceTextureFactory::~SurfaceTextureFactory() {}
 
 void
-SurfaceTextureFactory::UpdateResource(Context& aContext) {
+SurfaceTextureFactory::UpdateResource(RenderContext& aContext) {
   if (!m.env) {
     return;
   }
@@ -276,7 +280,7 @@ SurfaceTextureFactory::UpdateResource(Context& aContext) {
 
 // ResourceGL interface
 void
-SurfaceTextureFactory::InitializeGL(Context& aContext) {
+SurfaceTextureFactory::InitializeGL(RenderContext& aContext) {
   VRB_LOG("***** SurfaceTextureFactory::InitializeGL");
   for(SurfaceTextureRecord& record: m.textures) {
     if (record.surface && !record.attached) {
@@ -294,7 +298,7 @@ SurfaceTextureFactory::InitializeGL(Context& aContext) {
 }
 
 void
-SurfaceTextureFactory::ShutdownGL(Context& aContext) {
+SurfaceTextureFactory::ShutdownGL(RenderContext& aContext) {
   VRB_LOG("***** SurfaceTextureFactory::ShutdownGL");
   for(SurfaceTextureRecord& record: m.textures) {
     if (record.surface && record.attached) {

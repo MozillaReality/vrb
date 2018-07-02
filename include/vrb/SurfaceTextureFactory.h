@@ -33,7 +33,7 @@ private:
 
 class SurfaceTextureFactory : protected Updatable, protected ResourceGL {
 public:
-  static SurfaceTextureFactoryPtr Create(ContextWeak& aContext);
+  static SurfaceTextureFactoryPtr Create(CreationContextPtr& aContext);
   void InitializeJava(JNIEnv* aEnv);
   void ShutdownJava();
 
@@ -46,15 +46,15 @@ public:
 
 protected:
   struct State;
-  SurfaceTextureFactory(State& aState, ContextWeak& aContext);
+  SurfaceTextureFactory(State& aState, CreationContextPtr& aContext);
   ~SurfaceTextureFactory();
 
   // Updatable interface
-  void UpdateResource(Context& aContext) override;
+  void UpdateResource(RenderContext& aContext) override;
 
   // ResourceGL interface
-  void InitializeGL(Context& aContext) override;
-  void ShutdownGL(Context& aContext) override;
+  void InitializeGL(RenderContext& aContext) override;
+  void ShutdownGL(RenderContext& aContext) override;
 
 private:
   State& m;

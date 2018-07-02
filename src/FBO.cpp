@@ -6,7 +6,7 @@
 #include "vrb/FBO.h"
 #include "vrb/ConcreteClass.h"
 
-#include "vrb/Context.h"
+#include "vrb/RenderContext.h"
 #include "vrb/GLError.h"
 #include "vrb/GLExtensions.h"
 #include "vrb/Logger.h"
@@ -14,7 +14,7 @@
 namespace vrb {
 
 struct FBO::State {
-  ContextWeak context;
+  RenderContextWeak context;
   bool valid;
   GLuint depth;
   GLuint fbo;
@@ -39,7 +39,7 @@ struct FBO::State {
 
   void UpdateAttributes(const FBO::Attributes& aAttributes) {
     attributes = aAttributes;
-    ContextPtr ctx = context.lock();
+    RenderContextPtr ctx = context.lock();
     GLExtensionsPtr ext = ctx->GetGLExtensions();
     if (attributes.multiview) {
       if (!ext->IsExtensionSupported(GLExtensions::Ext::OVR_multiview)) {
@@ -60,7 +60,7 @@ struct FBO::State {
   }
 
   void InitializeMultiview(const GLuint aHandle, int32_t aWidth, int32_t aHeight) {
-    ContextPtr ctx = context.lock();
+    RenderContextPtr ctx = context.lock();
     const GLExtensions::Functions& ext = ctx->GetGLExtensions()->GetFunctions();
 
     if (attributes.depth) {
@@ -87,7 +87,7 @@ struct FBO::State {
   }
 
   void Initialize(const GLuint aHandle, int32_t aWidth, int32_t aHeight) {
-    ContextPtr ctx = context.lock();
+    RenderContextPtr ctx = context.lock();
     const GLExtensions::Functions& ext = ctx->GetGLExtensions()->GetFunctions();
 
     VRB_GL_CHECK(glGenFramebuffers(1, &fbo));
@@ -123,8 +123,10 @@ FBO::Attributes::Attributes(bool aDepth, bool aMultiview, int aSamples)
   , samples(aSamples) {}
 
 FBOPtr
-FBO::Create(ContextWeak& aContext) {
-  return std::make_shared<ConcreteClass<FBO, FBO::State> >(aContext);
+FBO::Create(RenderContextPtr& aContext) {
+  FBOPtr result = std::make_shared<ConcreteClass<FBO, FBO::State> >();
+  result->m.context = aContext;
+  return result;
 }
 
 bool
@@ -173,7 +175,7 @@ FBO::GetAttributes() const {
   return m.attributes;
 }
 
-FBO::FBO(State& aState, ContextWeak& aContext) : m(aState) { m.context = aContext; }
+FBO::FBO(State& aState) : m(aState) {}
 FBO::~FBO() { m.Clear(); }
 
 } // namespace vrb

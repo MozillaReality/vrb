@@ -17,13 +17,13 @@ namespace vrb {
 
 class TextureSurface : public Texture {
 public:
-  static TextureSurfacePtr Create(ContextWeak& aContext, const std::string& aName);
+  static TextureSurfacePtr Create(RenderContextPtr& aContext, const std::string& aName);
 
   void SetTextureHandle(const GLuint aHandle);
 
 protected:
   struct State;
-  TextureSurface(State& aState, ContextWeak& aContext);
+  TextureSurface(State& aState, CreationContextPtr& aContext);
   ~TextureSurface();
 
   // Texture interface

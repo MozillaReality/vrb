@@ -26,9 +26,16 @@ typedef std::shared_ptr<ClassLoaderAndroid> ClassLoaderAndroidPtr;
 
 class Color;
 
-class Context;
-typedef std::shared_ptr<Context> ContextPtr;
-typedef std::weak_ptr<Context> ContextWeak;
+class ContextSynchronizer;
+typedef std::shared_ptr<ContextSynchronizer> ContextSynchronizerPtr;
+
+class ContextSynchronizerObserver;
+typedef std::shared_ptr<ContextSynchronizerObserver> ContextSynchronizerObserverPtr;
+
+
+class CreationContext;
+typedef std::shared_ptr<CreationContext> CreationContextPtr;
+typedef std::weak_ptr<CreationContext> CreationContextWeak;
 
 class CullVisitor;
 typedef std::shared_ptr<CullVisitor> CullVisitorPtr;
@@ -68,11 +75,18 @@ typedef std::shared_ptr<Light> LightPtr;
 
 class Matrix;
 
+#if defined(ANDROID)
+class ModelLoaderAndroid;
+typedef std::shared_ptr<ModelLoaderAndroid> ModelLoaderAndroidPtr;
+#endif // defined(ANDROID)
+
 class Node;
 typedef std::shared_ptr<Node> NodePtr;
 
 class NodeFactoryObj;
 typedef std::shared_ptr<NodeFactoryObj> NodeFactoryObjPtr;
+
+class UpdatableStore;
 
 class ParserObj;
 typedef std::shared_ptr<ParserObj> ParserObjPtr;
@@ -86,10 +100,16 @@ typedef std::shared_ptr<Program> ProgramPtr;
 class ProgramFactory;
 typedef std::shared_ptr<ProgramFactory> ProgramFactoryPtr;
 
+class RenderContext;
+typedef std::shared_ptr<RenderContext> RenderContextPtr;
+typedef std::weak_ptr<RenderContext> RenderContextWeak;
+
 class RenderState;
 typedef std::shared_ptr<RenderState> RenderStatePtr;
 
 class ResourceGL;
+class ResourceGLHead;
+class ResourceGLTail;
 
 #if defined(ANDROID)
 class RunnableQueue;
@@ -126,6 +146,8 @@ class Transform;
 typedef std::shared_ptr<Transform> TransformPtr;
 
 class Updatable;
+class UpdatableHead;
+class UpdatableTail;
 
 class Vector;
 

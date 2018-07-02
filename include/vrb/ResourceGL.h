@@ -13,11 +13,11 @@ namespace vrb {
 
 class ResourceGL {
 public:
-  virtual void InitializeGL(Context& aContext) = 0;
-  virtual void ShutdownGL(Context& aContext) = 0;
+  virtual void InitializeGL(RenderContext& aContext) = 0;
+  virtual void ShutdownGL(RenderContext& aContext) = 0;
 protected:
   struct State;
-  ResourceGL(State& aState, ContextWeak& aContext);
+  ResourceGL(State& aState, CreationContextPtr& aContext);
   ResourceGL(State& aState);
   virtual ~ResourceGL();
 private:

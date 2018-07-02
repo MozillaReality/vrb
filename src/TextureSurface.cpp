@@ -5,11 +5,11 @@
 
 #include "vrb/TextureSurface.h"
 #include "vrb/private/TextureState.h"
-
 #include "vrb/ConcreteClass.h"
-#include "vrb/Context.h"
+
 #include "vrb/GLError.h"
 #include "vrb/Logger.h"
+#include "vrb/RenderContext.h"
 #include "vrb/SurfaceTextureFactory.h"
 
 #include "vrb/gl.h"
@@ -67,20 +67,19 @@ struct TextureSurface::State : public Texture::State {
 };
 
 TextureSurfacePtr
-TextureSurface::Create(ContextWeak& aContext, const std::string& aName) {
-  TextureSurfacePtr result = std::make_shared<ConcreteClass<TextureSurface, TextureSurface::State> >(aContext);
+TextureSurface::Create(RenderContextPtr& aContext, const std::string& aName) {
+  TextureSurfacePtr result = std::make_shared<ConcreteClass<TextureSurface, TextureSurface::State> >(aContext->GetRenderThreadCreationContext());
   result->SetName(aName);
-  if (ContextPtr context = aContext.lock()) {
-    SurfaceWeakPtr weakPtr = result;
-    if (SurfaceTextureFactoryPtr factory = context->GetSurfaceTextureFactory()) {
-      result->m.factory = factory;
-      factory->CreateSurfaceTexture(aName, std::make_shared<LocalObserver>(weakPtr));
-    }
+  SurfaceWeakPtr weakPtr = result;
+  if (SurfaceTextureFactoryPtr factory = aContext->GetSurfaceTextureFactory()) {
+    result->m.factory = factory;
+    factory->CreateSurfaceTexture(aName, std::make_shared<LocalObserver>(weakPtr));
   }
+
   return result;
 }
 
-TextureSurface::TextureSurface(State& aState, ContextWeak& aContext) : Texture(aState, aContext), m(aState) {
+TextureSurface::TextureSurface(State& aState, CreationContextPtr& aContext) : Texture(aState, aContext), m(aState) {
   m.target = GL_TEXTURE_EXTERNAL_OES;
 }
 

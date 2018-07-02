@@ -14,10 +14,11 @@ namespace vrb {
 struct Toggle::State : public Group::State {
   std::unordered_set<const Node*> toggledOff;
   bool IsEnabled(const Node& aNode) override { return toggledOff.count(&aNode) == 0; }
+  void Clear() override { toggledOff.clear(); Group::State::Clear(); }
 };
 
 TogglePtr
-Toggle::Create(ContextWeak& aContext) {
+Toggle::Create(CreationContextPtr& aContext) {
   TogglePtr toggle = std::make_shared<ConcreteClass<Toggle, Toggle::State> >(aContext);
   toggle->m.self = toggle;
   return toggle;
@@ -60,7 +61,7 @@ Toggle::ToggleChild(const Node& aNode, const bool aEnabled) {
   m.toggledOff.insert(&aNode);
 }
 
-Toggle::Toggle(State& aState, ContextWeak& aContext) : Group(aState, aContext), m(aState) {}
+Toggle::Toggle(State& aState, CreationContextPtr& aContext) : Group(aState, aContext), m(aState) {}
 Toggle::~Toggle() {}
 
 } // namespace vrb

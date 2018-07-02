@@ -15,7 +15,7 @@ namespace vrb {
 
 class CameraSimple : public Camera {
 public:
-  static CameraSimplePtr Create(ContextWeak& aContext);
+  static CameraSimplePtr Create(CreationContextPtr& aContext);
   // Camera interface
   const Matrix& GetTransform() const override;
   const Matrix& GetView() const override;
@@ -32,7 +32,7 @@ public:
   void SetFieldOfView(const float aHorizontal, const float aVertical);
 protected:
   struct State;
-  CameraSimple(State& aState, ContextWeak& aContext);
+  CameraSimple(State& aState, CreationContextPtr& aContext);
   ~CameraSimple();
 private:
   State& m;

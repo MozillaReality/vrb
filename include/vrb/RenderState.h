@@ -16,7 +16,7 @@ namespace vrb{
 
 class RenderState : protected ResourceGL {
 public:
-  static RenderStatePtr Create(ContextWeak& aContext);
+  static RenderStatePtr Create(CreationContextPtr& aContext);
   GLuint Program() const;
   GLint AttributePosition() const;
   GLint AttributeNormal() const;
@@ -38,12 +38,12 @@ public:
   void SetLightsEnabled(bool aEnabled);
 protected:
   struct State;
-  RenderState(State& aState, ContextWeak& aContext);
+  RenderState(State& aState, CreationContextPtr& aContext);
   ~RenderState();
 
   // ResourceGL interface
-  void InitializeGL(Context& aContext) override;
-  void ShutdownGL(Context& aContext) override;
+  void InitializeGL(RenderContext& aContext) override;
+  void ShutdownGL(RenderContext& aContext) override;
 
 private:
   State& m;

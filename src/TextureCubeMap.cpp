@@ -5,13 +5,14 @@
 
 #include "vrb/TextureCubeMap.h"
 #include "vrb/private/TextureState.h"
-
 #include "vrb/ConcreteClass.h"
-#include "vrb/Context.h"
+
+#include "vrb/CreationContext.h"
 #include "vrb/FileReader.h"
 #include "vrb/GLError.h"
 #include "vrb/Logger.h"
 #include "vrb/private/ResourceGLState.h"
+#include "vrb/RenderContext.h"
 
 #include "vrb/gl.h"
 #include <cstring>
@@ -104,7 +105,7 @@ CubeMapTextureHandler::ProcessImageFile(const int aFileHandle, std::unique_ptr<u
 namespace vrb {
 
 struct TextureCubeMap::State : public Texture::State, public ResourceGL::State {
-  ContextWeak context;
+  CreationContextWeak context;
   bool dirty;
   CubeMapFace faces[6];
 
@@ -153,18 +154,17 @@ TextureCubeMap::State::DestroyTexture() {
 }
 
 TextureCubeMapPtr
-TextureCubeMap::Create(ContextWeak& aContext) {
+TextureCubeMap::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<TextureCubeMap, TextureCubeMap::State> >(aContext);
 }
 
 
 void
-TextureCubeMap::Load(ContextWeak& aContext, const TextureCubeMapPtr& aTexture,
+TextureCubeMap::Load(CreationContextPtr& aContext, const TextureCubeMapPtr& aTexture,
                      const std::string& aFileXPos, const std::string& aFileXNeg,
                      const std::string& aFileYPos, const std::string& aFileYNeg,
                      const std::string& aFileZPos, const std::string& aFileZNeg) {
-  ContextPtr context = aContext.lock();
-  FileReaderPtr reader = context->GetFileReader();
+  FileReaderPtr reader = aContext->GetFileReader();
 
   if (!reader) {
     VRB_LOG("FileReaderPtr not found while loading a CubeMap");
@@ -207,7 +207,7 @@ TextureCubeMap::SetRGBData(const GLenum aFaceTarget, std::unique_ptr<uint8_t[]>&
   m.dirty = true;
 }
 
-TextureCubeMap::TextureCubeMap(State& aState, ContextWeak& aContext) : Texture(aState, aContext), ResourceGL (aState, aContext), m(aState) {
+TextureCubeMap::TextureCubeMap(State& aState, CreationContextPtr& aContext) : Texture(aState, aContext), ResourceGL (aState, aContext), m(aState) {
   m.context = aContext;
   m.target = GL_TEXTURE_CUBE_MAP;
   for (int i = 0; i < 6; ++i) {
@@ -223,12 +223,12 @@ TextureCubeMap::AboutToBind() {
 }
 
 void
-TextureCubeMap::InitializeGL(Context& aContext) {
+TextureCubeMap::InitializeGL(RenderContext& aContext) {
   m.CreateTexture();
 }
 
 void
-TextureCubeMap::ShutdownGL(Context& aContext) {
+TextureCubeMap::ShutdownGL(RenderContext& aContext) {
   m.DestroyTexture();
 }
 

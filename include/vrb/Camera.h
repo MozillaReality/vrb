@@ -19,7 +19,7 @@ public:
 
 protected:
   Camera() {}
-  ~Camera() {}
+  virtual ~Camera() {}
 private:
   VRB_NO_DEFAULTS(Camera)
 };
