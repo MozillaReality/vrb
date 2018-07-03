@@ -27,7 +27,7 @@ static LoadFinishedCallback sNoop = [](GroupPtr&){};
 struct LoadInfo {
   std::string name;
   GroupPtr target;
-  LoadFinishedCallback& callback;
+  LoadFinishedCallback callback;
   LoadInfo(const std::string& aName, GroupPtr& aGroup, LoadFinishedCallback& aCallback)
       : name(aName)
       , target(aGroup)
