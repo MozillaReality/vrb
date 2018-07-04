@@ -88,6 +88,7 @@ struct ModelLoaderAndroid::State {
   pthread_t child;
   ConditionVarible loadLock;
   bool done;
+  bool quitting;
   std::vector<LoadInfo> loadList;
   State()
       : running(false)
@@ -97,6 +98,7 @@ struct ModelLoaderAndroid::State {
       , activity(nullptr)
       , assets(nullptr)
       , done(false)
+      , quitting(false)
   {}
 };
 
@@ -134,6 +136,14 @@ ModelLoaderAndroid::ShutdownJava() {
     MutexAutoLock(m.loadLock);
     m.done = true;
     m.loadLock.Signal();
+  }
+  bool quitting = false;
+  while (!quitting) {
+    if (context) {
+      context->Update();
+    }
+    MutexAutoLock(m.loadLock);
+    quitting = m.quitting;
   }
   if (pthread_join(m.child, nullptr) == 0) {
     VRB_LOG("ModelLoaderAndroid load thread stopped");
@@ -185,7 +195,7 @@ ModelLoaderAndroid::Run(void* data) {
         MutexAutoLock lock(m.loadLock);
         list.swap(m.loadList);
         done = m.done;
-        while (list.size() == 0 && !m.done) {
+        while (list.size() == 0 && !done) {
           m.loadLock.Wait();
           list.swap(m.loadList);
           done = m.done;
@@ -209,6 +219,10 @@ ModelLoaderAndroid::Run(void* data) {
   }
   if (attached) {
     m.jvm->DetachCurrentThread();
+  }
+  {
+    MutexAutoLock(m.loadLock);
+    m.quitting = true;
   }
   VRB_LOG("ModelLoaderAndroid load thread stopping");
   return nullptr;
