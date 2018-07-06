@@ -7,6 +7,8 @@
 #include "vrb/private/TextureState.h"
 
 #include "vrb/ConcreteClass.h"
+#include "vrb/CreationContext.h"
+#include "vrb/DataCache.h"
 #include "vrb/GLError.h"
 #include "vrb/Logger.h"
 #include "vrb/private/ResourceGLState.h"
@@ -28,6 +30,7 @@ struct MipMap {
   GLenum type;
   GLsizei dataSize;
   std::unique_ptr<uint8_t[]> data;
+  uint32_t dataCacheHandle;
 
   MipMap()
       : target(GL_TEXTURE_2D)
@@ -39,6 +42,7 @@ struct MipMap {
       , format(GL_RGB)
       , type(GL_UNSIGNED_BYTE)
       , dataSize(0)
+      , dataCacheHandle(0)
   {}
 
   MipMap(MipMap&& aSource)
@@ -50,7 +54,9 @@ struct MipMap {
       , border(0)
       , format(GL_RGB)
       , type(GL_UNSIGNED_BYTE)
-      , dataSize(0) {
+      , dataSize(0)
+      , dataCacheHandle(0)
+  {
     *this = std::move(aSource);
   }
 
@@ -67,6 +73,7 @@ struct MipMap {
     format = aSource.format;
     type = aSource.type;
     dataSize = aSource.dataSize;
+    dataCacheHandle = aSource.dataCacheHandle;
     data = std::move(aSource.data);
     return *this;
   }
@@ -86,6 +93,7 @@ namespace vrb {
 
 struct TextureGL::State : public Texture::State, public ResourceGL::State {
   bool dirty;
+  DataCachePtr dataCache;
   std::vector<MipMap> mipMaps;
 
   State() : dirty(false) {}
@@ -101,6 +109,9 @@ TextureGL::State::CreateTexture() {
   VRB_GL_CHECK(glGenTextures(1, &texture));
   VRB_GL_CHECK(glBindTexture(target, texture));
   for (MipMap& mipMap: mipMaps) {
+    if (dataCache && (mipMap.dataCacheHandle > 0)) {
+      dataCache->LoadData(mipMap.dataCacheHandle, mipMap.data);
+    }
     if (!mipMap.data) {
       continue;
     }
@@ -115,6 +126,13 @@ TextureGL::State::CreateTexture() {
       mipMap.format,
       mipMap.type,
       (void*)mipMap.data.get()));
+    if (dataCache) {
+      if (mipMap.dataCacheHandle == 0) {
+        mipMap.dataCacheHandle = dataCache->CacheData(mipMap.data, (size_t)mipMap.dataSize);
+      } else {
+        mipMap.data = nullptr;
+      }
+    }
   }
 
   for (auto param = intMap.begin(); param != intMap.end(); param++) {
@@ -162,7 +180,9 @@ TextureGL::SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, cons
   m.dirty = true;
 }
 
-TextureGL::TextureGL(State& aState, CreationContextPtr& aContext) : Texture(aState, aContext), ResourceGL (aState, aContext), m(aState) {}
+TextureGL::TextureGL(State& aState, CreationContextPtr& aContext) : Texture(aState, aContext), ResourceGL (aState, aContext), m(aState) {
+  m.dataCache = aContext->GetDataCache();
+}
 TextureGL::~TextureGL() {}
 
 void

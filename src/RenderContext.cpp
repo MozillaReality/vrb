@@ -14,6 +14,7 @@
 #include "vrb/ClassLoaderAndroid.h"
 #include "vrb/FileReaderAndroid.h"
 #endif // defined(ANDROID)
+#include "vrb/DataCache.h"
 #include "vrb/GLExtensions.h"
 #include "vrb/Logger.h"
 #include "vrb/ResourceGL.h"
@@ -30,6 +31,7 @@ struct RenderContext::State {
   pthread_t threadSelf;
   EGLContext eglContext;
   TextureCachePtr textureCache;
+  DataCachePtr dataCache;
   CreationContextPtr creationContext;
   GLExtensionsPtr glExtensions;
 #if defined(ANDROID)
@@ -49,6 +51,7 @@ struct RenderContext::State {
 
 RenderContext::State::State() {
   threadSelf = pthread_self();
+  dataCache = DataCache::Create();
   textureCache = TextureCache::Create();
   updatableHead.BindTail(updatableTail);
   addedResourcesHead.BindTail(addedResourcesTail);
@@ -132,6 +135,11 @@ RenderContext::Update() {
     m.resourcesTail.PrependAndAdoptList(m.addedResourcesHead, m.addedResourcesTail);
   }
   m.updatableHead.UpdateResource(*this);
+}
+
+DataCachePtr&
+RenderContext::GetDataCache() {
+  return m.dataCache;
 }
 
 TextureCachePtr&

@@ -2,6 +2,7 @@
 #include "vrb/ConcreteClass.h"
 
 #include "vrb/ContextSynchronizer.h"
+#include "vrb/DataCache.h"
 #include "vrb/FileReader.h"
 #include "vrb/Logger.h"
 #include "vrb/RenderContext.h"
@@ -76,6 +77,7 @@ struct CreationContext::State {
   UpdatableHead updatableHead;
   UpdatableTail updatableTail;
   FileReaderPtr fileReader;
+  DataCachePtr dataCache;
   TextureCachePtr textureCache;
   pthread_t threadSelf;
 
@@ -94,6 +96,7 @@ CreationContext::Create(RenderContextPtr& aContext) {
   CreationContextPtr result = std::make_shared<ConcreteClass<CreationContext, CreationContext::State> >();
   result->m.self = result;
   result->m.sync = ContextSynchronizer::Create(aContext);
+  result->m.dataCache = aContext->GetDataCache();
   result->m.textureCache = aContext->GetTextureCache();
   return result;
 }
@@ -126,6 +129,11 @@ CreationContext::Synchronize() {
 void
 CreationContext::SetFileReader(FileReaderPtr aFileReader) {
   m.fileReader = std::move(aFileReader);
+}
+
+DataCachePtr
+CreationContext::GetDataCache() {
+  return m.dataCache;
 }
 
 FileReaderPtr
