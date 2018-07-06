@@ -27,6 +27,7 @@ public:
   void ShutdownGL();
   void Update();
 
+  DataCachePtr& GetDataCache();
   TextureCachePtr& GetTextureCache();
   CreationContextPtr& GetRenderThreadCreationContext();
   GLExtensionsPtr GetGLExtensions() const;

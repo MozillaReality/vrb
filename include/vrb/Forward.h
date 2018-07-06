@@ -40,6 +40,10 @@ typedef std::weak_ptr<CreationContext> CreationContextWeak;
 class CullVisitor;
 typedef std::shared_ptr<CullVisitor> CullVisitorPtr;
 
+class DataCache;
+typedef std::shared_ptr<DataCache> DataCachePtr;
+typedef std::weak_ptr<DataCache> DataCacheWeak;
+
 class Drawable;
 typedef std::shared_ptr<Drawable> DrawablePtr;
 

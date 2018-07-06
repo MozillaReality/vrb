@@ -20,6 +20,7 @@ public:
   void RegisterContextSynchronizerObserver(ContextSynchronizerObserverPtr& aObserver);
   void ReleaseContextSynchronizerObserver(ContextSynchronizerObserverPtr& aObserver);
   void SetFileReader(FileReaderPtr aFileReader);
+  DataCachePtr GetDataCache();
   FileReaderPtr GetFileReader();
   TextureGLPtr LoadTexture(const std::string& TextureName, const bool aUseCache = true);
   void AddResourceGL(ResourceGL* aResource);
