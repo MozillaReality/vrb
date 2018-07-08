@@ -53,8 +53,8 @@ protected:
   void UpdateResource(RenderContext& aContext) override;
 
   // ResourceGL interface
-  void InitializeGL(RenderContext& aContext) override;
-  void ShutdownGL(RenderContext& aContext) override;
+  void InitializeGL() override;
+  void ShutdownGL() override;
 
 private:
   State& m;

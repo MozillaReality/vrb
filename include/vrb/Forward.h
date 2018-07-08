@@ -42,7 +42,6 @@ typedef std::shared_ptr<CullVisitor> CullVisitorPtr;
 
 class DataCache;
 typedef std::shared_ptr<DataCache> DataCachePtr;
-typedef std::weak_ptr<DataCache> DataCacheWeak;
 
 class Drawable;
 typedef std::shared_ptr<Drawable> DrawablePtr;
@@ -112,13 +111,17 @@ class RenderState;
 typedef std::shared_ptr<RenderState> RenderStatePtr;
 
 class ResourceGL;
-class ResourceGLHead;
-class ResourceGLTail;
+class ResourceGLList;
 
 #if defined(ANDROID)
 class RunnableQueue;
 typedef std::shared_ptr<RunnableQueue> RunnableQueuePtr;
+#endif // defined(ANDROID)
 
+class SharedEGLContext;
+typedef std::shared_ptr<SharedEGLContext> SharedEGLContextPtr;
+
+#if defined(ANDROID)
 class SurfaceTextureFactory;
 typedef std::shared_ptr<SurfaceTextureFactory> SurfaceTextureFactoryPtr;
 
@@ -150,8 +153,7 @@ class Transform;
 typedef std::shared_ptr<Transform> TransformPtr;
 
 class Updatable;
-class UpdatableHead;
-class UpdatableTail;
+class UpdatableList;
 
 class Vector;
 

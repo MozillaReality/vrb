@@ -13,12 +13,12 @@
 
 namespace vrb {
 
-class ConditionVarible : public Mutex {
+class ConditionVariable : public Mutex {
 public:
-  ConditionVarible() {
+  ConditionVariable() {
     pthread_cond_init(&mCond, nullptr);
   }
-  ~ConditionVarible() {
+  ~ConditionVariable() {
     pthread_cond_destroy(&mCond);
   }
   bool Wait() {
@@ -30,7 +30,7 @@ public:
 protected:
   pthread_cond_t mCond;
 private:
-  VRB_NO_DEFAULTS(ConditionVarible);
+  VRB_NO_DEFAULTS(ConditionVariable);
 };
 
 }

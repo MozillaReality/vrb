@@ -280,7 +280,7 @@ SurfaceTextureFactory::UpdateResource(RenderContext& aContext) {
 
 // ResourceGL interface
 void
-SurfaceTextureFactory::InitializeGL(RenderContext& aContext) {
+SurfaceTextureFactory::InitializeGL() {
   VRB_LOG("***** SurfaceTextureFactory::InitializeGL");
   for(SurfaceTextureRecord& record: m.textures) {
     if (record.surface && !record.attached) {
@@ -298,7 +298,7 @@ SurfaceTextureFactory::InitializeGL(RenderContext& aContext) {
 }
 
 void
-SurfaceTextureFactory::ShutdownGL(RenderContext& aContext) {
+SurfaceTextureFactory::ShutdownGL() {
   VRB_LOG("***** SurfaceTextureFactory::ShutdownGL");
   for(SurfaceTextureRecord& record: m.textures) {
     if (record.surface && record.attached) {

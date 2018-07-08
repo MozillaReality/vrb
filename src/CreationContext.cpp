@@ -1,3 +1,8 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "vrb/CreationContext.h"
 #include "vrb/ConcreteClass.h"
 
@@ -72,19 +77,15 @@ namespace vrb {
 struct CreationContext::State {
   CreationContextWeak self;
   ContextSynchronizerPtr sync;
-  ResourceGLHead resourceHead;
-  ResourceGLTail resourceTail;
-  UpdatableHead updatableHead;
-  UpdatableTail updatableTail;
+  ResourceGLList uninitializedResources;
+  ResourceGLList resources;
+  UpdatableList updatables;
   FileReaderPtr fileReader;
   DataCachePtr dataCache;
   TextureCachePtr textureCache;
   pthread_t threadSelf;
 
-  State() {
-    resourceHead.BindTail(resourceTail);
-    updatableHead.BindTail(updatableTail);
-  }
+  State() {}
 };
 
 CreationContextPtr
@@ -121,8 +122,8 @@ CreationContext::BindToThread() {
 void
 CreationContext::Synchronize() {
   ASSERT_ON_CREATION_THREAD();
-  if (m.resourceHead.IsDirty(m.resourceTail) || m.updatableHead.IsDirty(m.updatableTail)) {
-    m.sync->AdoptLists(m.resourceHead, m.resourceTail, m.updatableHead, m.updatableTail);
+  if (m.uninitializedResources.IsDirty() || m.resources.IsDirty() || m.updatables.IsDirty()) {
+    m.sync->AdoptLists(m.uninitializedResources, m.resources, m.updatables);
   }
 }
 
@@ -166,17 +167,25 @@ CreationContext::LoadTexture(const std::string& aTextureName, const bool aUseCac
   return result;
 }
 
+void
+CreationContext::UpdateResourceGL() {
+  ResourceGLList list;
+  m.uninitializedResources.GetOffRenderThreadResources(list);
+  if (list.Update()) {
+    m.resources.AppendAndAdoptList(list);
+  }
+}
 
 void
 CreationContext::AddResourceGL(ResourceGL* aResource) {
   ASSERT_ON_CREATION_THREAD();
-  m.resourceTail.Prepend(aResource);
+  m.uninitializedResources.Append(aResource);
 }
 
 void
 CreationContext::AddUpdatable(Updatable* aUpdatable) {
   ASSERT_ON_CREATION_THREAD();
-  m.updatableTail.Prepend(aUpdatable);
+  m.updatables.Append(aUpdatable);
 }
 
 CreationContext::CreationContext(State& aState) : m(aState) {}

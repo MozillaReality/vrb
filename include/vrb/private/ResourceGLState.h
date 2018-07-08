@@ -7,6 +7,7 @@
 #define VRB_RESOURCE_GL_STATE_DOT_H
 
 #include "vrb/ResourceGL.h"
+#include "vrb/Logger.h"
 
 namespace vrb {
 
@@ -19,20 +20,20 @@ struct ResourceGL::State {
     if (prevResource) { prevResource->m.nextResource = nextResource; }
     if (nextResource) { nextResource->m.prevResource = prevResource; }
   }
-  void CallAllInitializeGL(RenderContext& aContext) {
+  void CallAllInitializeGL() {
     ResourceGL* current = nextResource;
     while(current) {
       ResourceGL* tmp = current;
       current = current->m.nextResource;
-      tmp->InitializeGL(aContext);
+      tmp->InitializeGL();
     }
   }
-  void CallAllShutdownGL(RenderContext& aContext) {
+  void CallAllShutdownGL() {
     ResourceGL* current = nextResource;
     while(current) {
       ResourceGL* tmp = current;
       current = current->m.nextResource;
-      tmp->ShutdownGL(aContext);
+      tmp->ShutdownGL();
     }
   }
 
@@ -64,55 +65,98 @@ struct ResourceGL::State {
     aTail.m.prevResource = &aHead;
     aHead.m.nextResource = &aTail;
   }
-};
 
-class ResourceGLHead : public vrb::ResourceGL {
-public:
-  ResourceGLHead(): vrb::ResourceGL(m) {}
-  ~ResourceGLHead() {}
-
-  // vrb::ResourcGL interface
-  void InitializeGL(RenderContext& aContext) override {
-    m.CallAllInitializeGL(aContext);
-  }
-  void ShutdownGL(RenderContext& aContext) override  {
-    m.CallAllShutdownGL(aContext);
-  }
-
-  // ResourceGLHead interface
-  void BindTail(ResourceGLHead& aTail) {
-    m.nextResource = &aTail;
-    aTail.m.prevResource = this;
-  }
-
-  bool Update(RenderContext& aContext) {
-    if (!m.nextResource) {
-      return false;
+  void RemoveFromCurrentList() {
+    if (!prevResource || !nextResource) {
+      // can't remove head or tail
+      VRB_LOG("List %s can not be removed", (prevResource == nullptr ? "head" : "tail"));
+      return;
     }
-    m.CallAllInitializeGL(aContext);
-    return true;
+    prevResource->m.nextResource = nextResource;
+    nextResource->m.prevResource = prevResource;
+    nextResource = prevResource = nullptr;
   }
 
-  bool IsDirty(ResourceGLHead& aTail) {
-    return m.nextResource != &aTail;
-  }
-protected:
-  vrb::ResourceGL::State m;
+  void GetOffRenderThreadResources(ResourceGLList& aTail);
 };
 
-class ResourceGLTail : public ResourceGLHead {
+class ResourceGLTail : public ResourceGL {
 public:
-  void InitializeGL(RenderContext&) override {} // noop
-  void ShutdownGL(RenderContext&) override {} // noop
+  ResourceGLTail() : ResourceGL(m) {}
+  void InitializeGL() override {} // noop
+  void ShutdownGL() override {} // noop
 
+  void SetHead(ResourceGL* aHead) {
+    m.prevResource = aHead;
+  }
   void Prepend(vrb::ResourceGL* aResource)  {
     m.Prepend(aResource);
   }
 
-  void PrependAndAdoptList(ResourceGLHead& aHead, ResourceGLHead& aTail)  {
+  void PrependAndAdoptList(ResourceGL& aHead, ResourceGL& aTail) {
     m.PrependAndAdoptList(*this, aHead, aTail);
   }
+
+protected:
+  ResourceGL::State m;
 };
+
+class ResourceGLList : public ResourceGL {
+public:
+  ResourceGLList() : ResourceGL(m) {
+    m.nextResource = &mTail;
+    mTail.SetHead(this);
+  }
+  ~ResourceGLList() {}
+
+  void GetOffRenderThreadResources(ResourceGLList& aList) {
+    m.GetOffRenderThreadResources(aList);
+  }
+
+  bool Update() {
+    if (!m.nextResource) {
+      return false;
+    }
+    m.CallAllInitializeGL();
+    return true;
+  }
+
+  bool IsDirty() {
+    return m.nextResource != &mTail;
+  }
+
+  void Append(vrb::ResourceGL* aResource)  {
+    mTail.Prepend(aResource);
+  }
+
+  void AppendAndAdoptList(ResourceGLList& aList)  {
+    mTail.PrependAndAdoptList(aList, aList.mTail);
+  }
+
+  // vrb::ResourcGL interface
+  void InitializeGL() override {
+    m.CallAllInitializeGL();
+  }
+  void ShutdownGL() override  {
+    m.CallAllShutdownGL();
+  }
+protected:
+  ResourceGLTail mTail;
+  ResourceGL::State m;
+};
+
+inline void
+ResourceGL::State::GetOffRenderThreadResources(ResourceGLList& aList) {
+  ResourceGL* current = nextResource;
+  while (current->m.nextResource) {
+    ResourceGL* resource = current;
+    current = current->m.nextResource;
+    if (resource->SupportOffRenderThreadInitialization()) {
+      resource->m.RemoveFromCurrentList();
+      aList.Append(resource);
+    }
+  }
+}
 
 } // namespace vrb
 

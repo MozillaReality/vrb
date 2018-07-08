@@ -1,6 +1,11 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "vrb/ContextSynchronizer.h"
 #include "vrb/ConcreteClass.h"
-#include "vrb/ConditionVarible.h"
+#include "vrb/ConditionVariable.h"
 #include "vrb/Logger.h"
 #include "vrb/RenderContext.h"
 
@@ -24,23 +29,21 @@ struct ContextSynchronizer::State {
   std::vector<ContextSynchronizerObserverPtr> observers;
   bool onRenderThread;
   RenderContextPtr context;
-  ConditionVarible cond;
+  ConditionVariable cond;
   bool active;
   bool waiting;
-  ResourceGLHead* resourceHead;
-  ResourceGLTail* resourceTail;
-  UpdatableHead* updatableHead;
-  UpdatableTail* updatableTail;
+  ResourceGLList* uninitializedResources;
+  ResourceGLList* resources;
+  UpdatableList* updatables;
 
   State()
       : threadSelf(0)
       , onRenderThread(false)
       , active(true)
       , waiting(false)
-      , resourceHead(nullptr)
-      , resourceTail(nullptr)
-      , updatableHead(nullptr)
-      , updatableTail(nullptr)
+      , uninitializedResources(nullptr)
+      , resources(nullptr)
+      , updatables(nullptr)
   {}
   bool IsOnCreationThread() {
     return pthread_equal(threadSelf, pthread_self()) > 0;
@@ -76,42 +79,47 @@ ContextSynchronizer::ReleaseObserver(ContextSynchronizerObserverPtr& aObserver) 
 }
 
 void
-ContextSynchronizer::AdoptLists(ResourceGLHead& aResourceHead, ResourceGLTail& aResourceTail,
-                                UpdatableHead& aUpdatableHead, UpdatableTail& aUpdatableTail) {
+ContextSynchronizer::AdoptLists(
+    ResourceGLList& aUninitializedResources,
+    ResourceGLList& aResources,
+    UpdatableList& aUpdatables) {
   ASSERT_ON_CREATION_THREAD();
   if (!m.context) {
     VRB_LOG("ContextSynchronizer failed, no RenderContext defined");
     return;
   }
   if (m.context->IsOnRenderThread()) {
-    if (aResourceHead.IsDirty(aResourceTail)) {
-      m.context->GetResourceGLTail().PrependAndAdoptList(aResourceHead, aResourceTail);
+    if (aUninitializedResources.IsDirty()) {
+      m.context->GetUninitializedResourceGLList().AppendAndAdoptList(aUninitializedResources);
     }
-    if (aUpdatableHead.IsDirty(aUpdatableTail)) {
-      m.context->GetUpdatableTail().PrependAndAdoptList(aUpdatableHead, aUpdatableTail);
+    if (aResources.IsDirty()) {
+      m.context->GetResourceGLList().AppendAndAdoptList(aResources);
+    }
+    if (aUpdatables.IsDirty()) {
+      m.context->GetUpdatableList().AppendAndAdoptList(aUpdatables);
     }
   } else {
     MutexAutoLock lock(m.cond);
-    if (aResourceHead.IsDirty(aResourceTail)) {
-      m.resourceHead = &aResourceHead;
-      m.resourceTail = &aResourceTail;
+    if (aUninitializedResources.IsDirty()) {
+      m.uninitializedResources = &aUninitializedResources;
     }
-    if (aUpdatableHead.IsDirty(aUpdatableTail)) {
-      m.updatableHead = &aUpdatableHead;
-      m.updatableTail = &aUpdatableTail;
+    if (aResources.IsDirty()) {
+      m.resources = &aResources;
     }
-    if (m.resourceHead || m.updatableHead) {
+    if (aUpdatables.IsDirty()) {
+      m.updatables = &aUpdatables;
+    }
+    if (m.uninitializedResources|| m.resources || m.updatables) {
       m.waiting = true;
       while (m.waiting) {
         if (!m.cond.Wait()) {
           m.waiting = false;
-          VRB_LOG("ConditionVarible Wait failed in ContextSynchronizer");
+          VRB_LOG("Condition variable Wait failed in ContextSynchronizer");
         }
       }
-      m.resourceHead = nullptr;
-      m.resourceTail = nullptr;
-      m.updatableHead = nullptr;
-      m.updatableTail = nullptr;
+      m.uninitializedResources = nullptr;
+      m.resources = nullptr;
+      m.updatables = nullptr;
     }
   }
 }
@@ -136,11 +144,14 @@ ContextSynchronizer::Signal(bool& aIsActive) {
   aIsActive = m.active;
   if (m.waiting) {
     m.waiting = false;
-    if (m.resourceHead && m.resourceTail) {
-      m.context->GetResourceGLTail().PrependAndAdoptList(*m.resourceHead, *m.resourceTail);
+    if (m.uninitializedResources) {
+      m.context->GetUninitializedResourceGLList().AppendAndAdoptList(*m.uninitializedResources);
     }
-    if (m.updatableHead && m.updatableTail) {
-      m.context->GetUpdatableTail().PrependAndAdoptList(*m.updatableHead, *m.updatableTail);
+    if (m.resources) {
+      m.context->GetResourceGLList().AppendAndAdoptList(*m.resources);
+    }
+    if (m.updatables) {
+      m.context->GetUpdatableList().AppendAndAdoptList(*m.updatables);
     }
     {
       MutexAutoLock(m.observerLock);

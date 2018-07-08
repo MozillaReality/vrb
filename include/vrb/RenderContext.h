@@ -21,7 +21,7 @@ public:
 #if defined(ANDROID)
   void InitializeJava(JNIEnv* aEnv, jobject& aActivity, jobject& aAssetManager);
   void ShutdownJava();
-#endif // defined(ANDROID)A
+#endif // defined(ANDROID)
   bool IsOnRenderThread();
   bool InitializeGL();
   void ShutdownGL();
@@ -36,8 +36,9 @@ public:
 #endif // defined(ANDROID)
 
   // Internal interface
-  ResourceGLTail& GetResourceGLTail();
-  UpdatableTail& GetUpdatableTail();
+  ResourceGLList& GetUninitializedResourceGLList();
+  ResourceGLList& GetResourceGLList();
+  UpdatableList& GetUpdatableList();
   void RegisterContextSynchronizer(ContextSynchronizerPtr& aSynchronizer);
 protected:
   struct State;

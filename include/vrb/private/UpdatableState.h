@@ -58,41 +58,56 @@ struct Updatable::State {
   }
 };
 
-class UpdatableHead : public vrb::Updatable {
+class UpdatableTail : public Updatable {
 public:
-  UpdatableHead() : vrb::Updatable(m) {}
-  ~UpdatableHead() {}
+  UpdatableTail() : Updatable(m) {}
+  void UpdateResource(RenderContext&) override {} // noop
+
+  void Prepend(vrb::Updatable* aUpdatable)  {
+    m.Prepend(aUpdatable);
+  }
+
+  void PrependAndAdoptList(Updatable& aHead, Updatable& aTail)  {
+    m.PrependAndAdoptList(*this, aHead, aTail);
+  }
+
+  void SetHead(Updatable* aHead) {
+    m.prevUpdatable = aHead;
+  }
+protected:
+  Updatable::State m;
+};
+
+class UpdatableList : public Updatable {
+public:
+  UpdatableList() : Updatable(m) {
+    m.nextUpdatable = &mTail;
+    mTail.SetHead(this);
+  }
+  ~UpdatableList() {}
 
   // vrb::Updatable interface
   void UpdateResource(RenderContext& aContext) override  {
     m.CallAllUpdateResources(aContext);
   }
 
-  // UpdatableHead interface
-  void BindTail(UpdatableHead& aTail)  {
-    m.nextUpdatable = &aTail;
-    aTail.m.prevUpdatable = this;
+  bool IsDirty() {
+    return m.nextUpdatable != &mTail;
   }
 
-  bool IsDirty(UpdatableHead& aTail) {
-    return m.nextUpdatable != &aTail;
+  void Append(vrb::Updatable* aUpdatable)  {
+    mTail.Prepend(aUpdatable);
+  }
+
+  void AppendAndAdoptList(UpdatableList& aList)  {
+    mTail.PrependAndAdoptList(aList, aList.mTail);
   }
 protected:
-  vrb::Updatable::State m;
-
+  UpdatableTail mTail;
+  Updatable::State m;
 };
 
-class UpdatableTail : public UpdatableHead {
-public:
-  void UpdateResource(RenderContext&) override {} // noop
-  void Prepend(vrb::Updatable* aUpdatable)  {
-    m.Prepend(aUpdatable);
-  }
 
-  void PrependAndAdoptList(UpdatableHead& aHead, UpdatableHead& aTail)  {
-    m.PrependAndAdoptList(*this, aHead, aTail);
-  }
-};
 
 } // namespace vrb
 

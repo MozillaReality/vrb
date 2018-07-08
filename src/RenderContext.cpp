@@ -39,12 +39,9 @@ struct RenderContext::State {
   SurfaceTextureFactoryPtr surfaceTextureFactory;
   ClassLoaderAndroidPtr classLoader;
 #endif // defined(ANDROID)
-  UpdatableHead updatableHead;
-  UpdatableTail updatableTail;
-  ResourceGLHead addedResourcesHead;
-  ResourceGLTail addedResourcesTail;
-  ResourceGLHead resourcesHead;
-  ResourceGLTail resourcesTail;
+  UpdatableList updatables;
+  ResourceGLList uninitializedResources;
+  ResourceGLList resources;
   std::vector<ContextSynchronizerPtr> synchronizers;
   State();
 };
@@ -53,9 +50,6 @@ RenderContext::State::State() {
   threadSelf = pthread_self();
   dataCache = DataCache::Create();
   textureCache = TextureCache::Create();
-  updatableHead.BindTail(updatableTail);
-  addedResourcesHead.BindTail(addedResourcesTail);
-  resourcesHead.BindTail(resourcesTail);
 }
 
 RenderContextPtr
@@ -109,14 +103,14 @@ RenderContext::InitializeGL() {
     VRB_LOG("*** EGLContext NOT EQUAL %p != %p",(void*)current,(void*)m.eglContext);
   }
   m.eglContext = current;
-  m.resourcesHead.InitializeGL(*this);
+  m.resources.InitializeGL();
   m.glExtensions->Initialize();
   return true;
 }
 
 void
 RenderContext::ShutdownGL() {
-  m.resourcesHead.ShutdownGL(*this);
+  m.resources.ShutdownGL();
 }
 
 void
@@ -131,10 +125,10 @@ RenderContext::Update() {
       iter++;
     }
   }
-  if (m.addedResourcesHead.Update(*this)) {
-    m.resourcesTail.PrependAndAdoptList(m.addedResourcesHead, m.addedResourcesTail);
+  if (m.uninitializedResources.Update()) {
+    m.resources.AppendAndAdoptList(m.uninitializedResources);
   }
-  m.updatableHead.UpdateResource(*this);
+  m.updatables.UpdateResource(*this);
 }
 
 DataCachePtr&
@@ -166,14 +160,19 @@ RenderContext::GetSurfaceTextureFactory() {
 #endif // defined(ANDROID)
 
 // Internal interface
-ResourceGLTail&
-RenderContext::GetResourceGLTail() {
-  return m.addedResourcesTail;
+ResourceGLList&
+RenderContext::GetUninitializedResourceGLList() {
+  return m.uninitializedResources;
 }
 
-UpdatableTail&
-RenderContext::GetUpdatableTail() {
-  return m.updatableTail;
+ResourceGLList&
+RenderContext::GetResourceGLList() {
+  return m.resources;
+}
+
+UpdatableList&
+RenderContext::GetUpdatableList() {
+  return m.updatables;
 }
 
 void

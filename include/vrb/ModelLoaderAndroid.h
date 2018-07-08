@@ -8,6 +8,7 @@
 
 #include "vrb/Forward.h"
 #include "vrb/MacroUtils.h"
+#include "vrb/ResourceGL.h"
 #include <functional>
 #include <string>
 #include <jni.h>
@@ -21,6 +22,8 @@ public:
   static ModelLoaderAndroidPtr Create(RenderContextPtr& aContext);
   void InitializeJava(JNIEnv* eEnv, jobject aActivity, jobject aAssets);
   void ShutdownJava();
+  void InitializeGL();
+  void ShutdownGL();
   void LoadModel(const std::string& aModelName, GroupPtr aTargetNode);
   void LoadModel(const std::string& aModelName, GroupPtr aTargetNode, LoadFinishedCallback& aCallback);
 protected:

@@ -223,12 +223,12 @@ TextureCubeMap::AboutToBind() {
 }
 
 void
-TextureCubeMap::InitializeGL(RenderContext& aContext) {
+TextureCubeMap::InitializeGL() {
   m.CreateTexture();
 }
 
 void
-TextureCubeMap::ShutdownGL(RenderContext& aContext) {
+TextureCubeMap::ShutdownGL() {
   m.DestroyTexture();
 }
 

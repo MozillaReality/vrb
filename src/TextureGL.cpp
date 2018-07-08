@@ -190,13 +190,18 @@ TextureGL::AboutToBind() {
   m.CreateTexture();
 }
 
+bool
+TextureGL::SupportOffRenderThreadInitialization() {
+  return true;
+}
+
 void
-TextureGL::InitializeGL(RenderContext& aContext) {
+TextureGL::InitializeGL() {
   m.CreateTexture();
 }
 
 void
-TextureGL::ShutdownGL(RenderContext& aContext) {
+TextureGL::ShutdownGL() {
   m.DestroyTexture();
 }
 
