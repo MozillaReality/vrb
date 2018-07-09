@@ -163,6 +163,7 @@ CreationContext::LoadTexture(const std::string& aTextureName, const bool aUseCac
   result = TextureGL::Create(context);
   m.textureCache->AddTexture(aTextureName, result);
   m.fileReader->ReadImageFile(aTextureName, TextureHandler::Create(result));
+  result->SetName(aTextureName);
 
   return result;
 }

@@ -96,6 +96,7 @@ NodeFactoryObj::StartModel(const std::string& aFileName) {
   }
   m.root->SetName(aFileName);
   m.vertices = VertexArray::Create(creation);
+  m.materials.clear();
 }
 
 void
