@@ -397,7 +397,7 @@ RenderState::RenderState(State& aState, CreationContextPtr& aContext) : Resource
 RenderState::~RenderState() {}
 
 void
-RenderState::InitializeGL(RenderContext& aContext) {
+RenderState::InitializeGL() {
   const bool kEnableTexturing = m.texture != nullptr;
   std::string vertexShaderSource = sVertexShaderSource;
   const std::string kTextureUVMacro("VRB_TEXTURE_UV_TYPE");
@@ -481,8 +481,6 @@ RenderState::InitializeGL(RenderContext& aContext) {
 }
 
 void
-RenderState::ShutdownGL(RenderContext& aContext) {
-
-}
+RenderState::ShutdownGL() {}
 
 } // namespace vrb

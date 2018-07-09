@@ -8,13 +8,14 @@
 
 #include "vrb/Group.h"
 #include "vrb/ClassLoaderAndroid.h"
-#include "vrb/ConditionVarible.h"
+#include "vrb/ConditionVariable.h"
 #include "vrb/ContextSynchronizer.h"
 #include "vrb/CreationContext.h"
 #include "vrb/FileReaderAndroid.h"
 #include "vrb/Logger.h"
 #include "vrb/NodeFactoryObj.h"
 #include "vrb/ParserObj.h"
+#include "vrb/SharedEGLContext.h"
 
 #include <pthread.h>
 #include <vector>
@@ -85,8 +86,9 @@ struct ModelLoaderAndroid::State {
   jobject assets;
   RenderContextWeak render;
   CreationContextPtr context;
+  SharedEGLContextPtr eglContext;
   pthread_t child;
-  ConditionVarible loadLock;
+  ConditionVariable loadLock;
   bool done;
   bool quitting;
   std::vector<LoadInfo> loadList;
@@ -100,10 +102,51 @@ struct ModelLoaderAndroid::State {
       , done(false)
       , quitting(false)
   {}
+  void StartThread() {
+    if (running) {
+      return;
+    }
+    if (!renderThreadEnv || !eglContext) {
+      return;
+    }
+    pthread_create(&child, nullptr, &ModelLoaderAndroid::Run, this);
+    running = true;
+  }
+
+  void StopThread() {
+    if (!running) {
+      return;
+    }
+    RenderContextPtr context = render.lock();
+    if (context) {
+      context->Update();
+    }
+    VRB_LOG("Waiting for ModelLoaderAndroid load thread to stop.");
+    {
+      MutexAutoLock lock(loadLock);
+      done = true;
+      loadLock.Signal();
+    }
+    bool gotQuit = false;
+    while (!gotQuit) {
+      if (context) {
+        context->Update();
+      }
+      MutexAutoLock lock(loadLock);
+      gotQuit = quitting;
+    }
+    if (pthread_join(child, nullptr) == 0) {
+      VRB_LOG("ModelLoaderAndroid load thread stopped");
+    } else {
+      VRB_LOG("Error: ModelLoaderAndroid load thread failed to stop");
+    }
+    running = false;
+  }
 };
 
 ModelLoaderAndroidPtr
 ModelLoaderAndroid::Create(RenderContextPtr& aContext) {
+
   return std::make_shared<ConcreteClass<ModelLoaderAndroid, ModelLoaderAndroid::State> >(aContext);
 }
 
@@ -118,42 +161,37 @@ ModelLoaderAndroid::InitializeJava(JNIEnv* aEnv, jobject aActivity, jobject aAss
   m.renderThreadEnv = aEnv;
   m.activity = aEnv->NewGlobalRef(aActivity);
   m.assets = aEnv->NewGlobalRef(aAssets);
-  pthread_create(&(m.child), nullptr, &ModelLoaderAndroid::Run, &m);
-  m.running = true;
+  m.StartThread();
 }
 
 void
 ModelLoaderAndroid::ShutdownJava() {
-  if (!m.running) {
+  m.StopThread();
+  if (!m.renderThreadEnv) {
     return;
   }
-  RenderContextPtr context = m.render.lock();
-  if (context) {
-    context->Update();
+  if (m.activity) {
+    m.renderThreadEnv->DeleteGlobalRef(m.activity);
+    m.activity = nullptr;
   }
-  VRB_LOG("Waiting for ModelLoaderAndroid load thread to stop.");
-  {
-    MutexAutoLock(m.loadLock);
-    m.done = true;
-    m.loadLock.Signal();
+  if (m.assets) {
+    m.renderThreadEnv->DeleteGlobalRef(m.assets);
+    m.assets = nullptr;
   }
-  bool quitting = false;
-  while (!quitting) {
-    if (context) {
-      context->Update();
-    }
-    MutexAutoLock(m.loadLock);
-    quitting = m.quitting;
-  }
-  if (pthread_join(m.child, nullptr) == 0) {
-    VRB_LOG("ModelLoaderAndroid load thread stopped");
-  } else {
-    VRB_LOG("Error: ModelLoaderAndroid load thread failed to stop");
-  }
-  m.renderThreadEnv->DeleteGlobalRef(m.activity);
-  m.renderThreadEnv->DeleteGlobalRef(m.assets);
   m.renderThreadEnv = nullptr;
-  m.running = false;
+}
+
+void
+ModelLoaderAndroid::InitializeGL() {
+  m.eglContext = SharedEGLContext::Create();
+  m.eglContext->Initialize();
+  m.StartThread();
+}
+
+void
+ModelLoaderAndroid::ShutdownGL() {
+  m.StopThread();
+  m.eglContext = nullptr;
 }
 
 void
@@ -175,6 +213,10 @@ ModelLoaderAndroid::Run(void* data) {
   bool attached = false;
   if (m.jvm->AttachCurrentThread(&(m.env), nullptr) == 0) {
     attached = true;
+    const bool offRenderThreadContextCurrent = m.eglContext->MakeCurrent();
+    if (!offRenderThreadContextCurrent) {
+      VRB_LOG("Failed to make shared context current. VRB Nodes will be initialized on render thread");
+    }
     ClassLoaderAndroidPtr classLoader = ClassLoaderAndroid::Create();
     classLoader->Init(m.env, m.activity);
     FileReaderAndroidPtr reader = FileReaderAndroid::Create();
@@ -208,6 +250,9 @@ ModelLoaderAndroid::Run(void* data) {
           finalizer->Set(group, info.target, info.callback);
           factory->SetModelRoot(group);
           parser->LoadModel(info.name);
+          if (offRenderThreadContextCurrent) {
+            m.context->UpdateResourceGL();
+          }
           m.context->Synchronize();
         }
       }
@@ -228,11 +273,15 @@ ModelLoaderAndroid::Run(void* data) {
   return nullptr;
 }
 
-
-ModelLoaderAndroid::ModelLoaderAndroid(State& aState, RenderContextPtr& aContext) : m(aState) {
+ModelLoaderAndroid::ModelLoaderAndroid(State& aState, RenderContextPtr& aContext)
+    : m(aState) {
   m.context = CreationContext::Create(aContext);
   m.render = aContext;
 }
-ModelLoaderAndroid::~ModelLoaderAndroid() {}
+
+ModelLoaderAndroid::~ModelLoaderAndroid() {
+  m.StopThread();
+}
+
 
 } // namespace vrb

@@ -147,6 +147,7 @@ Geometry::SetVertexArray(const VertexArrayPtr& aVertexArray) {
 void
 Geometry::UpdateBuffers() {
   if (m.vertexObjectId == 0 || m.indexObjectId == 0) {
+    VRB_LOG("Geometry GL objects not created");
     return;
   }
   const bool kUseTextureCoords = m.renderState->HasTexture();
@@ -294,12 +295,18 @@ Geometry::Geometry(State& aState, CreationContextPtr& aContext) :
     Node(aState, aContext),
     ResourceGL(aState, aContext),
     Drawable(aState, aContext),
-    m(aState) {}
+    m(aState)
+{}
 Geometry::~Geometry() {}
 
 // ResourceGL interface
+bool
+Geometry::SupportOffRenderThreadInitialization() {
+  return true;
+}
+
 void
-Geometry::InitializeGL(RenderContext& aContext) {
+Geometry::InitializeGL() {
   if (!m.renderState) {
     VRB_LOG("Unable to initialize Geometry Node. No RenderState set");
   }
@@ -308,18 +315,18 @@ Geometry::InitializeGL(RenderContext& aContext) {
   GLsizei kTriangleSize = m.VertexSize() * 3;
 
   VRB_GL_CHECK(glBufferData(GL_ARRAY_BUFFER, kTriangleSize * m.triangleCount, nullptr, GL_STATIC_DRAW));
-  VRB_LOG("Allocate: %d for GL_ARRAY_BUFFER", kTriangleSize * m.triangleCount);
+  VRB_LOG("Allocate: %d for GL_ARRAY_BUFFER: %d", kTriangleSize * m.triangleCount, m.vertexObjectId);
 
   VRB_GL_CHECK(glGenBuffers(1, &m.indexObjectId));
   VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
   VRB_GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * m.triangleCount * 3, nullptr, GL_STATIC_DRAW));
-  VRB_LOG("Allocate: %d for GL_ELEMENT_ARRAY_BUFFER", sizeof(GLushort) * m.triangleCount * 3);
+  VRB_LOG("Allocate: %d for GL_ELEMENT_ARRAY_BUFFER: %d", sizeof(GLushort) * m.triangleCount * 3, m.indexObjectId);
 
   UpdateBuffers();
 }
 
 void
-Geometry::ShutdownGL(RenderContext& aContext) {
+Geometry::ShutdownGL() {
 
 }
 
