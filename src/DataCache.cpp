@@ -101,7 +101,7 @@ DataCache::CacheData(std::unique_ptr<uint8_t[]>& aData, const size_t aDataSize) 
     MutexAutoLock lock(m.cacheLock);
     m.cache[handle] = info;
   }
-  VRB_LOG("Cached data: %u size: %u", handle, aDataSize);
+  VRB_LOG("Cached data: %u size: %u", handle, (uint32_t)aDataSize);
   return handle;
 }
 
@@ -135,7 +135,7 @@ DataCache::LoadData(const uint32_t aHandle, std::unique_ptr<uint8_t[]>& aData) {
     toRead -= (size_t)dataRead;
     place = info.size - toRead;
   }
-  VRB_LOG("Loaded cached data: %u size: %u", aHandle, info.size);
+  VRB_LOG("Loaded cached data: %u size: %u", aHandle, (uint32_t)info.size);
   return info.size;
 }
 

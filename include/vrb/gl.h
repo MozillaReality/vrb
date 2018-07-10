@@ -6,9 +6,18 @@
 #ifndef VRB_GL_DOT_H
 #define VRB_GL_DOT_H
 
-#include <GLES3/gl3.h>
-#include <GLES3/gl3ext.h>
-#include <GLES2/gl2ext.h> // Need for GL_TEXTURE_EXTERNAL_OES
+#if defined(ANDROID)
+#  include <GLES3/gl3.h>
+#  include <GLES3/gl3ext.h>
+#  include <GLES2/gl2ext.h> // Need for GL_TEXTURE_EXTERNAL_OES
+#elif defined(__APPLE__)
+#  include <OpenGL/gl3.h>
+#  include <OpenGL/gl3ext.h>
+#endif
+
+#if !defined(GL_APIENTRY)
+#  define GL_APIENTRY
+#endif
 
 #if !defined(GL_EXT_multisampled_render_to_texture)
 typedef void (GL_APIENTRY* PFNGLRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC) (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);

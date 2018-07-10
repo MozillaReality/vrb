@@ -7,12 +7,18 @@
 #define VRB_GL_ERROR_DOT_H
 
 #include "vrb/gl.h"
-#include <android/log.h>
+#if defined(ANDROID)
+#  include <android/log.h>
+#else
+#  include <stdio.h>
+#endif
 
 namespace vrb {
 
 const char* GLErrorString(GLenum aError);
 const char* GLErrorCheck();
+
+#if defined(ANDROID)
 
 #define VRB_GL_CHECK(X) X;                                  \
 {                                                           \
@@ -24,6 +30,21 @@ const char* GLErrorCheck();
                          __FILE__, __FUNCTION__, __LINE__); \
   }                                                         \
 }
+
+#else
+
+#define VRB_GL_CHECK(X) X;                                  \
+{                                                           \
+  const char* str = vrb::GLErrorCheck();                    \
+  if (str) {                                                \
+    fprintf(stderr, "VRB: OpenGL Error: %s at%s:%s:%d",     \
+                         str,                               \
+                         __FILE__, __FUNCTION__, __LINE__); \
+  }                                                         \
+}
+
+
+#endif
 
 } // namespace vrb
 
