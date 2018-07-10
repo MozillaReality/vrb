@@ -18,10 +18,14 @@
 #include "vrb/GLExtensions.h"
 #include "vrb/Logger.h"
 #include "vrb/ResourceGL.h"
+#if defined(ANDROID)
 #include "vrb/SurfaceTextureFactory.h"
+#endif // defined(ANDROID)
 #include "vrb/TextureCache.h"
 #include "vrb/Updatable.h"
+#if defined(ANDROID)
 #include <EGL/egl.h>
+#endif // defined(ANDROID)
 #include <pthread.h>
 #include <vector>
 
@@ -29,12 +33,12 @@ namespace vrb {
 
 struct RenderContext::State {
   pthread_t threadSelf;
-  EGLContext eglContext;
   TextureCachePtr textureCache;
   DataCachePtr dataCache;
   CreationContextPtr creationContext;
   GLExtensionsPtr glExtensions;
 #if defined(ANDROID)
+  EGLContext eglContext;
   FileReaderAndroidPtr fileReader;
   SurfaceTextureFactoryPtr surfaceTextureFactory;
   ClassLoaderAndroidPtr classLoader;
@@ -46,11 +50,14 @@ struct RenderContext::State {
   State();
 };
 
-RenderContext::State::State() {
-  threadSelf = pthread_self();
-  dataCache = DataCache::Create();
-  textureCache = TextureCache::Create();
-}
+RenderContext::State::State()
+    : threadSelf(pthread_self())
+#if defined(ANDROID)
+    , eglContext(EGL_NO_CONTEXT)
+#endif // defined(ANDROID)
+    , dataCache(DataCache::Create())
+    , textureCache(TextureCache::Create())
+{}
 
 RenderContextPtr
 RenderContext::Create() {
@@ -91,6 +98,7 @@ RenderContext::IsOnRenderThread() {
 
 bool
 RenderContext::InitializeGL() {
+#if defined(ANDROID)
   EGLContext current = eglGetCurrentContext();
   if (current == EGL_NO_CONTEXT) {
     VRB_LOG("Unable to initialize VRB context: EGLContext is not valid.");
@@ -103,6 +111,7 @@ RenderContext::InitializeGL() {
     VRB_LOG("*** EGLContext NOT EQUAL %p != %p",(void*)current,(void*)m.eglContext);
   }
   m.eglContext = current;
+#endif // defined(ANDROID)
   m.resources.InitializeGL();
   m.glExtensions->Initialize();
   return true;

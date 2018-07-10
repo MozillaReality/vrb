@@ -110,9 +110,9 @@ Geometry::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
     const GLsizei kUVLength = m.UVLength();
     VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
     VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, kSize, nullptr));
-    VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributeNormal(), 3, GL_FLOAT, GL_FALSE, kSize, (void*)kPositionSize));
+    VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributeNormal(), 3, GL_FLOAT, GL_FALSE, kSize, (const GLvoid*)kPositionSize));
     if (kUseTextureCoords) {
-      VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributeUV(), kUVLength, GL_FLOAT, GL_FALSE, kSize, (void*)(kPositionSize + kNormalSize)));
+      VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributeUV(), kUVLength, GL_FLOAT, GL_FALSE, kSize, (const GLvoid*)(kPositionSize + kNormalSize)));
     }
 
     VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
@@ -166,7 +166,7 @@ Geometry::UpdateBuffers() {
     if (face.vertices.size() < 3) {
       std::string message;
       for (auto index: face.vertices) { message += " "; message += std::to_string(index); }
-      VRB_LOG("ERROR! Face with only %d vertices:%s", face.vertices.size(), message.c_str());
+      VRB_LOG("ERROR! Face with only %d vertices:%s", (int32_t)face.vertices.size(), message.c_str());
       continue;
     }
     const GLushort vertexIndex = (GLushort)(face.vertices[0] - 1);
@@ -320,7 +320,7 @@ Geometry::InitializeGL() {
   VRB_GL_CHECK(glGenBuffers(1, &m.indexObjectId));
   VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
   VRB_GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * m.triangleCount * 3, nullptr, GL_STATIC_DRAW));
-  VRB_LOG("Allocate: %d for GL_ELEMENT_ARRAY_BUFFER: %d", sizeof(GLushort) * m.triangleCount * 3, m.indexObjectId);
+  VRB_LOG("Allocate: %d for GL_ELEMENT_ARRAY_BUFFER: %d", (int32_t)sizeof(GLushort) * m.triangleCount * 3, m.indexObjectId);
 
   UpdateBuffers();
 }
