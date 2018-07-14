@@ -30,7 +30,7 @@ CopyIndecies(std::vector<GLushort> &aTarget, const std::vector<int> &aSource) {
   aTarget.reserve(aSource.size());
   for (auto value: aSource) {
     if (value >= std::numeric_limits<GLushort>::max()) {
-      VRB_LOG("Error, Index is greater than max size of GLushort: %d", value);
+      VRB_ERROR("Index is greater than max size of GLushort: %d", value);
     }
     aTarget.push_back(static_cast<GLushort>(value));
   }
@@ -147,7 +147,7 @@ Geometry::SetVertexArray(const VertexArrayPtr& aVertexArray) {
 void
 Geometry::UpdateBuffers() {
   if (m.vertexObjectId == 0 || m.indexObjectId == 0) {
-    VRB_LOG("Geometry GL objects not created");
+    VRB_WARN("Geometry GL objects not created");
     return;
   }
   const bool kUseTextureCoords = m.renderState->HasTexture();
@@ -166,7 +166,7 @@ Geometry::UpdateBuffers() {
     if (face.vertices.size() < 3) {
       std::string message;
       for (auto index: face.vertices) { message += " "; message += std::to_string(index); }
-      VRB_LOG("ERROR! Face with only %d vertices:%s", (int32_t)face.vertices.size(), message.c_str());
+      VRB_ERROR("Face with only %d vertices:%s", (int32_t)face.vertices.size(), message.c_str());
       continue;
     }
     const GLushort vertexIndex = (GLushort)(face.vertices[0] - 1);
@@ -254,7 +254,7 @@ Geometry::AddFace(
       indices += " ";
       indices += std::to_string(ix);
     }
-    VRB_LOG("ERROR! Face with only %d vertices:%s", (int)face.vertices.size(), indices.c_str());
+    VRB_ERROR("Face with only %d vertices:%s", (int)face.vertices.size(), indices.c_str());
   }
   if (aUVs.size() > 0) {
     CopyIndecies(face.uvs, aUVs);
@@ -269,7 +269,7 @@ Geometry::AddFace(
     int place = m.vertexArray->AppendNormal(normal);
     for (GLuint index: face.vertices) {
       if (index <= 0) {
-        VRB_LOG("Vertices index is less than zero.");
+        VRB_ERROR("Vertices index is less than zero.");
       }
       if (normal.Magnitude() > 0.00001f) {
         m.vertexArray->AddNormal(index - 1, normal);
@@ -308,7 +308,7 @@ Geometry::SupportOffRenderThreadInitialization() {
 void
 Geometry::InitializeGL() {
   if (!m.renderState) {
-    VRB_LOG("Unable to initialize Geometry Node. No RenderState set");
+    VRB_ERROR("Unable to initialize Geometry Node. No RenderState set");
   }
   VRB_GL_CHECK(glGenBuffers(1, &m.vertexObjectId));
   VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));

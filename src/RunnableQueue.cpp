@@ -52,18 +52,18 @@ struct RunnableQueue::State {
     vm = aVM;
     JNIEnv* env = nullptr;
     if (vm->AttachCurrentThread(&env, nullptr) != 0) {
-      VRB_LOG("Failed to attach to current thread in %s:%s:%d", __FILE__, __FUNCTION__, __LINE__);
+      VRB_ERROR("Failed to attach to current thread in %s:%s:%d", __FILE__, __FUNCTION__, __LINE__);
       return;
     }
     jclass localRunnableClass = env->FindClass("java/lang/Runnable");
     if (!localRunnableClass) {
-      VRB_LOG("Failed to fine java class java/lang/Runnable in %s", __FILE__);
+      VRB_ERROR("Failed to fine java class java/lang/Runnable in %s", __FILE__);
       return;
     }
     runnableClass = (jclass)env->NewGlobalRef(localRunnableClass);
     runMethod = env->GetMethodID(runnableClass, "run", "()V");
     if (!runMethod) {
-      VRB_LOG("Failed to fine java/lang/Runnable.run() in %s", __FILE__);
+      VRB_ERROR("Failed to fine java/lang/Runnable.run() in %s", __FILE__);
     }
   }
   uint32_t AddPlace() {
@@ -91,11 +91,11 @@ RunnableQueue::AddRunnable(JNIEnv* aEnv, jobject aRunnable) {
 void
 RunnableQueue::ProcessRunnables() {
   if (!m.vm) {
-    VRB_LOG("Unable to process Runnables, JavaVM is a nullptr in %s", __FILE__);
+    VRB_ERROR("Unable to process Runnables, JavaVM is a nullptr in %s", __FILE__);
     return;
   }
   if (!m.runMethod) {
-    VRB_LOG("Unable to process Runnables, runMethod is a nullptr in %s", __FILE__);
+    VRB_ERROR("Unable to process Runnables, runMethod is a nullptr in %s", __FILE__);
     return;
   }
   if (!m.processEnv) {

@@ -55,7 +55,7 @@ LocalObserver::SurfaceTextureDestroyed(const std::string& aName) {
 
 void
 LocalObserver::SurfaceTextureCreationError(const std::string& aName, const std::string& aReason) {
-  VRB_LOG("Failed to create SurfaceTexture[%s]: %s", aName.c_str(), aReason.c_str());
+  VRB_ERROR("Failed to create SurfaceTexture[%s]: %s", aName.c_str(), aReason.c_str());
 }
 
 } // namespace

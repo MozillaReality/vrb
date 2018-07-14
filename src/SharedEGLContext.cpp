@@ -41,7 +41,7 @@ SharedEGLContext::Initialize() {
   m.display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   EGLContext currentContext = eglGetCurrentContext();
   if (currentContext == EGL_NO_CONTEXT) {
-    VRB_LOG("Failed to initialize shared egl context, no current context: %s", EGLErrorCheck());
+    VRB_ERROR("Failed to initialize shared egl context, no current context: %s", EGLErrorCheck());
     return false;
   }
   EGLint id = 0;
@@ -49,7 +49,7 @@ SharedEGLContext::Initialize() {
   EGLint attr[] = { EGL_CONFIG_ID, id, EGL_NONE };
   EGLint configCount = 0;
   if (eglChooseConfig(m.display, attr, &(m.config), 1, &configCount) == EGL_FALSE) {
-    VRB_LOG("Failed to find config for shared context %s", EGLErrorCheck());
+    VRB_ERROR("Failed to find config for shared context %s", EGLErrorCheck());
     return false;
   }
   EGLint contextAttr[] = {
@@ -59,13 +59,13 @@ SharedEGLContext::Initialize() {
   m.context = eglCreateContext(m.display, m.config, currentContext, contextAttr);
 
   if (m.context == EGL_NO_CONTEXT) {
-    VRB_LOG("Failed to create shared egl context: %s", EGLErrorString());
+    VRB_ERROR("Failed to create shared egl context: %s", EGLErrorString());
     return false;
   }
 
   const std::string extensions = eglQueryString(m.display, EGL_EXTENSIONS);
   if (extensions.find(kSurfacelessContextExtenionName) == std::string::npos) {
-    VRB_LOG("EGL surfaceless context not supported. Falling back to pbuffer surface");
+    VRB_WARN("EGL surfaceless context not supported. Falling back to pbuffer surface");
     const EGLint attr[] = {
         EGL_WIDTH, 16,
         EGL_HEIGHT, 16,
@@ -73,7 +73,7 @@ SharedEGLContext::Initialize() {
     };
     m.surface = VRB_EGL_CHECK(eglCreatePbufferSurface(m.display, m.config, attr));
     if (m.surface == EGL_NO_SURFACE) {
-      VRB_LOG("Failed to create fallback pbuffer surface for shared context");
+      VRB_ERROR("Failed to create fallback pbuffer surface for shared context");
       return false;
     }
   } else {
@@ -88,11 +88,11 @@ SharedEGLContext::Initialize() {
 bool
 SharedEGLContext::MakeCurrent() {
   if (m.context == EGL_NO_CONTEXT) {
-    VRB_LOG("Failed to make shared egl context current: EGL_NO_CONTEXT");
+    VRB_ERROR("Failed to make shared egl context current: EGL_NO_CONTEXT");
     return false;
   }
   if (eglMakeCurrent(m.display, m.surface, m.surface, m.context) == EGL_FALSE) {
-    VRB_LOG("Failed to make shared egl context current: %s", EGLErrorString());
+    VRB_ERROR("Failed to make shared egl context current: %s", EGLErrorString());
     return false;
   }
   return true;

@@ -101,14 +101,12 @@ RenderContext::InitializeGL() {
 #if defined(ANDROID)
   EGLContext current = eglGetCurrentContext();
   if (current == EGL_NO_CONTEXT) {
-    VRB_LOG("Unable to initialize VRB context: EGLContext is not valid.");
+    VRB_WARN("Unable to initialize VRB context: EGLContext is not valid.");
     m.eglContext = current;
     return false;
   }
   if (current == m.eglContext) {
-    VRB_LOG("EGLContext c:%p == %p",(void*)current,(void*)m.eglContext);
-  } else {
-    VRB_LOG("*** EGLContext NOT EQUAL %p != %p",(void*)current,(void*)m.eglContext);
+    VRB_ERROR("RenderContext already initialized.");
   }
   m.eglContext = current;
 #endif // defined(ANDROID)

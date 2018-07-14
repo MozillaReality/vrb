@@ -112,32 +112,32 @@ SurfaceTextureFactory::State::Initialize(JNIEnv* aEnv) {
   surfaceTextureClass = (jclass)env->NewGlobalRef(localSurfaceTextureFactoryClass);
 
   if (!surfaceTextureClass) {
-    VRB_LOG("Failed finding Android class type: android/graphics/SurfaceTexture");
+    VRB_ERROR("Failed finding Android class type: android/graphics/SurfaceTexture");
     return;
   }
 
   surfaceTextureCtor = env->GetMethodID(surfaceTextureClass, "<init>", "(I)V");
 
   if (!surfaceTextureCtor) {
-    VRB_LOG("Failed finding SurfaceTexure <init> function");
+    VRB_ERROR("Failed finding SurfaceTexure <init> function");
   }
 
   updateTexImageMethod = env->GetMethodID(surfaceTextureClass, "updateTexImage", "()V");
 
   if (!updateTexImageMethod) {
-    VRB_LOG("Failed finding SurfaceTexure.updateTexImage function");
+    VRB_ERROR("Failed finding SurfaceTexure.updateTexImage function");
   }
 
   attachToGLContextMethod = env->GetMethodID(surfaceTextureClass, "attachToGLContext", "(I)V");
 
   if (!attachToGLContextMethod) {
-    VRB_LOG("Failed finding SurfaceTexure.attachToGLContext function");
+    VRB_ERROR("Failed finding SurfaceTexure.attachToGLContext function");
   }
 
   detachFromGLContextMethod = env->GetMethodID(surfaceTextureClass, "detachFromGLContext", "()V");
 
   if (!detachFromGLContextMethod) {
-    VRB_LOG("Failed finding SurfaceTexure.detachFromGLContext function");
+    VRB_ERROR("Failed finding SurfaceTexure.detachFromGLContext function");
   }
 }
 
@@ -272,8 +272,6 @@ SurfaceTextureFactory::UpdateResource(RenderContext& aContext) {
     }
     if (record.surface && record.attached && m.updateTexImageMethod) {
       m.env->CallVoidMethod(record.surface, m.updateTexImageMethod);
-    } else if (record.surface && !record.attached) {
-      VRB_LOG("********* SurfaceTexture not active!");
     }
   }
 }
@@ -281,7 +279,7 @@ SurfaceTextureFactory::UpdateResource(RenderContext& aContext) {
 // ResourceGL interface
 void
 SurfaceTextureFactory::InitializeGL() {
-  VRB_LOG("***** SurfaceTextureFactory::InitializeGL");
+  VRB_LOG("SurfaceTextureFactory::InitializeGL");
   for(SurfaceTextureRecord& record: m.textures) {
     if (record.surface && !record.attached) {
       VRB_GL_CHECK(glGenTextures(1, &record.texture));
@@ -299,7 +297,7 @@ SurfaceTextureFactory::InitializeGL() {
 
 void
 SurfaceTextureFactory::ShutdownGL() {
-  VRB_LOG("***** SurfaceTextureFactory::ShutdownGL");
+  VRB_LOG("SurfaceTextureFactory::ShutdownGL");
   for(SurfaceTextureRecord& record: m.textures) {
     if (record.surface && record.attached) {
       m.env->CallVoidMethod(record.surface, m.detachFromGLContextMethod);

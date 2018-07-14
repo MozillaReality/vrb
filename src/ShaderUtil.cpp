@@ -15,7 +15,7 @@ GLint
 GetAttributeLocation(GLuint aProgram, const char* aName) {
   GLint result = VRB_GL_CHECK(glGetAttribLocation(aProgram, aName));
   if (result < 0) {
-    VRB_LOG("Failed to glGetAttributLocation for '%s'", aName);
+    VRB_ERROR("Failed to glGetAttributLocation for '%s'", aName);
   }
   return result;
 }
@@ -29,7 +29,7 @@ GLint
 GetUniformLocation(GLuint aProgram, const char* aName) {
   GLint result = VRB_GL_CHECK(glGetUniformLocation(aProgram, aName));
   if (result < 0) {
-    VRB_LOG("Failed to glGetUniformLocation for '%s'", aName);
+    VRB_ERROR("Failed to glGetUniformLocation for '%s'", aName);
   }
   return result;
 }
@@ -44,7 +44,7 @@ LoadShader(GLenum aType, const char* aSrc) {
   GLuint shader = VRB_GL_CHECK(glCreateShader(aType));
 
   if (shader == 0) {
-    VRB_LOG("FAILDED to create shader of type: %s", (aType == GL_VERTEX_SHADER ? "vertex shader" : "fragment shader"));
+    VRB_ERROR("FAILDED to create shader of type: %s", (aType == GL_VERTEX_SHADER ? "vertex shader" : "fragment shader"));
   }
 
   VRB_GL_CHECK(glShaderSource(shader, 1, &aSrc, nullptr));
@@ -58,8 +58,8 @@ LoadShader(GLenum aType, const char* aSrc) {
     if (length > 1) {
       std::unique_ptr<char[]> log = std::make_unique<char[]>(length);
       VRB_GL_CHECK(glGetShaderInfoLog(shader, length, nullptr, log.get()));
-      VRB_LOG("FAILED TO COMPILE SHADER:\n%s", log.get());
-      VRB_LOG("From source:\n%s", aSrc);
+      VRB_ERROR("Failed to compile shader:\n%s", log.get());
+      VRB_ERROR("From source:\n%s", aSrc);
     }
   }
 
@@ -80,7 +80,7 @@ CreateProgram(GLuint aVertexShader, GLuint aFragmentShader) {
     if (length > 1) {
       std::unique_ptr<char[]> log = std::make_unique<char[]>(length);
       VRB_GL_CHECK(glGetProgramInfoLog(program, length, nullptr, log.get()));
-      VRB_LOG("Failed to link program:\n%s", log.get());
+      VRB_ERROR("Failed to link program:\n%s", log.get());
     }
     VRB_GL_CHECK(glDeleteProgram(program));
     program = 0;

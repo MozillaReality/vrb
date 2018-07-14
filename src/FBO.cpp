@@ -44,18 +44,18 @@ struct FBO::State {
     if (attributes.multiview) {
       if (!ext->IsExtensionSupported(GLExtensions::Ext::OVR_multiview)) {
         attributes.multiview = false;
-        VRB_LOG("Multiview not supported");
+        VRB_WARN("Multiview not supported");
       }
       if (attributes.samples > 1 &&
           !ext->IsExtensionSupported(GLExtensions::Ext::EXT_multisampled_render_to_texture)) {
         attributes.samples = 1;
-        VRB_LOG("Multiview multisampled not supported");
+        VRB_WARN("Multiview multisampled not supported");
       }
     }
     else if (attributes.samples > 1 &&
              !ext->IsExtensionSupported(GLExtensions::Ext::EXT_multisampled_render_to_texture)) {
       attributes.samples = 1;
-      VRB_LOG("Multiview multisampled not supported");
+      VRB_WARN("Multiview multisampled not supported");
     }
   }
 
@@ -152,7 +152,7 @@ FBO::SetTextureHandle(const GLuint aHandle,
     if (GL_FRAMEBUFFER_COMPLETE == glCheckFramebufferStatus(GL_FRAMEBUFFER)) {
       m.valid = true;
     } else {
-      VRB_LOG("Failed to create valid frame buffer object");
+      VRB_ERROR("Failed to create valid frame buffer object");
       m.Clear();
     }
     Unbind();

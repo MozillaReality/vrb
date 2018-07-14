@@ -68,7 +68,7 @@ DataCache::CacheData(std::unique_ptr<uint8_t[]>& aData, const size_t aDataSize) 
     MutexAutoLock lock(m.cacheLock);
     root = m.cachePath;
     if (root.empty()) {
-      VRB_LOG("Failed to cache data, root path, not set");
+      VRB_ERROR("Failed to cache data, root path, not set");
       return 0;
     }
     m.handleCount++;
@@ -80,7 +80,7 @@ DataCache::CacheData(std::unique_ptr<uint8_t[]>& aData, const size_t aDataSize) 
   info.path = root + sFilePrefix + std::to_string(handle);
   int file = open(info.path.c_str(), O_WRONLY | O_CREAT, 0660);
   if (file < 0) {
-    VRB_LOG("Failed to open cache file: %s for writing", info.path.c_str());
+    VRB_ERROR("Failed to open cache file: %s for writing", info.path.c_str());
     return 0;
   }
   CloseFileOnReturn hold(file);
@@ -89,7 +89,7 @@ DataCache::CacheData(std::unique_ptr<uint8_t[]>& aData, const size_t aDataSize) 
   while (toWrite > 0) {
     ssize_t written = write(file, &(aData[place]), toWrite);
     if (written < 0) {
-      VRB_LOG("Failed writing to cache file: %s", info.path.c_str());
+      VRB_ERROR("Failed writing to cache file: %s", info.path.c_str());
       return 0;
     }
     toWrite -= (size_t)written;
@@ -112,14 +112,14 @@ DataCache::LoadData(const uint32_t aHandle, std::unique_ptr<uint8_t[]>& aData) {
     MutexAutoLock lock(m.cacheLock);
     found = m.cache.find(aHandle);
     if (found == m.cache.end()) {
-      VRB_LOG("Failed to find cache file from handle: %u", aHandle);
+      VRB_ERROR("Failed to find cache file from handle: %u", aHandle);
       return 0;
     }
   }
   CachedData info = found->second;
   int file = open(info.path.c_str(), O_RDONLY);
   if (file < 0) {
-    VRB_LOG("Failed to open cache file: %s for reading", info.path.c_str());
+    VRB_ERROR("Failed to open cache file: %s for reading", info.path.c_str());
     return 0;
   }
   CloseFileOnReturn hold(file);
@@ -129,7 +129,7 @@ DataCache::LoadData(const uint32_t aHandle, std::unique_ptr<uint8_t[]>& aData) {
   while (toRead > 0) {
     ssize_t dataRead = read(file, &(aData[place]), toRead);
     if (dataRead < 0) {
-      VRB_LOG("Failed to read from cache file: %s", info.path.c_str());
+      VRB_ERROR("Failed to read from cache file: %s", info.path.c_str());
       return 0;
     }
     toRead -= (size_t)dataRead;
@@ -146,14 +146,14 @@ DataCache::RemoveData(const uint32_t aHandle) {
     MutexAutoLock lock(m.cacheLock);
     cacheIterator_t found = m.cache.find(aHandle);
     if (found == m.cache.end()) {
-      VRB_LOG("Failed to find cache file for removal from handle: %u", aHandle);
+      VRB_ERROR("Failed to find cache file for removal from handle: %u", aHandle);
       return;
     }
     path = found->second.path;
     m.cache.erase(found);
   }
   if (remove(path.c_str()) < 0) {
-    VRB_LOG("Failed to remove cache file: %s", path.c_str());
+    VRB_ERROR("Failed to remove cache file: %s", path.c_str());
   }
 }
 
@@ -169,7 +169,7 @@ DataCache::~DataCache() {
   // No need to lock since if destructor is called, no references are left
   for (cacheIterator_t info = m.cache.begin(); info != m.cache.end(); info++) {
     if (remove(info->second.path.c_str()) < 0) {
-      VRB_LOG("Failed to remove cache file: %s", info->second.path.c_str());
+      VRB_ERROR("Failed to remove cache file: %s", info->second.path.c_str());
     }
   }
 }

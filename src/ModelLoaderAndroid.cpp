@@ -138,7 +138,7 @@ struct ModelLoaderAndroid::State {
     if (pthread_join(child, nullptr) == 0) {
       VRB_LOG("ModelLoaderAndroid load thread stopped");
     } else {
-      VRB_LOG("Error: ModelLoaderAndroid load thread failed to stop");
+      VRB_ERROR("ModelLoaderAndroid load thread failed to stop");
     }
     running = false;
   }
@@ -215,7 +215,7 @@ ModelLoaderAndroid::Run(void* data) {
     attached = true;
     const bool offRenderThreadContextCurrent = m.eglContext->MakeCurrent();
     if (!offRenderThreadContextCurrent) {
-      VRB_LOG("Failed to make shared context current. VRB Nodes will be initialized on render thread");
+      VRB_ERROR("Failed to make shared context current. VRB Nodes will be initialized on render thread");
     }
     ClassLoaderAndroidPtr classLoader = ClassLoaderAndroid::Create();
     classLoader->Init(m.env, m.activity);

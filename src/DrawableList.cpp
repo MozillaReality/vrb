@@ -63,7 +63,7 @@ DrawableList::PopLights(const int aCount) {
     }
   }
   if (m.depth < 0) {
-    VRB_LOG("ERROR: Light list depth in DrawableList is less than zero!");
+    VRB_ERROR("Light list depth in DrawableList is less than zero!");
   }
 }
 

@@ -88,7 +88,7 @@ NodeFactoryObj::StartModel(const std::string& aFileName) {
   FinishModel();
   CreationContextPtr creation = m.context.lock();
   if (!creation) {
-    VRB_LOG("Error: failed to lock creation context in NodeFactoryObj::StartModel");
+    VRB_ERROR("Failed to lock creation context in NodeFactoryObj::StartModel");
     return;
   }
   if (!m.root) {
@@ -137,7 +137,7 @@ void
 NodeFactoryObj::SetMaterialName(const std::string& aName) {
   std::unordered_map<std::string, Material>::iterator it = m.materials.find(aName);
   if (it == m.materials.end()) {
-    VRB_LOG("Failed to find material: '%s'", aName.c_str());
+    VRB_WARN("Failed to find material: '%s'", aName.c_str());
     return;
   }
 

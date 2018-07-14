@@ -34,7 +34,7 @@ Transform::GetWorldTransform() const {
   GetParents(parents);
   while (parents.size() > 0) {
     if (parents.size() > 1) {
-      VRB_LOG("Warning: Calculating world transform where node has more than one parent");
+      VRB_WARN("Calculating world transform where node has more than one parent");
     }
     GroupPtr parent = parents[0];
     TransformPtr transform = std::dynamic_pointer_cast<Transform>(parent);
