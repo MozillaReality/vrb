@@ -246,6 +246,11 @@ TextureCubeMap::AboutToBind() {
   m.CreateTexture();
 }
 
+bool
+TextureCubeMap::SupportOffRenderThreadInitialization() {
+  return true;
+}
+
 void
 TextureCubeMap::InitializeGL() {
   m.CreateTexture();

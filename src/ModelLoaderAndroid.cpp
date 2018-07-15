@@ -26,25 +26,27 @@ namespace vrb {
 static LoadFinishedCallback sNoop = [](GroupPtr&){};
 
 struct LoadInfo {
-  std::string name;
   GroupPtr target;
+  LoadTask task;
   LoadFinishedCallback callback;
-  LoadInfo(const std::string& aName, GroupPtr& aGroup, LoadFinishedCallback& aCallback)
-      : name(aName)
-      , target(aGroup)
+  LoadInfo(GroupPtr& aGroup, LoadTask& aTask, LoadFinishedCallback& aCallback)
+      : target(aGroup)
+      , task(aTask)
       , callback(aCallback)
   {}
   LoadInfo(const LoadInfo& aInfo)
-      : name(aInfo.name)
-      , target(aInfo.target)
+      : target(aInfo.target)
+      , task(aInfo.task)
       , callback(aInfo.callback)
   {}
   LoadInfo& operator=(const LoadInfo& aInfo) {
-    name = aInfo.name;
     target = aInfo.target;
+    task = aInfo.task;
     callback = aInfo.callback;
     return *this;
   }
+private:
+  LoadInfo() = delete;
 };
 
 class ModelLoaderAndroidSynchronizerObserver;
@@ -201,8 +203,28 @@ ModelLoaderAndroid::LoadModel(const std::string& aModelName, GroupPtr aTargetNod
 
 void
 ModelLoaderAndroid::LoadModel(const std::string& aModelName, GroupPtr aTargetNode, LoadFinishedCallback& aCallback) {
+  LoadTask task = [aModelName](CreationContextPtr& aContext) -> GroupPtr {
+    NodeFactoryObjPtr factory = NodeFactoryObj::Create(aContext);
+    ParserObjPtr parser = ParserObj::Create(aContext);
+    parser->SetFileReader(aContext->GetFileReader());
+    parser->SetObserver(factory);
+    GroupPtr group = Group::Create(aContext);
+    factory->SetModelRoot(group);
+    parser->LoadModel(aModelName);
+    return group;
+  };
+  RunLoadTask(aTargetNode, task, aCallback);
+}
+
+void
+ModelLoaderAndroid::RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask) {
+  RunLoadTask(aTargetNode, aTask, sNoop);
+}
+
+void
+ModelLoaderAndroid::RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask, LoadFinishedCallback& aCallback) {
   MutexAutoLock(m.loadLock);
-  m.loadList.push_back(LoadInfo(aModelName, aTargetNode, aCallback));
+  m.loadList.push_back(LoadInfo(aTargetNode, aTask,  aCallback));
   m.loadLock.Signal();
 }
 
@@ -225,10 +247,6 @@ ModelLoaderAndroid::Run(void* data) {
     ModelLoaderAndroidSynchronizerObserverPtr finalizer = ModelLoaderAndroidSynchronizerObserver::Create();
     ContextSynchronizerObserverPtr obs = finalizer;
     m.context->RegisterContextSynchronizerObserver(obs);
-    NodeFactoryObjPtr factory = NodeFactoryObj::Create(m.context);
-    ParserObjPtr parser = ParserObj::Create(m.context);
-    parser->SetFileReader(reader);
-    parser->SetObserver(factory);
 
     bool done = false;
     while (!done) {
@@ -246,10 +264,8 @@ ModelLoaderAndroid::Run(void* data) {
 
       if (!done) {
         for (LoadInfo& info: list) {
-          GroupPtr group = Group::Create(m.context);
+          GroupPtr group = info.task(m.context);
           finalizer->Set(group, info.target, info.callback);
-          factory->SetModelRoot(group);
-          parser->LoadModel(info.name);
           if (offRenderThreadContextCurrent) {
             m.context->UpdateResourceGL();
           }

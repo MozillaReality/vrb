@@ -34,6 +34,7 @@ protected:
   void AboutToBind() override;
 
   // ResourceGL interface
+  bool SupportOffRenderThreadInitialization() override;
   void InitializeGL() override;
   void ShutdownGL() override;
 

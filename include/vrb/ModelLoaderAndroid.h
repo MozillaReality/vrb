@@ -16,6 +16,7 @@
 namespace vrb {
 
 typedef std::function<void(GroupPtr&)> LoadFinishedCallback;
+typedef std::function<GroupPtr(CreationContextPtr&)> LoadTask;
 
 class ModelLoaderAndroid {
 public:
@@ -26,6 +27,8 @@ public:
   void ShutdownGL();
   void LoadModel(const std::string& aModelName, GroupPtr aTargetNode);
   void LoadModel(const std::string& aModelName, GroupPtr aTargetNode, LoadFinishedCallback& aCallback);
+  void RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask);
+  void RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask, LoadFinishedCallback& aCallback);
 protected:
   struct State;
   ModelLoaderAndroid(State& aState, RenderContextPtr& aContext);
