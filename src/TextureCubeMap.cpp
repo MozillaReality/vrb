@@ -8,6 +8,7 @@
 #include "vrb/ConcreteClass.h"
 
 #include "vrb/CreationContext.h"
+#include "vrb/DataCache.h"
 #include "vrb/FileReader.h"
 #include "vrb/GLError.h"
 #include "vrb/Logger.h"
@@ -31,6 +32,8 @@ struct CubeMapFace {
   GLenum type;
   GLsizei dataSize;
   std::unique_ptr<uint8_t[]> data;
+  uint32_t dataCacheHandle;
+
 
   CubeMapFace()
       : target(GL_TEXTURE_CUBE_MAP_POSITIVE_X)
@@ -42,6 +45,7 @@ struct CubeMapFace {
       , format(GL_RGB)
       , type(GL_UNSIGNED_BYTE)
       , dataSize(0)
+      , dataCacheHandle(0)
   {}
 
   void SetAlpha(const bool aHasAlpha) {
@@ -105,9 +109,9 @@ CubeMapTextureHandler::ProcessImageFile(const int aFileHandle, std::unique_ptr<u
 namespace vrb {
 
 struct TextureCubeMap::State : public Texture::State, public ResourceGL::State {
-  CreationContextWeak context;
   bool dirty;
   CubeMapFace faces[6];
+  DataCachePtr dataCache;
 
   void CreateTexture();
   void DestroyTexture();
@@ -120,7 +124,12 @@ TextureCubeMap::State::CreateTexture() {
   }
   for (CubeMapFace& face: faces) {
     if (!face.data) {
-      return;
+      if (dataCache && (face.dataCacheHandle > 0)) {
+        dataCache->LoadData(face.dataCacheHandle, face.data);
+      }
+      if (!face.data) {
+        return;
+      }
     }
   }
   VRB_GL_CHECK(glGenTextures(1, &texture));
@@ -136,6 +145,11 @@ TextureCubeMap::State::CreateTexture() {
         face.format,
         face.type,
         (void*)face.data.get()));
+    if (!face.dataCacheHandle && dataCache) {
+      face.dataCacheHandle = dataCache->CacheData(face.data, (size_t)face.dataSize);
+    } else if (face.dataCacheHandle > 0) {
+      face.data = nullptr;
+    }
   }
 
   for (auto param = intMap.begin(); param != intMap.end(); param++) {
@@ -208,14 +222,24 @@ TextureCubeMap::SetRGBData(const GLenum aFaceTarget, std::unique_ptr<uint8_t[]>&
 }
 
 TextureCubeMap::TextureCubeMap(State& aState, CreationContextPtr& aContext) : Texture(aState, aContext), ResourceGL (aState, aContext), m(aState) {
-  m.context = aContext;
+  m.dataCache = aContext->GetDataCache();
   m.target = GL_TEXTURE_CUBE_MAP;
   for (int i = 0; i < 6; ++i) {
     m.faces[i].target = (GLenum) GL_TEXTURE_CUBE_MAP_POSITIVE_X + i;
   }
 }
 
-TextureCubeMap::~TextureCubeMap() {}
+TextureCubeMap::~TextureCubeMap() {
+  if (!m.dataCache) {
+    return;
+  }
+  for (CubeMapFace& face: m.faces) {
+    if (face.dataCacheHandle > 0) {
+      m.dataCache->RemoveData(face.dataCacheHandle);
+      face.dataCacheHandle = 0;
+    }
+  }
+}
 
 void
 TextureCubeMap::AboutToBind() {

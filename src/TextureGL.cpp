@@ -183,7 +183,17 @@ TextureGL::SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, cons
 TextureGL::TextureGL(State& aState, CreationContextPtr& aContext) : Texture(aState, aContext), ResourceGL (aState, aContext), m(aState) {
   m.dataCache = aContext->GetDataCache();
 }
-TextureGL::~TextureGL() {}
+TextureGL::~TextureGL() {
+  if (!m.dataCache) {
+    return;
+  }
+  for (MipMap& mipMap: m.mipMaps) {
+    if (mipMap.dataCacheHandle > 0) {
+      m.dataCache->RemoveData(mipMap.dataCacheHandle);
+      mipMap.dataCacheHandle = 0;
+    }
+  }
+}
 
 void
 TextureGL::AboutToBind() {
