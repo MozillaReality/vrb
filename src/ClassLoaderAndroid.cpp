@@ -64,7 +64,7 @@ ClassLoaderAndroid::FindClass(const std::string& aClassName) const {
   m.env->DeleteLocalRef(name);
   if (m.env->ExceptionCheck() == JNI_TRUE) {
     m.env->ExceptionClear();
-    VRB_LOG("Failed to find java class: %s", aClassName.c_str());
+    VRB_ERROR("Failed to find java class: %s", aClassName.c_str());
     return nullptr;
   }
   return result;

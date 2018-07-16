@@ -21,7 +21,7 @@
 
 #define ASSERT_ON_CREATION_THREAD()                                          \
   if (pthread_equal(m.threadSelf, pthread_self()) == 0) {                    \
-    VRB_LOG("CreationContext::%s called on wrong thread", __FUNCTION__);     \
+    VRB_ERROR("CreationContext::%s called on wrong thread", __FUNCTION__);     \
     return;                                                                  \
   }
 
@@ -60,7 +60,7 @@ TextureHandler::BindFileHandle(const std::string& aFileName, const int aFileHand
 
 void
 TextureHandler::LoadFailed(const int aFileHandle, const std::string& aReason) {
-  VRB_LOG("Failed to load texture: %s", aReason.c_str());
+  VRB_ERROR("Failed to load texture: %s", aReason.c_str());
 }
 
 void
@@ -91,7 +91,7 @@ struct CreationContext::State {
 CreationContextPtr
 CreationContext::Create(RenderContextPtr& aContext) {
   if (!aContext->IsOnRenderThread()) {
-    VRB_LOG("Creation Context must be created on render thread");
+    VRB_ERROR("Creation Context must be created on render thread");
     return nullptr;
   }
   CreationContextPtr result = std::make_shared<ConcreteClass<CreationContext, CreationContext::State> >();

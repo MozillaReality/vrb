@@ -121,7 +121,7 @@ FileReaderAndroid::Init(JNIEnv* aEnv, jobject &aAssetManager, const ClassLoaderA
   m.imageLoaderClass = (jclass)m.env->NewGlobalRef(localImageLoaderClass);
   m.loadFromAssets = m.env->GetStaticMethodID(m.imageLoaderClass, "loadFromAssets", "(Landroid/content/res/AssetManager;Ljava/lang/String;JI)V");
   if (!m.loadFromAssets) {
-    VRB_LOG("Failed to find Java function ImageLoader::loadFromAssets");
+    VRB_ERROR("Failed to find Java function ImageLoader::loadFromAssets");
   }
 }
 
@@ -175,13 +175,13 @@ JNI_METHOD(void, ProcessImage)
   vrb::FileReaderAndroid* reader = ptr(aFileReaderAndroid);
 
   if (!reader) {
-    VRB_LOG("Error: nullptr FileReaderAndroid in ProcessTexture");
+    VRB_ERROR("FileReaderAndroid is nullptr in ProcessTexture");
     return;
   }
 
   jsize arraySize = env->GetArrayLength(aPixels);
   if ((width * height) > arraySize) {
-    VRB_LOG("Error: Image width[%d] * height[%d] = %d > buffer[%d] size in ProcessImage", width, height, width * height, arraySize);
+    VRB_ERROR("Image width[%d] * height[%d] = %d > buffer[%d] size in ProcessImage", width, height, width * height, arraySize);
     return;
   }
 
@@ -207,7 +207,7 @@ JNI_METHOD(void, ImageLoadFailed)
   vrb::FileReaderAndroid* reader = ptr(aFileReaderAndroid);
 
   if (!reader) {
-    VRB_LOG("Error: nullptr FileReaderAndroid in ImageLoadFailed");
+    VRB_ERROR("FileReaderAndroid is a nullptr in ImageLoadFailed");
     return;
   }
 

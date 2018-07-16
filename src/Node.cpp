@@ -21,7 +21,7 @@ Node::GetParents(std::vector<GroupPtr>& aParents) const {
     if (GroupPtr parent = weak.lock()) {
       aParents.push_back(std::move(parent));
     } else {
-      VRB_LOG("Deleted weak parent found in parent list in Node::GetParents Node: %s", m.name.c_str());
+      VRB_WARN("Deleted weak parent found in parent list in Node::GetParents Node: %s", m.name.c_str());
     }
   }
 }
@@ -32,18 +32,18 @@ Node::RemoveFromParents() {
     if (GroupPtr parent = weak.lock()) {
       parent->RemoveNode(*this);
     } else {
-      VRB_LOG("Deleted weak parent found in parent list in Node::RemoveFromParents Node: %s", m.name.c_str());
+      VRB_WARN("Deleted weak parent found in parent list in Node::RemoveFromParents Node: %s", m.name.c_str());
     }
   }
   if (m.parents.size() != 0) {
-    VRB_LOG("Node::RemoveFromParents failed to remove all parents for Node: %s", m.name.c_str());
+    VRB_WARN("Node::RemoveFromParents failed to remove all parents for Node: %s", m.name.c_str());
   }
 }
 
 Node::Node(State& aState, CreationContextPtr& aContext) : m(aState) {}
 Node::~Node() {
   if (m.parents.size() != 0) {
-    VRB_LOG("Node: %s destructor called with parent count != 0", m.name.c_str());
+    VRB_WARN("Node: %s destructor called with parent count != 0", m.name.c_str());
   }
 }
 

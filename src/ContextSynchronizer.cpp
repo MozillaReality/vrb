@@ -17,7 +17,7 @@
 
 #define ASSERT_ON_CREATION_THREAD()                                          \
   if (!m.IsOnCreationThread()) {                                             \
-    VRB_LOG("ContextSynchronizer::%s called on wrong thread", __FUNCTION__); \
+    VRB_ERROR("ContextSynchronizer::%s called on wrong thread", __FUNCTION__); \
     return;                                                                  \
   }
 
@@ -85,7 +85,7 @@ ContextSynchronizer::AdoptLists(
     UpdatableList& aUpdatables) {
   ASSERT_ON_CREATION_THREAD();
   if (!m.context) {
-    VRB_LOG("ContextSynchronizer failed, no RenderContext defined");
+    VRB_ERROR("ContextSynchronizer failed, no RenderContext defined");
     return;
   }
   if (m.context->IsOnRenderThread()) {
@@ -114,7 +114,7 @@ ContextSynchronizer::AdoptLists(
       while (m.waiting) {
         if (!m.cond.Wait()) {
           m.waiting = false;
-          VRB_LOG("Condition variable Wait failed in ContextSynchronizer");
+          VRB_WARN("Condition variable Wait failed in ContextSynchronizer");
         }
       }
       m.uninitializedResources = nullptr;
@@ -131,12 +131,12 @@ ContextSynchronizer::Signal(bool& aIsActive) {
     return;
   }
   if (!m.context) {
-    VRB_LOG("ContextSynchronizer::Signal() failed. RenderContext not defined.");
+    VRB_ERROR("ContextSynchronizer::Signal() failed. RenderContext not defined.");
     aIsActive = false;
     return;
   }
   if (!m.context->IsOnRenderThread()) {
-    VRB_LOG("ContextSynchronizer::Signal() failed. Must be called on main render thread");
+    VRB_ERROR("ContextSynchronizer::Signal() failed. Must be called on main render thread");
     aIsActive = false;
     return;
   }

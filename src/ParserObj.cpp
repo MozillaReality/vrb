@@ -380,7 +380,7 @@ ParserObj::State::ParseMtl() {
       observer->SetIlluniationModel(LocalStoi(tokens.size() > 0 ? tokens[tokens.size() - 1] : "1"));
     }else {
       // Unhandled tag
-      VRB_LOG("In file: '%s' Unhandled mtl option: '%s'", mtlFileName.c_str(), mtlLineBuffer.c_str());
+      VRB_WARN("In file: '%s' Unhandled mtl option: '%s'", mtlFileName.c_str(), mtlLineBuffer.c_str());
     }
 
     if (currentParser) {
@@ -413,7 +413,7 @@ ParserObj::BindFileHandle(const std::string& aFileName, const int aFileHandle) {
 
 void
 ParserObj::LoadFailed(const int aFileHandle, const std::string& aReason) {
-  VRB_LOG("Failed to load: %s", aReason.c_str());
+  VRB_ERROR("Failed to load: %s", aReason.c_str());
   FinishRawFile(aFileHandle);
 }
 
@@ -422,7 +422,7 @@ ParserObj::ProcessRawFileChunk(const int aFileHandle, const char* aBuffer, const
   std::string* lineBuffer = m.GetBuffer(aFileHandle);
 
   if (!lineBuffer) {
-    VRB_LOG("Failed to find line buffer of file handle: %d", aFileHandle);
+    VRB_ERROR("Failed to find line buffer of file handle: %d", aFileHandle);
     return;
   }
   size_t place = 0;
@@ -462,7 +462,7 @@ ParserObj::LoadModel(const std::string& aFileName) {
     VRB_LOG("Loading file: '%s'", aFileName.c_str());
     m.fileReader->ReadRawFile(aFileName, m.self.lock());
   } else {
-    VRB_LOG("ParserObj unable to load file: '%s'. FileReader not set", aFileName.c_str());
+    VRB_ERROR("ParserObj unable to load file: '%s'. FileReader not set", aFileName.c_str());
   }
 }
 

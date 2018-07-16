@@ -90,7 +90,7 @@ CubeMapTextureHandler::BindFileHandle(const std::string& aFileName, const int aF
 
 void
 CubeMapTextureHandler::LoadFailed(const int aFileHandle, const std::string& aReason) {
-  VRB_LOG("Failed to load CubeMap texture for target %d: %s", mFaceTarget, aReason.c_str());
+  VRB_ERROR("Failed to load CubeMap texture for target %d: %s", mFaceTarget, aReason.c_str());
 }
 
 void
@@ -167,7 +167,7 @@ TextureCubeMap::Load(CreationContextPtr& aContext, const TextureCubeMapPtr& aTex
   FileReaderPtr reader = aContext->GetFileReader();
 
   if (!reader) {
-    VRB_LOG("FileReaderPtr not found while loading a CubeMap");
+    VRB_ERROR("FileReaderPtr not found while loading a CubeMap");
     return;
   }
 
