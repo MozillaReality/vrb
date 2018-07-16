@@ -43,7 +43,8 @@ Node::RemoveFromParents() {
 Node::Node(State& aState, CreationContextPtr& aContext) : m(aState) {}
 Node::~Node() {
   if (m.parents.size() != 0) {
-    VRB_WARN("Node: %s destructor called with parent count != 0", m.name.c_str());
+    const char* name = (m.name.size() ? m.name.c_str() : "<unnamed>");
+    VRB_WARN("Node: %s destructor called with parent count != 0", name);
   }
 }
 
@@ -53,15 +54,16 @@ Node::AddToParents(GroupWeak& aParent, Node& aChild) {
 }
 
 void
-Node::RemoveFromParents(GroupWeak& aParent, Node& aChild) {
-  GroupPtr parent = aParent.lock();
-  if (!parent) {
-    return;
-  }
-  for (auto it = aChild.m.parents.begin(); it != aChild.m.parents.end(); it++) {
-    if (it->lock() == parent) {
-      aChild.m.parents.erase(it);
+Node::RemoveFromParents(Group& aParent, Node& aChild) {
+  for (auto it = aChild.m.parents.begin(); it != aChild.m.parents.end();) {
+    Group* node = it->lock().get();
+    if (node == &aParent) {
+      it = aChild.m.parents.erase(it);
       return;
+    } else if (node == nullptr) {
+      it = aChild.m.parents.erase(it);
+    } else {
+      it++;
     }
   }
 }

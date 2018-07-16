@@ -86,7 +86,7 @@ Group::RemoveNode(Node& aNode) {
   for (auto childIt = m.children.begin(); childIt != m.children.end(); childIt++) {
     if (childIt->get() == &aNode) {
       m.children.erase(childIt);
-      RemoveFromParents(m.self, aNode);
+      RemoveFromParents(*this, aNode);
       return;
     }
   }
@@ -137,7 +137,7 @@ Group::Traverse(const GroupPtr& aParent, const Node::TraverseFunction& aTraverse
 Group::Group(State& aState, CreationContextPtr& aContext) : Node(aState, aContext), m(aState) {}
 Group::~Group() {
   for (NodePtr& child: m.children) {
-    RemoveFromParents(m.self, *child);
+    RemoveFromParents(*this, *child);
   }
 }
 

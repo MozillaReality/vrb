@@ -29,7 +29,7 @@ protected:
   Node(State& aState, CreationContextPtr& aContext);
   virtual ~Node();
   static void AddToParents(GroupWeak& aParent, Node& aChild);
-  static void RemoveFromParents(GroupWeak& aParent, Node& aChild);
+  static void RemoveFromParents(Group& aParent, Node& aChild);
   virtual bool Traverse(const GroupPtr& aParent, const TraverseFunction& aTraverseFunction);
 private:
   State& m;
