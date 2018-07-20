@@ -250,6 +250,7 @@ struct ParserObj::State {
   std::weak_ptr<ParserObj> self;
   FileReaderPtr fileReader;
   std::weak_ptr<ParserObserverObj> weakObserver;
+  std::string objFileName;
   std::string mtlFileName;
   int objFileHandle;
   int mtlFileHandle;
@@ -269,12 +270,22 @@ struct ParserObj::State {
     {
 }
 
+  std::string GetAbsolutePath(const std::string& aRelativePath) const;
   std::string* GetBuffer(const int aFileHandle);
   void Parse(const int aFileHandle, FileHandler& aFileHandler);
   void Finish(const int aFileHandle);
   void ParseObj(FileHandler& aFileHandler);
   void ParseMtl();
 };
+
+std::string
+ParserObj::State::GetAbsolutePath(const std::string& aRelativePath) const  {
+  size_t pos = objFileName.rfind("/");
+  if (pos == std::string::npos) {
+    return aRelativePath;
+  }
+  return objFileName.substr(0, pos + 1) + aRelativePath;
+}
 
 std::string*
 ParserObj::State::GetBuffer(const int aFileHandle) {
@@ -327,7 +338,8 @@ ParserObj::State::ParseObj(FileHandler& aFileHandler) {
     } else if (type == "o") {
       observer->SetObjectName(tokens.size() > 0 ? tokens[0] : "");
     } else if (type == "mtllib") {
-      mtlFileName = tokens.size() > 0 ? tokens[0] : "";
+
+      mtlFileName = tokens.size() > 0 ? GetAbsolutePath(tokens[0]) : "";
       if (fileReader) {
         fileReader->ReadRawFile(mtlFileName, self.lock());
       }
@@ -371,11 +383,11 @@ ParserObj::State::ParseMtl() {
     } else if (type == "Ns") {
       observer->SetSpecularExponent(LocalStof(tokens.size() > 0 ? tokens[tokens.size() - 1] : "1.0"));
     } else if (type == "map_Ka") {
-      observer->SetAmbientTexture(tokens.size() > 0 ? tokens[tokens.size() - 1] : "");
+      observer->SetAmbientTexture(tokens.size() > 0 ? GetAbsolutePath(tokens[tokens.size() - 1]) : "");
     } else if (type == "map_Kd") {
-      observer->SetDiffuseTexture(tokens.size() > 0 ? tokens[tokens.size() - 1] : "");
+      observer->SetDiffuseTexture(tokens.size() > 0 ? GetAbsolutePath(tokens[tokens.size() - 1]) : "");
     } else if (type == "map_Ks") {
-      observer->SetSpecularTexture(tokens.size() > 0 ? tokens[tokens.size() - 1] : "");
+      observer->SetSpecularTexture(tokens.size() > 0 ? GetAbsolutePath(tokens[tokens.size() - 1]) : "");
     } else if (type == "illum") {
       observer->SetIlluniationModel(LocalStoi(tokens.size() > 0 ? tokens[tokens.size() - 1] : "1"));
     }else {
@@ -406,6 +418,7 @@ ParserObj::BindFileHandle(const std::string& aFileName, const int aFileHandle) {
     if (observer) { observer->StartMaterialFile(aFileName); }
   } else {
     m.objFileHandle = aFileHandle;
+    m.objFileName = aFileName;
     m.objLineBuffer.clear();
     if (observer) { observer->StartModel(aFileName); }
   }
