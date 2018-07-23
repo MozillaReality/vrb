@@ -176,7 +176,7 @@ FileReaderAndroid::Shutdown() {
 }
 
 void
-FileReaderAndroid::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]> &aImage, const int aWidth, const int aHeight) {
+FileReaderAndroid::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]> &aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat) {
   if (m.imageTargetHandle != aFileHandle) {
     return;
   }
@@ -186,7 +186,7 @@ FileReaderAndroid::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8
     return;
   }
 
-  m.imageTarget->ProcessImageFile(aFileHandle, aImage, aWidth, aHeight);
+  m.imageTarget->ProcessImageFile(aFileHandle, aImage, aImageLength, aWidth, aHeight, aFormat);
   m.imageTarget = nullptr;
 }
 
@@ -210,7 +210,7 @@ FileReaderAndroid::~FileReaderAndroid() {}
 extern "C" {
 
 JNI_METHOD(void, ProcessImage)
-(JNIEnv* env, jclass, jlong aFileReaderAndroid, int aFileTrackingHandle, jintArray aPixels, int width, int height) {
+(JNIEnv* env, jclass, jlong aFileReaderAndroid, jint aFileTrackingHandle, jobject aBuffer, jint width, jint height, jint format) {
   vrb::FileReaderAndroid* reader = ptr(aFileReaderAndroid);
 
   if (!reader) {
@@ -218,31 +218,21 @@ JNI_METHOD(void, ProcessImage)
     return;
   }
 
-  jsize arraySize = env->GetArrayLength(aPixels);
-  if ((width * height) > arraySize) {
-    VRB_ERROR("Image width[%d] * height[%d] = %d > buffer[%d] size in ProcessImage", width, height, width * height, arraySize);
+  uint8_t * buffer = (uint8_t *) env->GetDirectBufferAddress(aBuffer);
+  jlong length = env->GetDirectBufferCapacity(aBuffer);
+  if (length <= 0) {
+    VRB_ERROR("FileReaderAndroid got invalid ByteBuffer length");
     return;
   }
 
-  const int imageSize = width * height * 4;
-  std::unique_ptr<uint8_t[]> image = std::make_unique<uint8_t[]>(imageSize);
 
-  jint* array = env->GetIntArrayElements(aPixels, 0);
-  memcpy(image.get(), array, imageSize);
-  env->ReleaseIntArrayElements(aPixels, array, 0);
-
-  // We need to swap red and blue channels
-  for (int ix = 0; ix < imageSize; ix += 4) {
-    uint8_t red = image[ix];
-    image[ix] = image[ix + 2];
-    image[ix + 2] = red;
-  }
-
-  reader->ProcessImageFile(aFileTrackingHandle, image, width, height);
+  std::unique_ptr<uint8_t[]> image = std::make_unique<uint8_t[]>((size_t)length);
+  memcpy(image.get(), buffer, (size_t)length);
+  reader->ProcessImageFile(aFileTrackingHandle, image, (uint64_t) length, width, height, (GLenum) format);
 }
 
 JNI_METHOD(void, ImageLoadFailed)
-(JNIEnv* env, jclass, jlong aFileReaderAndroid, int aFileTrackingHandle, jstring aReason) {
+(JNIEnv* env, jclass, jlong aFileReaderAndroid, jint aFileTrackingHandle, jstring aReason) {
   vrb::FileReaderAndroid* reader = ptr(aFileReaderAndroid);
 
   if (!reader) {

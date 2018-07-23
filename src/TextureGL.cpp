@@ -78,10 +78,6 @@ struct MipMap {
     return *this;
   }
 
-  void SetAlpha(const bool aHasAlpha) {
-    internalFormat = aHasAlpha ? GL_RGBA : GL_RGB;
-    format = aHasAlpha ? GL_RGBA : GL_RGB;
-  }
 private:
   MipMap(const MipMap&) = delete;
   MipMap& operator=(const MipMap&) = delete;
@@ -116,16 +112,29 @@ TextureGL::State::CreateTexture() {
       continue;
     }
 
-    VRB_GL_CHECK(glTexImage2D(
-      mipMap.target,
-      mipMap.level,
-      mipMap.internalFormat,
-      mipMap.width,
-      mipMap.height,
-      mipMap.border,
-      mipMap.format,
-      mipMap.type,
-      (void*)mipMap.data.get()));
+    if (mipMap.format == GL_RG8 || mipMap.format == GL_RGBA) {
+      VRB_GL_CHECK(glTexImage2D(
+          mipMap.target,
+          mipMap.level,
+          mipMap.internalFormat,
+          mipMap.width,
+          mipMap.height,
+          mipMap.border,
+          mipMap.format,
+          mipMap.type,
+          (void*)mipMap.data.get()));
+    } else {
+      VRB_GL_CHECK(glCompressedTexImage2D(
+          mipMap.target,
+          mipMap.level,
+          mipMap.internalFormat,
+          mipMap.width,
+          mipMap.height,
+          mipMap.border,
+          mipMap.dataSize,
+          (void*)mipMap.data.get()));
+    }
+
     if (dataCache) {
       if (mipMap.dataCacheHandle == 0) {
         mipMap.dataCacheHandle = dataCache->CacheData(mipMap.data, (size_t)mipMap.dataSize);
@@ -156,11 +165,7 @@ TextureGL::Create(CreationContextPtr& aContext) {
 }
 
 void
-TextureGL::SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight, const int aChannels) {
-  if ((aChannels < 3) || (aChannels > 4)) {
-    return;
-  }
-
+TextureGL::SetImageData(std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat) {
   if ((aWidth <= 0) || (aHeight <= 0)) {
     return;
   }
@@ -172,9 +177,10 @@ TextureGL::SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, cons
   MipMap mipMap;
   mipMap.width = aWidth;
   mipMap.height = aHeight;
-  mipMap.SetAlpha(aChannels == 4);
-  mipMap.dataSize = aWidth * aHeight * aChannels;
+  mipMap.dataSize = (GLsizei) aImageLength;
   mipMap.data = std::move(aImage);
+  mipMap.internalFormat = aFormat;
+  mipMap.format = aFormat;
   m.mipMaps.clear();
   m.mipMaps.push_back(std::move(mipMap));
   m.dirty = true;

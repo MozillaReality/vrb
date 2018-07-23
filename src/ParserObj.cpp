@@ -465,7 +465,7 @@ ParserObj::FinishRawFile(const int aFileHandle) {
 }
 
 void
-ParserObj::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight) {
+ParserObj::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat) {
 
 }
 

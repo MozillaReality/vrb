@@ -36,7 +36,8 @@ TextureCache::Init(CreationContextPtr& aContext) {
   const size_t kArraySize = kDefaultImageDataSize * sizeof(uint32_t);
   std::unique_ptr<uint8_t[]> data = std::make_unique<uint8_t[]>(kArraySize);
   memcpy(data.get(), (void*)kDefaultImageData, kArraySize);
-  m.defaultTexture->SetRGBData(data, kDefaultImageDataWidth, kDefaultImageDataHeight, 4);
+  uint64_t length = kDefaultImageDataWidth * kDefaultImageDataHeight * 4;
+  m.defaultTexture->SetImageData(data, length, kDefaultImageDataWidth,  kDefaultImageDataHeight, GL_RGBA);
 }
 
 void
