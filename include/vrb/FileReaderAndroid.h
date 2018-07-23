@@ -10,6 +10,7 @@
 #include "vrb/Forward.h"
 #include "vrb/MacroUtils.h"
 
+#include "vrb/gl.h"
 #include <jni.h>
 #include <memory>
 
@@ -22,7 +23,7 @@ public:
   void ReadImageFile(const std::string& aFileName, FileHandlerPtr aHandler) override;
   void Init(JNIEnv* aEnv, jobject& aAssetManager, const ClassLoaderAndroidPtr& classLoader);
   void Shutdown();
-  void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight);
+  void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat);
   void ImageFileLoadFailed(const int aFileHandle, const std::string& aReason);
 protected:
   struct State;

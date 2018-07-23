@@ -20,7 +20,7 @@ class TextureGL : public Texture, protected ResourceGL {
 public:
   static TextureGLPtr Create(CreationContextPtr& aContext);
 
-  void SetRGBData(std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight, const int aChannels);
+  void SetImageData(std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat);
 protected:
   struct State;
   TextureGL(State& aState, CreationContextPtr& aContext);

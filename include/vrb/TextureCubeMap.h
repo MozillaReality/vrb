@@ -24,7 +24,7 @@ public:
                    const std::string& aFileXPos, const std::string& aFileXNeg,
                    const std::string& aFileYPos, const std::string& aFileYNeg,
                    const std::string& aFileZPos, const std::string& aFileZNeg);
-  void SetRGBData(const GLenum aFaceTarget, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight, const int aChannels);
+  void SetImageData(const GLenum aFaceTarget, std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat);
 protected:
   struct State;
   TextureCubeMap(State& aState, CreationContextPtr& aContext);

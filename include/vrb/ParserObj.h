@@ -61,7 +61,7 @@ public:
   void LoadFailed(const int aFileHandle, const std::string& aReason) override ;
   void ProcessRawFileChunk(const int aFileHandle, const char* aBuffer, const size_t aSize) override ;
   void FinishRawFile(const int aFileHandle) override;
-  void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight) override;
+  void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat) override;
 
   // ParserObj Interface
   void LoadModel(const std::string& aFileName);

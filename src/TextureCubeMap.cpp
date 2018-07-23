@@ -47,11 +47,6 @@ struct CubeMapFace {
       , dataSize(0)
       , dataCacheHandle(0)
   {}
-
-  void SetAlpha(const bool aHasAlpha) {
-    internalFormat = aHasAlpha ? GL_RGBA : GL_RGB;
-    format = aHasAlpha ? GL_RGBA : GL_RGB;
-  }
 private:
   CubeMapFace(const CubeMapFace&) = delete;
   CubeMapFace& operator=(const CubeMapFace&) = delete;
@@ -69,7 +64,7 @@ public:
   void LoadFailed(const int aFileHandle, const std::string& aReason) override;
   void ProcessRawFileChunk(const int aFileHandle, const char* aBuffer, const size_t aSize) override {};
   void FinishRawFile(const int aFileHandle) override {};
-  void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight) override;
+  void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat) override;
   CubeMapTextureHandler() {}
   ~CubeMapTextureHandler() {}
 protected:
@@ -98,9 +93,9 @@ CubeMapTextureHandler::LoadFailed(const int aFileHandle, const std::string& aRea
 }
 
 void
-CubeMapTextureHandler::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight) {
+CubeMapTextureHandler::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat) {
   if (mTexture) {
-    mTexture->SetRGBData(mFaceTarget, aImage, aWidth, aHeight, 4);
+    mTexture->SetImageData(mFaceTarget, aImage, aImageLength, aWidth, aHeight, aFormat);
   }
 }
 
@@ -135,16 +130,28 @@ TextureCubeMap::State::CreateTexture() {
   VRB_GL_CHECK(glGenTextures(1, &texture));
   VRB_GL_CHECK(glBindTexture(target, texture));
   for (CubeMapFace& face: faces) {
-    VRB_GL_CHECK(glTexImage2D(
-        face.target,
-        face.level,
-        face.internalFormat,
-        face.width,
-        face.height,
-        face.border,
-        face.format,
-        face.type,
-        (void*)face.data.get()));
+    if (face.format == GL_RG8 || face.format == GL_RGBA) {
+      VRB_GL_CHECK(glTexImage2D(
+          face.target,
+          face.level,
+          face.internalFormat,
+          face.width,
+          face.height,
+          face.border,
+          face.format,
+          face.type,
+          (void*)face.data.get()));
+    } else {
+      VRB_GL_CHECK(glCompressedTexImage2D(
+          face.target,
+          face.level,
+          face.internalFormat,
+          face.width,
+          face.height,
+          face.border,
+          face.dataSize,
+          (void*)face.data.get()));
+    }
     if (!face.dataCacheHandle && dataCache) {
       face.dataCacheHandle = dataCache->CacheData(face.data, (size_t)face.dataSize);
     } else if (face.dataCacheHandle > 0) {
@@ -194,11 +201,7 @@ TextureCubeMap::Load(CreationContextPtr& aContext, const TextureCubeMapPtr& aTex
 }
 
 void
-TextureCubeMap::SetRGBData(const GLenum aFaceTarget, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight, const int aChannels) {
-  if ((aChannels < 3) || (aChannels > 4)) {
-    return;
-  }
-
+TextureCubeMap::SetImageData(const GLenum aFaceTarget, std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat){
   if ((aWidth <= 0) || (aHeight <= 0)) {
     return;
   }
@@ -215,8 +218,9 @@ TextureCubeMap::SetRGBData(const GLenum aFaceTarget, std::unique_ptr<uint8_t[]>&
   CubeMapFace& face = m.faces[index];
   face.width = aWidth;
   face.height = aHeight;
-  face.SetAlpha(aChannels == 4);
-  face.dataSize = aWidth * aHeight * aChannels;
+  face.internalFormat = aFormat;
+  face.format = aFormat;
+  face.dataSize = (GLsizei) aImageLength;
   face.data = std::move(aImage);
   m.dirty = true;
 }

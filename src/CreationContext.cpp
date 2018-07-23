@@ -37,7 +37,7 @@ public:
   void LoadFailed(const int aFileHandle, const std::string& aReason) override;
   void ProcessRawFileChunk(const int aFileHandle, const char* aBuffer, const size_t aSize) override {};
   void FinishRawFile(const int aFileHandle) override {};
-  void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight) override;
+  void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat) override;
   TextureHandler() {}
   ~TextureHandler() {}
 protected:
@@ -64,9 +64,9 @@ TextureHandler::LoadFailed(const int aFileHandle, const std::string& aReason) {
 }
 
 void
-TextureHandler::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const int aWidth, const int aHeight) {
+TextureHandler::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat) {
   if (mTexture) {
-    mTexture->SetRGBData(aImage, aWidth, aHeight, 4);
+    mTexture->SetImageData(aImage, aImageLength, aWidth, aHeight, aFormat);
   }
 }
 
