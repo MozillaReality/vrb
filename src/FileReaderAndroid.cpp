@@ -10,6 +10,7 @@
 #include "vrb/ClassLoaderAndroid.h"
 
 #include <jni.h>
+#include <fstream>
 #include <vector>
 
 #include <android/asset_manager.h>
@@ -36,6 +37,7 @@ struct FileReaderAndroid::State {
   AAssetManager* am;
   jclass imageLoaderClass;
   jmethodID loadFromAssets;
+  jmethodID loadFromRawFile;
   int imageTargetHandle;
   FileHandlerPtr imageTarget;
   State()
@@ -45,12 +47,60 @@ struct FileReaderAndroid::State {
       , am(nullptr)
       , imageLoaderClass(nullptr)
       , loadFromAssets(nullptr)
+      , loadFromRawFile(nullptr)
       , imageTargetHandle(0)
   {}
 
   int nextHandle() {
     trackingHandleCount++;
     return trackingHandleCount;
+  }
+
+  void readRawAssetsFile(const std::string& aFileName, FileHandlerPtr aHandler) {
+    const int handle = nextHandle();
+    aHandler->BindFileHandle(aFileName, handle);
+    if (!am) {
+      aHandler->LoadFailed(handle, "Unable to load file: No Android AssetManager.");
+      return;
+    }
+
+    AAsset* asset = AAssetManager_open(am, aFileName.c_str(), AASSET_MODE_STREAMING);
+    if (!asset) {
+      aHandler->LoadFailed(handle, "Unable to find file");
+      return;
+    }
+
+    const int bufferSize = 1024;
+    char buffer[bufferSize];
+    int read = 0;
+    while ((read = AAsset_read(asset, buffer, bufferSize)) > 0) {
+      aHandler->ProcessRawFileChunk(handle, buffer, read);
+    }
+    if (read == 0) {
+      aHandler->FinishRawFile(handle);
+    } else {
+      aHandler->LoadFailed(handle, "Error while reading file");
+    }
+
+    AAsset_close(asset);
+  }
+
+  void readRawFile(const std::string& aFileName, FileHandlerPtr aHandler) {
+    const int handle = nextHandle();
+    aHandler->BindFileHandle(aFileName, handle);
+    std::ifstream input(aFileName, std::ios::binary);
+    if (!input) {
+      aHandler->LoadFailed(handle, "Unable to load file: No Android AssetManager.");
+      return;
+    }
+
+    std::vector<char> buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    if (buffer.size() > 0) {
+      aHandler->ProcessRawFileChunk(handle, buffer.data(), buffer.size());
+      aHandler->FinishRawFile(handle);
+    } else {
+      aHandler->LoadFailed(handle, "Error while reading file");
+    }
   }
 
 private:
@@ -65,32 +115,11 @@ FileReaderAndroid::Create() {
 
 void
 FileReaderAndroid::ReadRawFile(const std::string& aFileName, FileHandlerPtr aHandler) {
-  const int handle = m.nextHandle();
-  aHandler->BindFileHandle(aFileName, handle);
-  if (!m.am) {
-    aHandler->LoadFailed(handle, "Unable to load file: No Android AssetManager.");
-    return;
-  }
-
-  AAsset* asset = AAssetManager_open(m.am, aFileName.c_str(), AASSET_MODE_STREAMING);
-  if (!asset) {
-    aHandler->LoadFailed(handle, "Unable to find file");
-    return;
-  }
-
-  const int bufferSize = 1024;
-  char buffer[bufferSize];
-  int read = 0;
-  while ((read = AAsset_read(asset, buffer, bufferSize)) > 0) {
-    aHandler->ProcessRawFileChunk(handle, buffer, read);
-  }
-  if (read == 0) {
-    aHandler->FinishRawFile(handle);
+  if (aFileName.size() && aFileName[0] == '/') {
+    m.readRawFile(aFileName, aHandler);
   } else {
-    aHandler->LoadFailed(handle, "Error while reading file");
+    m.readRawAssetsFile(aFileName, aHandler);
   }
-
-  AAsset_close(asset);
 }
 
 void
@@ -106,7 +135,13 @@ FileReaderAndroid::ReadImageFile(const std::string& aFileName, FileHandlerPtr aH
     return;
   }
 
-  m.env->CallStaticVoidMethod(m.imageLoaderClass, m.loadFromAssets, m.jassetManager, m.env->NewStringUTF(aFileName.c_str()), jptr(this), m.imageTargetHandle);
+  jstring jFileName = m.env->NewStringUTF(aFileName.c_str());
+  if (aFileName.size() && aFileName[0] == '/') {
+    m.env->CallStaticVoidMethod(m.imageLoaderClass, m.loadFromRawFile, jFileName, jptr(this), m.imageTargetHandle);
+  } else {
+    m.env->CallStaticVoidMethod(m.imageLoaderClass, m.loadFromAssets, m.jassetManager, jFileName, jptr(this), m.imageTargetHandle);
+  }
+  m.env->DeleteLocalRef(jFileName);
 }
 
 void
@@ -122,6 +157,10 @@ FileReaderAndroid::Init(JNIEnv* aEnv, jobject &aAssetManager, const ClassLoaderA
   m.loadFromAssets = m.env->GetStaticMethodID(m.imageLoaderClass, "loadFromAssets", "(Landroid/content/res/AssetManager;Ljava/lang/String;JI)V");
   if (!m.loadFromAssets) {
     VRB_ERROR("Failed to find Java function ImageLoader::loadFromAssets");
+  }
+  m.loadFromRawFile = m.env->GetStaticMethodID(m.imageLoaderClass, "loadFromRawFile", "(Ljava/lang/String;JI)V");
+  if (!m.loadFromRawFile) {
+    VRB_ERROR("Failed to find Java function ImageLoader::loadFromRawfile");
   }
 }
 
