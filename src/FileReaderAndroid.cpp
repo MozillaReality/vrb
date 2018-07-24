@@ -4,10 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "vrb/FileReaderAndroid.h"
-
 #include "vrb/ConcreteClass.h"
-#include "vrb/Logger.h"
+
 #include "vrb/ClassLoaderAndroid.h"
+#include "vrb/JNIException.h"
+#include "vrb/Logger.h"
+
 
 #include <jni.h>
 #include <fstream>
@@ -138,8 +140,10 @@ FileReaderAndroid::ReadImageFile(const std::string& aFileName, FileHandlerPtr aH
   jstring jFileName = m.env->NewStringUTF(aFileName.c_str());
   if (aFileName.size() && aFileName[0] == '/') {
     m.env->CallStaticVoidMethod(m.imageLoaderClass, m.loadFromRawFile, jFileName, jptr(this), m.imageTargetHandle);
+    VRB_CHECK_JNI_EXCEPTION(m.env);
   } else {
     m.env->CallStaticVoidMethod(m.imageLoaderClass, m.loadFromAssets, m.jassetManager, jFileName, jptr(this), m.imageTargetHandle);
+    VRB_CHECK_JNI_EXCEPTION(m.env);
   }
   m.env->DeleteLocalRef(jFileName);
 }

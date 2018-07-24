@@ -8,6 +8,7 @@
 #include "vrb/private/UpdatableState.h"
 #include "vrb/ConcreteClass.h"
 #include "vrb/GLError.h"
+#include "vrb/JNIException.h"
 #include "vrb/Logger.h"
 
 #include <forward_list>
@@ -272,6 +273,7 @@ SurfaceTextureFactory::UpdateResource(RenderContext& aContext) {
     }
     if (record.surface && record.attached && m.updateTexImageMethod) {
       m.env->CallVoidMethod(record.surface, m.updateTexImageMethod);
+      VRB_CHECK_JNI_EXCEPTION(m.env);
     }
   }
 }
@@ -284,6 +286,7 @@ SurfaceTextureFactory::InitializeGL() {
     if (record.surface && !record.attached) {
       VRB_GL_CHECK(glGenTextures(1, &record.texture));
       m.env->CallVoidMethod(record.surface, m.attachToGLContextMethod, record.texture);
+      VRB_CHECK_JNI_EXCEPTION(m.env);
       record.attached = true;
       if (record.observer) {
         record.observer->SurfaceTextureHandleUpdated(record.name, record.texture);
@@ -301,6 +304,7 @@ SurfaceTextureFactory::ShutdownGL() {
   for(SurfaceTextureRecord& record: m.textures) {
     if (record.surface && record.attached) {
       m.env->CallVoidMethod(record.surface, m.detachFromGLContextMethod);
+      VRB_CHECK_JNI_EXCEPTION(m.env);
       record.texture = 0;
       record.attached = false;
       if (record.observer) {
