@@ -6,6 +6,7 @@
 #include "vrb/ClassLoaderAndroid.h"
 
 #include "vrb/ConcreteClass.h"
+#include "vrb/JNIException.h"
 #include "vrb/Logger.h"
 
 #include <jni.h>
@@ -28,6 +29,7 @@ struct ClassLoaderAndroid::State {
     // Get class loader instance from the activity
     jmethodID getClassLoader = env->GetMethodID(clazz, "getClassLoader", "()Ljava/lang/ClassLoader;");
     jobject cls = env->CallObjectMethod(aActivity, getClassLoader);
+    VRB_CHECK_JNI_EXCEPTION(env);
     classLoader = env->NewGlobalRef(cls);
     // Cache the classLoader->findClass method
     findClass = env->GetMethodID(env->GetObjectClass(classLoader), "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
@@ -61,12 +63,8 @@ jclass
 ClassLoaderAndroid::FindClass(const std::string& aClassName) const {
   jstring name = m.env->NewStringUTF(aClassName.c_str());
   jclass result = (jclass)(m.env->CallObjectMethod(m.classLoader, m.findClass, name));
+  VRB_CHECK_JNI_EXCEPTION(m.env);
   m.env->DeleteLocalRef(name);
-  if (m.env->ExceptionCheck() == JNI_TRUE) {
-    m.env->ExceptionClear();
-    VRB_ERROR("Failed to find java class: %s", aClassName.c_str());
-    return nullptr;
-  }
   return result;
 }
 
