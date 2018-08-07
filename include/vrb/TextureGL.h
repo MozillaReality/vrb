@@ -21,6 +21,8 @@ public:
   static TextureGLPtr Create(CreationContextPtr& aContext);
 
   void SetImageData(std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat);
+  GLsizei GetWidth() const;
+  GLsizei GetHeight() const;
 protected:
   struct State;
   TextureGL(State& aState, CreationContextPtr& aContext);

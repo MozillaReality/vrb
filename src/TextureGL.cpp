@@ -201,6 +201,22 @@ TextureGL::~TextureGL() {
   }
 }
 
+GLsizei
+TextureGL::GetWidth() const {
+  if (m.mipMaps.size()) {
+    return m.mipMaps.front().width;
+  }
+  return 0;
+}
+
+GLsizei
+TextureGL::GetHeight() const {
+  if (m.mipMaps.size()) {
+    return m.mipMaps.front().height;
+  }
+  return 0;
+}
+
 void
 TextureGL::AboutToBind() {
   m.CreateTexture();
