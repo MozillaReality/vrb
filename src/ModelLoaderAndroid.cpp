@@ -65,10 +65,10 @@ public:
   void ContextsSynchronized(RenderContextPtr& aRenderContext) override {
     if (mTarget && mSource) {
       mTarget->TakeChildren(mSource);
-      mCallback(mTarget);
-      mTarget = mSource = nullptr;
-      mCallback = sNoop;
     }
+    mCallback(mTarget);
+    mTarget = mSource = nullptr;
+    mCallback = sNoop;
   }
   ModelLoaderAndroidSynchronizerObserver() {}
 protected:
