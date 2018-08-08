@@ -50,34 +50,40 @@ Trim(const std::string& aStr) {
 
 static std::string
 TokenizeWhiteSpace(const std::string& aBuffer, std::vector<std::string>& aTokens) {
-   const size_t bufferLength = aBuffer.length();
-   std::string result;
-   std::string inProcess;
-   size_t place = 0;
-   bool first = true;
+  const size_t bufferLength = aBuffer.length();
+  const char* buffer = aBuffer.c_str();
+  std::string result;
+  int charCount = 0;
+  size_t begin = 0;
+  size_t place = 0;
+  bool first = true;
 
-   while (place < bufferLength) {
-     if ((aBuffer[place] == cSpace) || (aBuffer[place] == cTab)) {
-       if (!inProcess.empty()) {
-         if (first) {
-           result = inProcess;
-           first = false;
-         } else { aTokens.push_back(inProcess); }
-         inProcess.clear();
-       }
-     } else {
-       inProcess.push_back(aBuffer[place]);
-     }
-     place++;
-   }
+  while (place < bufferLength) {
+    const char value = buffer[place];
+    if ((value == cSpace) || (value == cTab)) {
+      if (charCount > 0) {
+        if (first) {
+          result = aBuffer.substr(begin, place - begin);
+          first = false;
+        } else {
+          aTokens.push_back(aBuffer.substr(begin, place - begin));
+        }
+        charCount = 0;
+      }
+    } else {
+      if (charCount == 0) {
+        begin = place;
+      }
+      charCount++;
+    }
+    place++;
+  }
 
-   if (!inProcess.empty()) {
-     if (first) { result = inProcess; }
-     else { aTokens.push_back(inProcess); }
-     inProcess.clear();
-   }
-
-   return result;
+  if (charCount > 0) {
+    if (first) { result = aBuffer.substr(begin); }
+    else { aTokens.push_back(aBuffer.substr(begin)); }
+  }
+  return result;
 }
 
 static std::string
@@ -89,24 +95,19 @@ TokenizeBuffer(std::string& aBuffer, std::vector<std::string>& aTokens) {
 }
 
 static size_t
-TokenizeDelimiter(const std::string& aStr, const std::string& aDelimiter, std::vector<std::string>& aTokens) {
-  bool done = false;
+TokenizeDelimiter(const std::string& aStr, const char aDelimiter, std::vector<std::string>& aTokens) {
+  const char* buffer = aStr.c_str();
   size_t start = 0;
-  size_t end = 0;
-  while (!done) {
-    end = aStr.find(aDelimiter, start);
-    if (end == std::string::npos) {
-      done = true;
-      end = aStr.length();
+  size_t place = 0;
+  while (buffer[place] != '\0') {
+    if (buffer[place] == aDelimiter) {
+      aTokens.push_back(aStr.substr(start, place - start));
+      start = place + 1;
     }
-
-    std::string token = aStr.substr(start, end - start);
-    aTokens.push_back(aStr.substr(start, end - start));
-
-    start = end + aDelimiter.length();
+    place++;
   }
+  aTokens.push_back(aStr.substr(start));
   return aTokens.size();
-
 }
 
 class LineParser {
@@ -226,11 +227,15 @@ void
 FaceParser::Parse(const std::vector<std::string>& aTokens, vrb::ParserObserverObj& aObserver) {
   const size_t tokensSize = aTokens.size();
   std::vector<int> vertices;
+  vertices.reserve(4);
   std::vector<int> uvs;
+  uvs.reserve(4);
   std::vector<int> normals;
+  normals.reserve(4);
   for (size_t ix = 0; ix < tokensSize; ix++) {
     std::vector<std::string> vertexTokens;
-    size_t vertexSize = TokenizeDelimiter(aTokens[ix], "/", vertexTokens);
+    vertexTokens.reserve(3);
+    size_t vertexSize = TokenizeDelimiter(aTokens[ix], '/', vertexTokens);
     int index[3] = { 0, 0, 0 };
     for (size_t jy = 0; jy < vertexSize; jy++) {
       if ((jy < 3) && !vertexTokens[jy].empty()) { index[jy] = LocalStoi(vertexTokens[jy]); }

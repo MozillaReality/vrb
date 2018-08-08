@@ -53,6 +53,9 @@ struct NodeFactoryObj::State {
       , currentMaterial(nullptr) {}
 
   void Reset() {
+    if (vertices) {
+      VRB_LOG("vertices: %d normals: %d uv: %d", vertices->GetVertexCount(), vertices->GetNormalCount(), vertices->GetUVCount());
+    }
     groupId = 0;
     vertices = nullptr;
     currentGeometry = nullptr;
@@ -280,7 +283,7 @@ NodeFactoryObj::GetModelRoot() {
 NodeFactoryObj::NodeFactoryObj(State& aState, CreationContextPtr& aContext) : m(aState) {
   m.context = aContext;
 }
-NodeFactoryObj::~NodeFactoryObj() {}
+NodeFactoryObj::~NodeFactoryObj() { m.Reset(); }
 
 } // namespace vrb
 

@@ -16,12 +16,32 @@
 #include "vrb/NodeFactoryObj.h"
 #include "vrb/ParserObj.h"
 #include "vrb/SharedEGLContext.h"
+#include "vrb/RenderContext.h"
 
 #include <pthread.h>
 #include <vector>
-#include <vrb/include/vrb/RenderContext.h>
 
 namespace vrb {
+
+#define LOCAL_CLOCK_TYPE CLOCK_THREAD_CPUTIME_ID
+
+class LoadTimer {
+public:
+  LoadTimer() {}
+  void Start() {
+    clock_gettime(LOCAL_CLOCK_TYPE, &start);
+  }
+  float Sample() {
+    timespec end;
+    clock_gettime(LOCAL_CLOCK_TYPE, &end);
+    return (float) end.tv_sec + (((float) end.tv_nsec) / 1.0e9f) - ((float) start.tv_sec +
+           (((float) start.tv_nsec) / 1.0e9f));
+  }
+protected:
+  timespec start;
+};
+
+#undef LOCAL_CLOCK_TYPE
 
 static LoadFinishedCallback sNoop = [](GroupPtr&){};
 
@@ -204,6 +224,8 @@ ModelLoaderAndroid::LoadModel(const std::string& aModelName, GroupPtr aTargetNod
 void
 ModelLoaderAndroid::LoadModel(const std::string& aModelName, GroupPtr aTargetNode, LoadFinishedCallback& aCallback) {
   LoadTask task = [aModelName](CreationContextPtr& aContext) -> GroupPtr {
+    LoadTimer timer;
+    timer.Start();
     NodeFactoryObjPtr factory = NodeFactoryObj::Create(aContext);
     ParserObjPtr parser = ParserObj::Create(aContext);
     parser->SetFileReader(aContext->GetFileReader());
@@ -211,6 +233,7 @@ ModelLoaderAndroid::LoadModel(const std::string& aModelName, GroupPtr aTargetNod
     GroupPtr group = Group::Create(aContext);
     factory->SetModelRoot(group);
     parser->LoadModel(aModelName);
+    VRB_LOG("TIMER Load time for %s: %f", aModelName.c_str(), timer.Sample());
     return group;
   };
   RunLoadTask(aTargetNode, task, aCallback);
@@ -248,6 +271,9 @@ ModelLoaderAndroid::Run(void* data) {
     ContextSynchronizerObserverPtr obs = finalizer;
     m.context->RegisterContextSynchronizerObserver(obs);
 
+    LoadTimer timer;
+    LoadTimer total;
+
     bool done = false;
     while (!done) {
       std::vector<LoadInfo> list;
@@ -264,12 +290,20 @@ ModelLoaderAndroid::Run(void* data) {
 
       if (!done) {
         for (LoadInfo& info: list) {
+          total.Start();
+          timer.Start();
           GroupPtr group = info.task(m.context);
+          VRB_LOG("TIMER Off-render-thread task: %f", timer.Sample());
           finalizer->Set(group, info.target, info.callback);
           if (offRenderThreadContextCurrent) {
+            timer.Start();
             m.context->UpdateResourceGL();
+            VRB_LOG("TIMER Update GL resources: %f", timer.Sample());
           }
+          timer.Start();
           m.context->Synchronize();
+          VRB_LOG("TIMER Synchronize with render thread: %f", timer.Sample());
+          VRB_LOG("TIMER Total time: %f", total.Sample());
         }
       }
     }
