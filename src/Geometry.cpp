@@ -176,16 +176,13 @@ Geometry::UpdateBuffers() {
     const Vector& firstNormal = m.vertexArray->GetNormal(normalIndex);
     const Vector& firstUV = m.vertexArray->GetUV(uvIndex);
     for (int ix = 1; ix <= face.vertices.size() - 2; ix++) {
-      std::string out;
       VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstVertex.Data()));
       offset += kVectorSize;
       VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstNormal.Data()));
       offset += kVectorSize;
-      out += " " + firstVertex.ToString() + firstNormal.ToString();
       if (kUseTextureCoords) {
         VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, firstUV.Data()));
         offset += kUVSize;
-        out += firstUV.ToString();
       }
       indices.push_back(count);
       count++;
@@ -196,12 +193,10 @@ Geometry::UpdateBuffers() {
       offset += kVectorSize;
       VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, n1.Data()));
       offset += kVectorSize;
-      out += "/" + v1.ToString() + n1.ToString();
       if (kUseTextureCoords) {
         const Vector uv1 = m.vertexArray->GetUV(face.uvs[ix] - 1);
         VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv1.Data()));
         offset += kUVSize;
-        out += uv1.ToString();
       }
       indices.push_back(count);
       count++;
@@ -212,16 +207,13 @@ Geometry::UpdateBuffers() {
       offset += kVectorSize;
       VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, n2.Data()));
       offset += kVectorSize;
-      out += "/" + v2.ToString() + n2.ToString();
       if (kUseTextureCoords) {
         const Vector uv2 = m.vertexArray->GetUV(face.uvs[ix + 1] - 1);
         VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv2.Data()));
         offset += kUVSize;
-        out += uv2.ToString();
       }
       indices.push_back(count);
       count++;
-//      VRB_LOG("array buffer[%d] o:%d c:%d : %s", ix, (int)offset, count, out.c_str());
     }
   }
 
