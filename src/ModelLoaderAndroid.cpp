@@ -233,7 +233,7 @@ ModelLoaderAndroid::LoadModel(const std::string& aModelName, GroupPtr aTargetNod
     GroupPtr group = Group::Create(aContext);
     factory->SetModelRoot(group);
     parser->LoadModel(aModelName);
-    VRB_LOG("TIMER Load time for %s: %f", aModelName.c_str(), timer.Sample());
+    VRB_LOG("TIMER Load time for %s: %f sec", aModelName.c_str(), timer.Sample());
     return group;
   };
   RunLoadTask(aTargetNode, task, aCallback);
@@ -273,6 +273,7 @@ ModelLoaderAndroid::Run(void* data) {
 
     LoadTimer timer;
     LoadTimer total;
+    float accumulativeTime = 0.0f;
 
     bool done = false;
     while (!done) {
@@ -293,17 +294,19 @@ ModelLoaderAndroid::Run(void* data) {
           total.Start();
           timer.Start();
           GroupPtr group = info.task(m.context);
-          VRB_LOG("TIMER Off-render-thread task: %f", timer.Sample());
+          VRB_DEBUG("TIMER Off-render-thread asset task: %f sec", timer.Sample());
           finalizer->Set(group, info.target, info.callback);
           if (offRenderThreadContextCurrent) {
             timer.Start();
             m.context->UpdateResourceGL();
-            VRB_LOG("TIMER Update GL resources: %f", timer.Sample());
+            VRB_DEBUG("TIMER Update GL resources: %f sec", timer.Sample());
           }
           timer.Start();
           m.context->Synchronize();
-          VRB_LOG("TIMER Synchronize with render thread: %f", timer.Sample());
-          VRB_LOG("TIMER Total time: %f", total.Sample());
+          const float thisLoad = total.Sample();
+          accumulativeTime += thisLoad;
+          VRB_DEBUG("TIMER Total asset processing time: %f sec", thisLoad);
+          VRB_LOG("TIMER Accumulative time loading assets: %f sec", accumulativeTime);
         }
       }
     }
