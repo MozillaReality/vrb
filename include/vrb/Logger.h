@@ -7,21 +7,23 @@
 #define VRBROWSER_LOGGER_H
 
 #if defined(ANDROID)
-#include <android/log.h>
-#define VRB_WARN(format, ...) __android_log_print(ANDROID_LOG_WARN, "VRB", format, ##__VA_ARGS__);
-#define VRB_ERROR(format, ...) __android_log_print(ANDROID_LOG_ERROR, "VRB", format, ##__VA_ARGS__);
-#ifdef NDEBUG
-#define VRB_LOG(...);
+#  include <android/log.h>
+#  if defined(NDEBUG)
+#    define VRB_DEBUG(...)
+#  else
+#    define VRB_DEBUG(format, ...) __android_log_print(ANDROID_LOG_DEBUG, "VRB", format, ##__VA_ARGS__);
+#  endif
+#  define VRB_LOG(format, ...) __android_log_print(ANDROID_LOG_INFO, "VRB", format, ##__VA_ARGS__);
+#  define VRB_WARN(format, ...) __android_log_print(ANDROID_LOG_WARN, "VRB", format, ##__VA_ARGS__);
+#  define VRB_ERROR(format, ...) __android_log_print(ANDROID_LOG_ERROR, "VRB", format, ##__VA_ARGS__);
 #else
-#define VRB_LOG(format, ...) __android_log_print(ANDROID_LOG_INFO, "VRB", format, ##__VA_ARGS__);
+#  include <stdio.h>
+#  define VRB_DEBUG(format, ...) fprintf(stderr, "VRB DEBUG: " format "\n", ##__VA_ARGS__);
+#  define VRB_LOG(format, ...) fprintf(stderr, "VRB: " format "\n", ##__VA_ARGS__);
+#  define VRB_WARN(format, ...) fprintf(stderr, "VRB WARNING: " format "\n", ##__VA_ARGS__);
+#  define VRB_ERROR(format, ...) fprintf(stderr, "VRB ERROR: " format "\n", ##__VA_ARGS__);
+#  define VRB_LINE VRB_LOG("%s:%s:%d", __FILE__, __FUNCTION__, __LINE__)
 #endif
-#define VRB_LINE VRB_LOG("%s:%s:%d", __FILE__, __FUNCTION__, __LINE__);
-#else
-#include <stdio.h>
-#define VRB_LOG(format, ...) fprintf(stderr, "VRB: " format "\n", ##__VA_ARGS__);
-#define VRB_WARN(format, ...) fprintf(stderr, "VRB WARNING: " format "\n", ##__VA_ARGS__);
-#define VRB_ERROR(format, ...) fprintf(stderr, "VRB ERROR: " format "\n", ##__VA_ARGS__);
-#define VRB_LINE VRB_LOG("%s:%s:%d", __FILE__, __FUNCTION__, __LINE__)
-#endif
+#define VRB_LINE VRB_DEBUG("%s:%s:%d", __FILE__, __FUNCTION__, __LINE__);
 
 #endif //VRBROWSER_LOGGER_H
