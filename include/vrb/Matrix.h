@@ -501,7 +501,7 @@ public:
         return Identity();
     }
 
-    det = 1.0 / det;
+    det = 1.0f / det;
 
     for (int ix = 0; ix < 16; ix++) {
         inv[ix] = inv[ix] * det;
