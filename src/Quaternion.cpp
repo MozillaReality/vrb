@@ -23,4 +23,41 @@ Quaternion::SetFromRotationMatrix(const Matrix &aMatrix) {
   this->m.mW = w;
 }
 
+void
+Quaternion::ToEulerAngles(float& aX, float& aY, float& aZ) const {
+  // Adapted from https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+  // roll (x-axis rotation)
+  float sinr_cosp = 2.0f * (m.mW * m.mX + m.mY * m.mZ);
+  float cosr_cosp = 1.0f - 2.0f * (m.mX * m.mX + m.mY * m.mY);
+  aX = atan2(sinr_cosp, cosr_cosp);
+
+  // pitch (y-axis rotation)
+  float sinp = 2.0f * (m.mW * m.mY - m.mZ * m.mX);
+  if (fabs(sinp) >= 1)
+    aY = copysign((float)M_PI / 2, sinp); // use 90 degrees if out of range
+  else
+    aY = asin(sinp);
+
+  // yaw (z-axis rotation)
+  float siny_cosp = 2.0f * (m.mW * m.mZ + m.mX * m.mY);
+  float cosy_cosp = 1.0f - 2.0f * (m.mY * m.mY + m.mZ * m.mZ);
+  aZ = atan2(siny_cosp, cosy_cosp);
+}
+
+void
+Quaternion::SetFromEulerAngles(float aX, float aY, float aZ) {
+  // Adapted from https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+  float cy = cos(aZ * 0.5f);
+  float sy = sin(aZ * 0.5f);
+  float cr = cos(aX * 0.5f);
+  float sr = sin(aX * 0.5f);
+  float cp = cos(aY * 0.5f);
+  float sp = sin(aY * 0.5f);
+
+  m.mW = cy * cr * cp + sy * sr * sp;
+  m.mX = cy * sr * cp - sy * cr * sp;
+  m.mY = cy * cr * sp + sy * sr * cp;
+  m.mZ = sy * cr * cp - cy * sr * sp;
+}
+
 }

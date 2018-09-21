@@ -105,6 +105,9 @@ public:
     return Conjugate().Normalize();
   }
 
+  void ToEulerAngles(float& aX, float& aY, float& aZ) const;
+  void SetFromEulerAngles(float aX, float aY, float aZ);
+
   float* Data() { return &m.mQ[0]; }
   const float* Data() const { return &m.mQ[0]; }
 
