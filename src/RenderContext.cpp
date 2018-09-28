@@ -27,6 +27,7 @@
 #include <EGL/egl.h>
 #endif // defined(ANDROID)
 #include <pthread.h>
+#include <time.h>
 #include <vector>
 
 namespace vrb {
@@ -47,6 +48,8 @@ struct RenderContext::State {
   ResourceGLList uninitializedResources;
   ResourceGLList resources;
   std::vector<ContextSynchronizerPtr> synchronizers;
+  double timestamp;
+  double frameDelta;
   State();
 };
 
@@ -57,6 +60,8 @@ RenderContext::State::State()
 #endif // defined(ANDROID)
     , dataCache(DataCache::Create())
     , textureCache(TextureCache::Create())
+    , timestamp(0.0)
+    , frameDelta(0.0)
 {}
 
 RenderContextPtr
@@ -136,6 +141,24 @@ RenderContext::Update() {
     m.resources.AppendAndAdoptList(m.uninitializedResources);
   }
   m.updatables.UpdateResource(*this);
+  timespec spec;
+  if (clock_gettime(CLOCK_MONOTONIC, &spec) == 0) {
+    double nextTimestamp = (double)spec.tv_sec + (double)(spec.tv_nsec / 1.0e09);
+    if (m.timestamp != 0.0) {
+      m.frameDelta = nextTimestamp - m.frameDelta;
+    }
+    m.timestamp = nextTimestamp;
+  }
+}
+
+double
+RenderContext::GetTimestamp() {
+  return m.timestamp;
+}
+
+double
+RenderContext::GetFrameDelta() {
+  return m.frameDelta;
 }
 
 DataCachePtr&

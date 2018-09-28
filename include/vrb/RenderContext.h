@@ -26,6 +26,8 @@ public:
   bool InitializeGL();
   void ShutdownGL();
   void Update();
+  double GetTimestamp();
+  double GetFrameDelta();
 
   DataCachePtr& GetDataCache();
   TextureCachePtr& GetTextureCache();
