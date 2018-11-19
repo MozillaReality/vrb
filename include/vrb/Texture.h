@@ -22,6 +22,7 @@ public:
   GLenum GetTarget() const;
   void SetName(const std::string& aName);
   void SetTextureParameter(GLenum aName, GLint aParam);
+  GLuint GetHandle() const;
 protected:
   struct State;
   Texture(State& aState, CreationContextPtr& aContext);

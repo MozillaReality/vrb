@@ -105,6 +105,7 @@ namespace vrb {
 
 struct TextureCubeMap::State : public Texture::State, public ResourceGL::State {
   bool dirty;
+  GLuint externalTexture;
   CubeMapFace faces[6];
   DataCachePtr dataCache;
 
@@ -127,10 +128,26 @@ TextureCubeMap::State::CreateTexture() {
       }
     }
   }
-  VRB_GL_CHECK(glGenTextures(1, &texture));
+  if (externalTexture) {
+    texture = externalTexture;
+  } else {
+    VRB_GL_CHECK(glGenTextures(1, &texture));
+  }
   VRB_GL_CHECK(glBindTexture(target, texture));
   for (CubeMapFace& face: faces) {
-    if (face.format == GL_RG8 || face.format == GL_RGBA) {
+    const bool isRGB = face.format == GL_RG8 || face.format == GL_RGBA;
+    if (externalTexture && isRGB) {
+      VRB_GL_CHECK(glTexSubImage2D(
+          face.target,
+          face.level,
+          0,
+          0,
+          face.width,
+          face.height,
+          face.format,
+          face.type,
+          (void*)face.data.get()));
+    } else if (isRGB) {
       VRB_GL_CHECK(glTexImage2D(
           face.target,
           face.level,
@@ -140,6 +157,17 @@ TextureCubeMap::State::CreateTexture() {
           face.border,
           face.format,
           face.type,
+          (void*)face.data.get()));
+    } else if (externalTexture) {
+      VRB_GL_CHECK(glCompressedTexSubImage2D(
+          face.target,
+          face.level,
+          0,
+          0,
+          face.width,
+          face.height,
+          face.format,
+          face.dataSize,
           (void*)face.data.get()));
     } else {
       VRB_GL_CHECK(glCompressedTexImage2D(
@@ -167,7 +195,10 @@ TextureCubeMap::State::CreateTexture() {
 
 void
 TextureCubeMap::State::DestroyTexture() {
-  if (texture > 0) {
+  if (externalTexture) {
+    // Texture life cycle is handled outside of this class (e.g TimeWarp Cubemap Layer)
+    texture = 0;
+  } else if (texture > 0) {
     VRB_GL_CHECK(glDeleteTextures(1, &texture));
     texture = 0;
   }
@@ -175,8 +206,10 @@ TextureCubeMap::State::DestroyTexture() {
 }
 
 TextureCubeMapPtr
-TextureCubeMap::Create(CreationContextPtr& aContext) {
-  return std::make_shared<ConcreteClass<TextureCubeMap, TextureCubeMap::State> >(aContext);
+TextureCubeMap::Create(CreationContextPtr& aContext, GLuint aExternalTexture) {
+  auto result = std::make_shared<ConcreteClass<TextureCubeMap, TextureCubeMap::State> >(aContext);
+  result->m.externalTexture = aExternalTexture;
+  return result;
 }
 
 

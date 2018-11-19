@@ -28,9 +28,10 @@ public:
                         const int32_t aWidth,
                         const int32_t aHeight,
                         const FBO::Attributes& aAttributtes = {});
-  void Bind();
+  void Bind(GLenum target = GL_FRAMEBUFFER);
   void Unbind();
   const FBO::Attributes& GetAttributes() const;
+  GLuint GetHandle() const;
 protected:
   struct State;
   FBO(State& aState);

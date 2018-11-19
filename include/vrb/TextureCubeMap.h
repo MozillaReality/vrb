@@ -18,7 +18,7 @@ namespace vrb {
 
 class TextureCubeMap : public Texture, protected ResourceGL {
 public:
-  static TextureCubeMapPtr Create(CreationContextPtr& aContext);
+  static TextureCubeMapPtr Create(CreationContextPtr& aContext, GLuint aExternalTexture = 0);
 
   static void Load(CreationContextPtr& aContext, const TextureCubeMapPtr& aTexture,
                    const std::string& aFileXPos, const std::string& aFileXNeg,

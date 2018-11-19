@@ -19,8 +19,9 @@ struct FBO::State {
   GLuint depth;
   GLuint fbo;
   Attributes attributes;
+  GLenum boundTarget;
 
-  State() : depth(0), fbo(0), valid(false) {}
+  State() : boundTarget(GL_FRAMEBUFFER), depth(0), fbo(0), valid(false) {}
   void Clear() {
     if (depth) {
       if (attributes.multiview) {
@@ -160,19 +161,26 @@ FBO::SetTextureHandle(const GLuint aHandle,
 }
 
 void
-FBO::Bind() {
+FBO::Bind(GLenum aTarget) {
   if (!m.valid) { return; }
-  VRB_GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, m.fbo));
+
+  m.boundTarget = aTarget;
+  VRB_GL_CHECK(glBindFramebuffer(aTarget, m.fbo));
 }
 
 void
 FBO::Unbind() {
-  VRB_GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+  VRB_GL_CHECK(glBindFramebuffer(m.boundTarget, 0));
 }
 
 const FBO::Attributes&
 FBO::GetAttributes() const {
   return m.attributes;
+}
+
+GLuint
+FBO::GetHandle() const {
+  return m.fbo;
 }
 
 FBO::FBO(State& aState) : m(aState) {}

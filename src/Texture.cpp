@@ -33,6 +33,11 @@ Texture::GetTarget() const {
   return m.target;
 }
 
+GLuint
+Texture::GetHandle() const {
+  return m.texture;
+}
+
 void
 Texture::SetName(const std::string& aName) {
   m.name = aName;
