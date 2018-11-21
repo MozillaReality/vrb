@@ -9,7 +9,6 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.ETC1;
-import android.support.annotation.Keep;
 
 import org.mozilla.vrb.etc2.UtilETC2;
 
@@ -20,7 +19,9 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import static android.opengl.GLES30.*;
+import androidx.annotation.Keep;
+
+import static android.opengl.GLES30.GL_RGBA;
 
 class ImageLoader {
 
