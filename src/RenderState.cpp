@@ -109,7 +109,7 @@ void main(void) {
 )SHADER";
 
 static const char* sFragmentShaderSource = R"SHADER(
-precision mediump float;
+precision VRB_FRAGMENT_PRECISION float;
 
 varying vec4 v_color;
 
@@ -120,7 +120,7 @@ void main() {
 )SHADER";
 
 static const char* sFragmentTextureShaderSource = R"SHADER(
-precision mediump float;
+precision VRB_FRAGMENT_PRECISION float;
 
 uniform sampler2D u_texture0;
 varying vec4 v_color;
@@ -134,7 +134,7 @@ void main() {
 
 static const char* sFragmentSurfaceTextureShaderSource = R"SHADER(
 #extension GL_OES_EGL_image_external : require
-precision mediump float;
+precision VRB_FRAGMENT_PRECISION float;
 
 uniform samplerExternalOES u_texture0;
 varying vec4 v_color;
@@ -147,7 +147,7 @@ void main() {
 )SHADER";
 
 static const char* sFragmentCubeMapTextureShaderSource = R"SHADER(
-precision mediump float;
+precision VRB_FRAGMENT_PRECISION float;
 
 uniform samplerCube u_texture0;
 varying vec4 v_color;
@@ -217,6 +217,7 @@ struct RenderState::State : public ResourceGL::State {
   bool updateLights;
   bool updateMaterial;
   bool lightsEnabled;
+  GLenum fragmentPrecision;
 
   State()
       : vertexShader(0)
@@ -243,7 +244,26 @@ struct RenderState::State : public ResourceGL::State {
       , updateLights(false)
       , updateMaterial(true)
       , lightsEnabled(true)
+      , fragmentPrecision(GL_MEDIUM_FLOAT)
   {}
+
+  std::string GetFragmentShader(const std::string& aSource) {
+    const std::string kPrecisionMacro("VRB_FRAGMENT_PRECISION");
+    std::string result = aSource;
+    const size_t kUVStart = result.find(kPrecisionMacro);
+    if (kUVStart != std::string::npos) {
+      const char * precision;
+      if (fragmentPrecision == GL_HIGH_FLOAT) {
+        precision = "highp";
+      } else if (fragmentPrecision == GL_LOW_FLOAT) {
+        precision = "lowp";
+      } else {
+        precision = "mediump";
+      }
+      result.replace(kUVStart, kPrecisionMacro.length(), precision);
+    }
+    return result;
+  }
 };
 
 RenderStatePtr
@@ -393,6 +413,11 @@ RenderState::SetLightsEnabled(bool aEnabled) {
   m.lightsEnabled = aEnabled;
 }
 
+void
+RenderState::SetFragmentPrecision(const GLenum aPrecision) {
+  m.fragmentPrecision = aPrecision;
+}
+
 RenderState::RenderState(State& aState, CreationContextPtr& aContext) : ResourceGL(aState, aContext), m(aState) {}
 RenderState::~RenderState() {}
 
@@ -413,23 +438,24 @@ RenderState::InitializeGL() {
       vertexShaderSource.replace(kStart, kTextureMacro.length(), "1");
     }
     m.vertexShader = LoadShader(GL_VERTEX_SHADER, vertexShaderSource.c_str());
-    const char* frag = sFragmentTextureShaderSource;
+    std::string frag = m.GetFragmentShader(sFragmentTextureShaderSource);
     if (m.texture->GetTarget() == GL_TEXTURE_CUBE_MAP) {
-      frag = sFragmentCubeMapTextureShaderSource;
+      frag = m.GetFragmentShader(sFragmentCubeMapTextureShaderSource);
     }
 #if defined(ANDROID)
     // SurfaceTexture requires usage of fragment shader extension.
     if (dynamic_cast<TextureSurface*>(m.texture.get()) != nullptr) {
-      frag = sFragmentSurfaceTextureShaderSource;
+      frag = m.GetFragmentShader(sFragmentSurfaceTextureShaderSource);
     }
 #endif // defined(ANDROID)
-    m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, frag);
+    m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, frag.c_str());
   } else {
     if(kStart != std::string::npos) {
       vertexShaderSource.replace(kStart, kTextureMacro.length(), "0");
     }
     m.vertexShader = LoadShader(GL_VERTEX_SHADER, vertexShaderSource.c_str());
-    m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, sFragmentShaderSource);
+    std::string frag = m.GetFragmentShader(sFragmentShaderSource);
+    m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, frag.c_str());
   }
   if (m.fragmentShader && m.vertexShader) {
     m.program = CreateProgram(m.vertexShader, m.fragmentShader);

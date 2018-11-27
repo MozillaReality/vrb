@@ -36,6 +36,7 @@ public:
   bool Enable(const Matrix& aPerspective, const Matrix& aView, const Matrix& aModel);
   void Disable();
   void SetLightsEnabled(bool aEnabled);
+  void SetFragmentPrecision(const GLenum aPrecision);
 protected:
   struct State;
   RenderState(State& aState, CreationContextPtr& aContext);
