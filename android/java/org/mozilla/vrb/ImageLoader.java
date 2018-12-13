@@ -10,7 +10,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.ETC1;
 
-import org.mozilla.vrb.etc2.UtilETC2;
+import org.mozilla.vrb.ktx.KTXTexture;
+import org.mozilla.vrb.pkm.UtilPKM;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -47,7 +48,7 @@ class ImageLoader {
         }
     }
 
-    private static void loadETC2FromInputStream(InputStream aInputStream, final String aFileName, final long aFileReader, final int aTrackingHandle) {
+    private static void loadPKMFromInputStream(InputStream aInputStream, final String aFileName, final long aFileReader, final int aTrackingHandle) {
         try {
             if (aInputStream == null) {
                 ImageLoadFailed(aFileReader, aTrackingHandle, "Unable to find image: " + aFileName);
@@ -60,14 +61,14 @@ class ImageLoader {
             }
             ByteBuffer header = ByteBuffer.allocateDirect(ETC1.ETC_PKM_HEADER_SIZE).order(ByteOrder.BIG_ENDIAN);
             header.put(buffer, 0, ETC1.ETC_PKM_HEADER_SIZE).position(0);
-            if (!UtilETC2.isValid(header)) {
+            if (!UtilPKM.isValid(header)) {
                 ImageLoadFailed(aFileReader, aTrackingHandle, "Invalid PKM header: " + aFileName);
                 return;
             }
-            int width = UtilETC2.getWidth(header);
-            int height = UtilETC2.getHeight(header);
-            int format = UtilETC2.getETC2CompressionType(header);
-            final int encodedSize = UtilETC2.getEncodedDataSize(width, height);
+            int width = UtilPKM.getWidth(header);
+            int height = UtilPKM.getHeight(header);
+            int format = UtilPKM.getETC2CompressionType(header);
+            final int encodedSize = UtilPKM.getEncodedDataSize(width, height);
             final ByteBuffer dataBuffer = ByteBuffer.allocateDirect(encodedSize).order(ByteOrder.BIG_ENDIAN);
             for (int i = 0; i < encodedSize; ) {
                 int chunkSize = Math.min(buffer.length, encodedSize - i);
@@ -86,10 +87,48 @@ class ImageLoader {
         }
     }
 
+    private static void loadKTXFromInputStream(InputStream aInputStream, final String aFileName, final long aFileReader, final int aTrackingHandle) {
+        try {
+            if (aInputStream == null) {
+                ImageLoadFailed(aFileReader, aTrackingHandle, "Unable to find image: " + aFileName);
+                return;
+            }
+            KTXTexture texture = KTXTexture.parse(aInputStream);
+
+            if (texture == null) {
+                ImageLoadFailed(aFileReader, aTrackingHandle, "Invalid KTX file " + aFileName);
+                return;
+            }
+
+            if (texture.pixelDepth != 0) {
+                throw new Exception("3D textures not implemented");
+            }
+
+            if (texture.numberOfArrayElements != 0) {
+                throw new Exception("Texture arrays not implemented");
+            }
+
+            if (texture.numberOfFaces != 1) {
+                throw new Exception("Cubemaps not implemented");
+            }
+
+            if (texture.numberOfMipmapLevels != 1) {
+                throw new Exception("Mipmaps not implemented");
+            }
+
+            ProcessImage(aFileReader, aTrackingHandle, texture.level0Texture, texture.pixelWidth, texture.pixelHeight, texture.glInternalFormat);
+        } catch(Exception e) {
+            String reason = "Error loading image file: " + aFileName + " (" + e.toString() + ")";
+            ImageLoadFailed(aFileReader, aTrackingHandle, reason);
+        }
+    }
+
     @Keep
     private static void loadFromInputStream(InputStream aInputStream, final String aFileName, final long aFileReader, final int aTrackingHandle) {
         if (aFileName.toLowerCase().endsWith(".pkm")) {
-            loadETC2FromInputStream(aInputStream, aFileName, aFileReader, aTrackingHandle);
+            loadPKMFromInputStream(aInputStream, aFileName, aFileReader, aTrackingHandle);
+        } else if (aFileName.toLowerCase().endsWith(".ktx")) {
+            loadKTXFromInputStream(aInputStream, aFileName, aFileReader, aTrackingHandle);
         } else {
             loadBitmapFromInputStream(aInputStream, aFileName, aFileReader, aTrackingHandle);
         }

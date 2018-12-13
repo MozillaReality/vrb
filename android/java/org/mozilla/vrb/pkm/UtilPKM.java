@@ -1,4 +1,4 @@
-package org.mozilla.vrb.etc2;
+package org.mozilla.vrb.pkm;
 
 import android.opengl.GLES11Ext;
 
@@ -15,7 +15,7 @@ import static android.opengl.GLES30.GL_COMPRESSED_RGBA8_ETC2_EAC;
  *
  * @author Jared Woolston (jwoolston@tenkiv.com)
  */
-public class UtilETC2 {
+public class UtilPKM {
 
     /**
      * The magic sequence for an ETC1 file.
