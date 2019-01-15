@@ -91,6 +91,26 @@ public:
     return result;
   }
 
+  static Matrix Rotation(const Vector& aDirection, const Vector& aUp = vrb::Vector(0.0f, 1.0f, 0.0f)) {
+    Matrix result;
+    const vrb::Vector dir = aDirection.Normalize();
+    const vrb::Vector xaxis = aUp.Cross(dir).Normalize();
+    const vrb::Vector yaxis = dir.Cross(xaxis).Normalize();
+
+    result.m.m[0][0] = xaxis.x();
+    result.m.m[1][0] = yaxis.x();
+    result.m.m[2][0] = dir.x();
+    result.m.m[0][1] = xaxis.y();
+    result.m.m[1][1] = yaxis.y();
+    result.m.m[2][1] = dir.y();
+    result.m.m[0][2] = xaxis.z();
+    result.m.m[1][2] = yaxis.z();
+    result.m.m[2][2] = dir.z();
+    result.m.m[3][3] = 1;
+
+    return result;
+  }
+
   static Matrix Rotation(const Quaternion & aQuat) {
     Matrix result;
 
