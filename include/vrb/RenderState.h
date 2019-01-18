@@ -37,6 +37,8 @@ public:
   void Disable();
   void SetLightsEnabled(bool aEnabled);
   void SetFragmentPrecision(const GLenum aPrecision);
+  void SetUVTransformEnabled(bool aEnabled);
+  void SetUVTransform(const vrb::Matrix& aMatrix);
 protected:
   struct State;
   RenderState(State& aState, CreationContextPtr& aContext);

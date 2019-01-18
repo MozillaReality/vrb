@@ -32,6 +32,7 @@ static const char* sVertexShaderSource = R"SHADER(
 #define MAX_LIGHTS 2
 #define VRB_USE_TEXTURE VRB_TEXTURE_STATE
 #define VRB_UV_TYPE VRB_TEXTURE_UV_TYPE
+#define VRB_UV_TRANSFORM VRB_UV_TRANSFORM_ENABLED
 
 struct Light {
   vec3 direction;
@@ -54,6 +55,9 @@ uniform int u_lightCount;
 uniform Light u_lights[MAX_LIGHTS];
 uniform Material u_material;
 uniform vec4 u_tintColor;
+#if VRB_UV_TRANSFORM == 1
+uniform mat4 u_uv_transform;
+#endif
 
 attribute vec3 a_position;
 attribute vec3 a_normal;
@@ -101,7 +105,11 @@ void main(void) {
   }
   v_color *= u_tintColor;
 #ifdef VRB_USE_TEXTURE
+#if VRB_UV_TRANSFORM == 1
+  v_uv = (u_uv_transform * vec4(a_uv.xy, 0, 1)).xy;
+#else
   v_uv = a_uv;
+#endif // VRB_UV_TRANSFORM
 #endif // VRB_USE_TEXTURE
   gl_Position = u_perspective * u_view * u_model * vec4(a_position.xyz, 1);
 }
@@ -195,6 +203,7 @@ struct RenderState::State : public ResourceGL::State {
   GLint uPerspective;
   GLint uView;
   GLint uModel;
+  GLint uUVTransform;
   GLint uLightCount;
   ULight uLights[MaxLights];
   GLint uMatterialAmbient;
@@ -218,6 +227,8 @@ struct RenderState::State : public ResourceGL::State {
   bool updateMaterial;
   bool lightsEnabled;
   GLenum fragmentPrecision;
+  bool uvTransformEnabled;
+  vrb::Matrix uvTransform;
 
   State()
       : vertexShader(0)
@@ -226,6 +237,7 @@ struct RenderState::State : public ResourceGL::State {
       , uPerspective(-1)
       , uView(-1)
       , uModel(-1)
+      , uUVTransform(-1)
       , uLightCount(-1)
       , uMatterialAmbient(-1)
       , uMatterialDiffuse(-1)
@@ -245,6 +257,8 @@ struct RenderState::State : public ResourceGL::State {
       , updateMaterial(true)
       , lightsEnabled(true)
       , fragmentPrecision(GL_MEDIUM_FLOAT)
+      , uvTransformEnabled(false)
+      , uvTransform(Matrix::Identity())
   {}
 
   std::string GetFragmentShader(const std::string& aSource) {
@@ -397,6 +411,9 @@ RenderState::Enable(const Matrix& aPerspective, const Matrix& aView, const Matri
   VRB_GL_CHECK(glUniformMatrix4fv(m.uPerspective, 1, GL_FALSE, aPerspective.Data()));
   VRB_GL_CHECK(glUniformMatrix4fv(m.uView, 1, GL_FALSE, aView.Data()));
   VRB_GL_CHECK(glUniformMatrix4fv(m.uModel, 1, GL_FALSE, aModel.Data()));
+  if (m.uvTransformEnabled) {
+    VRB_GL_CHECK(glUniformMatrix4fv(m.uUVTransform, 1, GL_FALSE, m.uvTransform.Data()));
+  }
   return true;
 }
 
@@ -418,6 +435,16 @@ RenderState::SetFragmentPrecision(const GLenum aPrecision) {
   m.fragmentPrecision = aPrecision;
 }
 
+void
+RenderState::SetUVTransformEnabled(bool aEnabled) {
+  m.uvTransformEnabled = aEnabled;
+}
+
+void
+RenderState::SetUVTransform(const vrb::Matrix& aMatrix) {
+  m.uvTransform = aMatrix;
+}
+
 RenderState::RenderState(State& aState, CreationContextPtr& aContext) : ResourceGL(aState, aContext), m(aState) {}
 RenderState::~RenderState() {}
 
@@ -429,6 +456,12 @@ RenderState::InitializeGL() {
   const size_t kUVStart = vertexShaderSource.find(kTextureUVMacro);
   if (kUVStart != std::string::npos) {
     vertexShaderSource.replace(kUVStart, kTextureUVMacro.length(), m.texture && m.texture->GetTarget() == GL_TEXTURE_CUBE_MAP ? "vec3" : "vec2");
+  }
+
+  const std::string kUVTransformMacro("VRB_UV_TRANSFORM_ENABLED");
+  const size_t kUVTransformStart = vertexShaderSource.find(kUVTransformMacro);
+  if (kUVTransformStart != std::string::npos) {
+    vertexShaderSource.replace(kUVTransformStart, kUVTransformMacro.length(), m.uvTransformEnabled ? "1" : "0");
   }
 
   const std::string kTextureMacro("VRB_TEXTURE_STATE");
@@ -465,6 +498,9 @@ RenderState::InitializeGL() {
     m.uView = GetUniformLocation(m.program, "u_view");
     m.uModel = GetUniformLocation(m.program, "u_model");
     m.uLightCount = GetUniformLocation(m.program, "u_lightCount");
+    if (m.uvTransformEnabled) {
+      m.uUVTransform = GetUniformLocation(m.program, "u_uv_transform");
+    }
     const std::string structNameOpen("u_lights[");
     const std::string structNameClose("].");
     const std::string directionName("direction");
