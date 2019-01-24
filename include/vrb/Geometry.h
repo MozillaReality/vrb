@@ -38,6 +38,8 @@ public:
   VertexArrayPtr GetVertexArray() const;
   void SetVertexArray(const VertexArrayPtr& aVertexArray);
   void UpdateBuffers();
+  void SetRenderRange(uint32_t aStartIndex, uint32_t aLength);
+  int32_t TriangleCount() const;
 
   void AddFace(
     const std::vector<int> &aVerticies,
