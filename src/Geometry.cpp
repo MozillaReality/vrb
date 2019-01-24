@@ -48,8 +48,11 @@ struct Geometry::State : public Node::State, public ResourceGL::State, public Dr
   int triangleCount;
   GLuint vertexObjectId;
   GLuint indexObjectId;
+  uint32_t rangeStart;
+  uint32_t rangeLength;
 
-  State() : vertexCount(0), triangleCount(0), vertexObjectId(0), indexObjectId(0) {}
+  State() : vertexCount(0), triangleCount(0), vertexObjectId(0), indexObjectId(0),
+            rangeStart(0), rangeLength(0) {}
 
 
   GLsizei UVLength() const {
@@ -121,7 +124,14 @@ Geometry::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
     if (kUseTextureCoords) {
       VRB_GL_CHECK(glEnableVertexAttribArray((GLuint)m.renderState->AttributeUV()));
     }
-    VRB_GL_CHECK(glDrawElements(GL_TRIANGLES, m.triangleCount * 3, GL_UNSIGNED_SHORT, 0));
+    const int32_t maxLength = m.triangleCount * 3;
+    if (m.rangeLength == 0) {
+      VRB_GL_CHECK(glDrawElements(GL_TRIANGLES, maxLength, GL_UNSIGNED_SHORT, 0));
+    } else if ((m.rangeStart + m.rangeLength) <= maxLength) {
+      VRB_GL_CHECK(glDrawElements(GL_TRIANGLES, m.rangeLength, GL_UNSIGNED_SHORT, (void*)(m.rangeStart * sizeof(GLushort))));
+    } else {
+      VRB_WARN("Invalid geometry range (%u-%u). Max geometry length %d", m.rangeStart, m.rangeLength + m.rangeLength, maxLength);
+    }
     VRB_GL_CHECK(glDisableVertexAttribArray((GLuint)m.renderState->AttributePosition()));
     VRB_GL_CHECK(glDisableVertexAttribArray((GLuint)m.renderState->AttributeNormal()));
     if (kUseTextureCoords) {
@@ -223,6 +233,17 @@ Geometry::UpdateBuffers() {
 
   VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
   VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+}
+
+void
+Geometry::SetRenderRange(uint32_t aStartIndex, uint32_t aLength) {
+  m.rangeStart = aStartIndex;
+  m.rangeLength = aLength;
+}
+
+int32_t
+Geometry::TriangleCount() const {
+  return m.triangleCount;
 }
 
 void
