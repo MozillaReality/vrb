@@ -108,8 +108,8 @@ Geometry::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
   if (m.renderState->Enable(aCamera.GetPerspective(), aCamera.GetView(), aModelTransform)) {
     const bool kUseTextureCoords = m.renderState->HasTexture();
     const GLsizei kSize = m.VertexSize();
-    const GLsizei kPositionSize = m.PositionSize();
-    const GLsizei kNormalSize = m.NormalSize();
+    const size_t kPositionSize = (size_t)m.PositionSize();
+    const size_t kNormalSize = (size_t)m.NormalSize();
     const GLsizei kUVLength = m.UVLength();
     VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
     VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, kSize, nullptr));
