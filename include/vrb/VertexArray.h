@@ -18,20 +18,24 @@ public:
   int GetVertexCount() const;
   int GetNormalCount() const;
   int GetUVCount() const;
+  int GetColorCount() const;
 
   void SetNormalCount(const int aCount);
 
   const Vector& GetVertex(const int aIndex) const;
   const Vector& GetNormal(const int aIndex) const;
   const Vector& GetUV(const int aIndex) const;
+  const Color& GetColor(const int aIndex) const;
 
   void SetVertex(const int aIndex, const Vector& aPoint);
   void SetNormal(const int aIndex, const Vector& aNormal);
   void SetUV(const int aIndex, const Vector& aUV);
+  void SetColor(const int aIndex, const Color& aColor);
 
   int AppendVertex(const Vector& aPoint);
   int AppendNormal(const Vector& aNormal);
   int AppendUV(const Vector& aUV);
+  int AppendColor(const Color& aUV);
 
   void AddNormal(const int aIndex, const Vector& aNormal);
 

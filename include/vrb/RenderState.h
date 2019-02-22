@@ -21,6 +21,7 @@ public:
   GLint AttributePosition() const;
   GLint AttributeNormal() const;
   GLint AttributeUV() const;
+  GLint AttributeColor() const;
   uint32_t GetLightId() const;
   void ResetLights(const uint32_t aId);
   void AddLight(const Vector& aDirection, const Color& aAmbient, const Color& aDiffuse, const Color& aSpecular);
@@ -39,6 +40,7 @@ public:
   void SetFragmentPrecision(const GLenum aPrecision);
   void SetUVTransformEnabled(bool aEnabled);
   void SetUVTransform(const vrb::Matrix& aMatrix);
+  void SetVertexColorEnabled(bool aEnabled);
 protected:
   struct State;
   RenderState(State& aState, CreationContextPtr& aContext);

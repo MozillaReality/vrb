@@ -6,6 +6,7 @@
 #include "vrb/VertexArray.h"
 
 #include "vrb/ConcreteClass.h"
+#include "vrb/Color.h"
 #include "vrb/Vector.h"
 
 #include <vector>
@@ -13,6 +14,7 @@
 namespace vrb {
 
 static const vrb::Vector cZeroVector;
+static const vrb::Color cZeroColor;
 
 struct VertexArray::State {
   struct NormalState {
@@ -24,6 +26,7 @@ struct VertexArray::State {
   std::vector<Vector> vertices;
   std::vector<NormalState> normals;
   std::vector<Vector> uvs;
+  std::vector<Color> colors;
 };
 
 VertexArrayPtr
@@ -44,6 +47,11 @@ VertexArray::GetNormalCount() const {
 int
 VertexArray::GetUVCount() const {
   return m.uvs.size();
+}
+
+int
+VertexArray::GetColorCount() const {
+  return m.colors.size();
 }
 
 void
@@ -77,6 +85,15 @@ VertexArray::GetUV(const int aIndex) const {
   return m.uvs[aIndex];
 }
 
+
+const Color&
+VertexArray::GetColor(const int aIndex) const {
+  if (aIndex >= m.colors.size()) {
+    return cZeroColor;
+  }
+  return m.colors[aIndex];
+}
+
 void
 VertexArray::SetVertex(const int aIndex, const Vector& aPoint) {
   if (m.vertices.size() < (aIndex + 1)) {
@@ -99,6 +116,14 @@ VertexArray::SetUV(const int aIndex, const Vector& aUV) {
     m.uvs.resize(aIndex + 1);
   }
   m.uvs[aIndex] = aUV;
+}
+
+void
+VertexArray::SetColor(const int aIndex, const Color& aColor) {
+  if (m.colors.size() < (aIndex + 1)) {
+    m.colors.resize(aIndex + 1);
+  }
+  m.colors[aIndex] = aColor;
 }
 
 int
@@ -129,6 +154,12 @@ int
 VertexArray::AppendUV(const Vector& aUV) {
   m.uvs.push_back(aUV);
   return m.uvs.size() - 1;
+}
+
+int
+VertexArray::AppendColor(const Color& aColor) {
+  m.colors.push_back(aColor);
+  return m.colors.size() - 1;
 }
 
 VertexArray::VertexArray(State& aState, CreationContextPtr& aContext) : m(aState) {}
