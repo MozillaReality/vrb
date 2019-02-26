@@ -10,6 +10,7 @@
 #include "vrb/private/ResourceGLState.h"
 
 #include "vrb/Camera.h"
+#include "vrb/Color.h"
 #include "vrb/ConcreteClass.h"
 #include "vrb/CullVisitor.h"
 #include "vrb/DrawableList.h"
@@ -75,8 +76,12 @@ struct Geometry::State : public Node::State, public ResourceGL::State, public Dr
     return 3 * sizeof(float);
   }
 
+  GLsizei ColorSize() const {
+    return vertexArray->GetColorCount() > 0 ? 4 * sizeof(float) : 0;
+  }
+
   GLsizei VertexSize() const {
-    return PositionSize() + NormalSize() + UVSize();
+    return PositionSize() + NormalSize() + UVSize() + ColorSize();
   }
 
 };
@@ -111,11 +116,16 @@ Geometry::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
     const size_t kPositionSize = (size_t)m.PositionSize();
     const size_t kNormalSize = (size_t)m.NormalSize();
     const GLsizei kUVLength = m.UVLength();
+    const GLsizei kUVSize = m.UVSize();
+    const GLsizei kColorSize = m.ColorSize();
     VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
     VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributePosition(), 3, GL_FLOAT, GL_FALSE, kSize, nullptr));
     VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributeNormal(), 3, GL_FLOAT, GL_FALSE, kSize, (const GLvoid*)kPositionSize));
     if (kUseTextureCoords) {
       VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributeUV(), kUVLength, GL_FLOAT, GL_FALSE, kSize, (const GLvoid*)(kPositionSize + kNormalSize)));
+    }
+    if (kColorSize) {
+      VRB_GL_CHECK(glVertexAttribPointer((GLuint)m.renderState->AttributeColor(), 4, GL_FLOAT, GL_FALSE, kSize, (const GLvoid*)(kPositionSize + kNormalSize + kUVSize)));
     }
 
     VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.indexObjectId));
@@ -123,6 +133,9 @@ Geometry::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
     VRB_GL_CHECK(glEnableVertexAttribArray((GLuint)m.renderState->AttributeNormal()));
     if (kUseTextureCoords) {
       VRB_GL_CHECK(glEnableVertexAttribArray((GLuint)m.renderState->AttributeUV()));
+    }
+    if (kColorSize) {
+      VRB_GL_CHECK(glEnableVertexAttribArray((GLuint)m.renderState->AttributeColor()));
     }
     const int32_t maxLength = m.triangleCount * 3;
     if (m.rangeLength == 0) {
@@ -136,6 +149,9 @@ Geometry::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
     VRB_GL_CHECK(glDisableVertexAttribArray((GLuint)m.renderState->AttributeNormal()));
     if (kUseTextureCoords) {
       VRB_GL_CHECK(glDisableVertexAttribArray((GLuint)m.renderState->AttributeUV()));
+    }
+    if (kColorSize) {
+      VRB_GL_CHECK(glDisableVertexAttribArray((GLuint)m.renderState->AttributeColor()));
     }
     m.renderState->Disable();
     VRB_GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
@@ -164,6 +180,7 @@ Geometry::UpdateBuffers() {
   VRB_GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m.vertexObjectId));
   const GLintptr kVectorSize = m.PositionSize();
   GLintptr kUVSize = m.UVSize();
+  GLintptr kColorSize = m.ColorSize();
 
   std::vector<GLushort> indices;
   GLushort count = 0;
@@ -185,6 +202,7 @@ Geometry::UpdateBuffers() {
     const Vector& firstVertex = m.vertexArray->GetVertex(vertexIndex);
     const Vector& firstNormal = m.vertexArray->GetNormal(normalIndex);
     const Vector& firstUV = m.vertexArray->GetUV(uvIndex);
+    const Color& firstColor = m.vertexArray->GetColor(vertexIndex);
     for (int ix = 1; ix <= face.vertices.size() - 2; ix++) {
       VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kVectorSize, firstVertex.Data()));
       offset += kVectorSize;
@@ -193,6 +211,10 @@ Geometry::UpdateBuffers() {
       if (kUseTextureCoords) {
         VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, firstUV.Data()));
         offset += kUVSize;
+      }
+      if (kColorSize) {
+        VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kColorSize, firstColor.Data()));
+        offset += kColorSize;
       }
       indices.push_back(count);
       count++;
@@ -208,6 +230,11 @@ Geometry::UpdateBuffers() {
         VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv1.Data()));
         offset += kUVSize;
       }
+      if (kColorSize) {
+        const Color& color1 = m.vertexArray->GetColor(face.vertices[ix] - 1);
+        VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kColorSize, color1.Data()));
+        offset += kColorSize;
+      }
       indices.push_back(count);
       count++;
 
@@ -221,6 +248,11 @@ Geometry::UpdateBuffers() {
         const Vector uv2 = m.vertexArray->GetUV(face.uvs[ix + 1] - 1);
         VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kUVSize, uv2.Data()));
         offset += kUVSize;
+      }
+      if (kColorSize) {
+        const Color& color2 = m.vertexArray->GetColor(face.vertices[ix + 1] - 1);
+        VRB_GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, offset, kColorSize, color2.Data()));
+        offset += kColorSize;
       }
       indices.push_back(count);
       count++;

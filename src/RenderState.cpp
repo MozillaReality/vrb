@@ -33,6 +33,7 @@ static const char* sVertexShaderSource = R"SHADER(
 #define VRB_USE_TEXTURE VRB_TEXTURE_STATE
 #define VRB_UV_TYPE VRB_TEXTURE_UV_TYPE
 #define VRB_UV_TRANSFORM VRB_UV_TRANSFORM_ENABLED
+#define VRB_VERTEX_COLOR VRB_VERTEX_COLOR_ENABLED
 
 struct Light {
   vec3 direction;
@@ -69,6 +70,10 @@ attribute VRB_UV_TYPE a_uv;
 varying VRB_UV_TYPE v_uv;
 #endif // VRB_USE_TEXTURE
 
+#if VRB_VERTEX_COLOR == 1
+attribute vec4 a_color;
+#endif
+
 vec4 normal;
 
 vec4
@@ -103,6 +108,9 @@ void main(void) {
   if (u_lightCount == 0) {
     v_color = u_material.diffuse;
   }
+#if VRB_VERTEX_COLOR == 1
+  v_color *= a_color;
+#endif
   v_color *= u_tintColor;
 #ifdef VRB_USE_TEXTURE
 #if VRB_UV_TRANSFORM == 1
@@ -215,6 +223,7 @@ struct RenderState::State : public ResourceGL::State {
   GLint aPosition;
   GLint aNormal;
   GLint aUV;
+  GLint aColor;
   std::vector<Light> lights;
   Color ambient;
   Color diffuse;
@@ -226,6 +235,7 @@ struct RenderState::State : public ResourceGL::State {
   bool updateLights;
   bool updateMaterial;
   bool lightsEnabled;
+  bool vertexColorEnabled;
   GLenum fragmentPrecision;
   bool uvTransformEnabled;
   vrb::Matrix uvTransform;
@@ -248,6 +258,7 @@ struct RenderState::State : public ResourceGL::State {
       , aPosition(-1)
       , aNormal(-1)
       , aUV(-1)
+      , aColor(-1)
       , specularExponent(0.0f)
       , ambient(0.5f, 0.5f, 0.5f, 1.0f) // default to gray
       , diffuse(1.0f, 1.0f, 1.0f, 1.0f) // default to white
@@ -256,6 +267,7 @@ struct RenderState::State : public ResourceGL::State {
       , updateLights(false)
       , updateMaterial(true)
       , lightsEnabled(true)
+      , vertexColorEnabled(false)
       , fragmentPrecision(GL_MEDIUM_FLOAT)
       , uvTransformEnabled(false)
       , uvTransform(Matrix::Identity())
@@ -303,6 +315,11 @@ RenderState::AttributeNormal() const {
 GLint
 RenderState::AttributeUV() const {
   return m.aUV;
+}
+
+GLint
+RenderState::AttributeColor() const {
+  return m.aColor;
 }
 
 uint32_t
@@ -445,6 +462,11 @@ RenderState::SetUVTransform(const vrb::Matrix& aMatrix) {
   m.uvTransform = aMatrix;
 }
 
+void
+RenderState::SetVertexColorEnabled(bool aEnabled) {
+  m.vertexColorEnabled = aEnabled;
+}
+
 RenderState::RenderState(State& aState, CreationContextPtr& aContext) : ResourceGL(aState, aContext), m(aState) {}
 RenderState::~RenderState() {}
 
@@ -462,6 +484,12 @@ RenderState::InitializeGL() {
   const size_t kUVTransformStart = vertexShaderSource.find(kUVTransformMacro);
   if (kUVTransformStart != std::string::npos) {
     vertexShaderSource.replace(kUVTransformStart, kUVTransformMacro.length(), m.uvTransformEnabled ? "1" : "0");
+  }
+
+  const std::string kVertexColorMacro("VRB_VERTEX_COLOR_ENABLED");
+  const size_t kVertexColorStart = vertexShaderSource.find(kVertexColorMacro);
+  if (kVertexColorStart != std::string::npos) {
+    vertexShaderSource.replace(kVertexColorStart, kVertexColorMacro.length(), m.vertexColorEnabled ? "1" : "0");
   }
 
   const std::string kTextureMacro("VRB_TEXTURE_STATE");
@@ -537,6 +565,9 @@ RenderState::InitializeGL() {
     m.aNormal = GetAttributeLocation(m.program, "a_normal");
     if (kEnableTexturing) {
       m.aUV = GetAttributeLocation(m.program, "a_uv");
+    }
+    if (m.vertexColorEnabled) {
+      m.aColor = GetAttributeLocation(m.program, "a_color");
     }
     m.updateMaterial = true;
   }
