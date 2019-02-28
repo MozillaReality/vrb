@@ -41,6 +41,7 @@ public:
   void SetUVTransformEnabled(bool aEnabled);
   void SetUVTransform(const vrb::Matrix& aMatrix);
   void SetVertexColorEnabled(bool aEnabled);
+  void SetCustomFragmentShader(const std::string& aFragment);
 protected:
   struct State;
   RenderState(State& aState, CreationContextPtr& aContext);

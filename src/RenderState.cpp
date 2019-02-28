@@ -239,6 +239,7 @@ struct RenderState::State : public ResourceGL::State {
   GLenum fragmentPrecision;
   bool uvTransformEnabled;
   vrb::Matrix uvTransform;
+  std::string customFragmentShader;
 
   State()
       : vertexShader(0)
@@ -467,6 +468,11 @@ RenderState::SetVertexColorEnabled(bool aEnabled) {
   m.vertexColorEnabled = aEnabled;
 }
 
+void
+RenderState::SetCustomFragmentShader(const std::string &aFragment) {
+  m.customFragmentShader = aFragment;
+}
+
 RenderState::RenderState(State& aState, CreationContextPtr& aContext) : ResourceGL(aState, aContext), m(aState) {}
 RenderState::~RenderState() {}
 
@@ -509,6 +515,9 @@ RenderState::InitializeGL() {
       frag = m.GetFragmentShader(sFragmentSurfaceTextureShaderSource);
     }
 #endif // defined(ANDROID)
+    if (!m.customFragmentShader.empty()) {
+      frag = m.customFragmentShader;
+    }
     m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, frag.c_str());
   } else {
     if(kStart != std::string::npos) {
@@ -516,6 +525,9 @@ RenderState::InitializeGL() {
     }
     m.vertexShader = LoadShader(GL_VERTEX_SHADER, vertexShaderSource.c_str());
     std::string frag = m.GetFragmentShader(sFragmentShaderSource);
+    if (!m.customFragmentShader.empty()) {
+      frag = m.customFragmentShader;
+    }
     m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, frag.c_str());
   }
   if (m.fragmentShader && m.vertexShader) {
