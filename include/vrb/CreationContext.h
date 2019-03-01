@@ -26,6 +26,7 @@ public:
   void UpdateResourceGL();
   void AddResourceGL(ResourceGL* aResource);
   void AddUpdatable(Updatable* aUpdatable);
+  vrb::TextureGLPtr GetDefaultTexture() const;
 protected:
   struct State;
   CreationContext(State& aState);

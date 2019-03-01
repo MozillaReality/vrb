@@ -189,6 +189,11 @@ CreationContext::AddUpdatable(Updatable* aUpdatable) {
   m.updatables.Append(aUpdatable);
 }
 
+vrb::TextureGLPtr
+CreationContext::GetDefaultTexture() const {
+  return m.textureCache->GetDefaultTexture();
+}
+
 CreationContext::CreationContext(State& aState) : m(aState) {}
 CreationContext::~CreationContext() {
   m.sync->Release();
