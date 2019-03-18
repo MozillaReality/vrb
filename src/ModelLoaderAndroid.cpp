@@ -218,7 +218,7 @@ ModelLoaderAndroid::ShutdownGL() {
 
 void
 ModelLoaderAndroid::LoadModel(const std::string& aModelName, GroupPtr aTargetNode) {
-  LoadModel(aModelName, aTargetNode, sNoop);
+  LoadModel(aModelName, std::move(aTargetNode), sNoop);
 }
 
 void
@@ -236,18 +236,18 @@ ModelLoaderAndroid::LoadModel(const std::string& aModelName, GroupPtr aTargetNod
     VRB_LOG("TIMER Load time for %s: %f sec", aModelName.c_str(), timer.Sample());
     return group;
   };
-  RunLoadTask(aTargetNode, task, aCallback);
+  RunLoadTask(std::move(aTargetNode), task, aCallback);
 }
 
 void
 ModelLoaderAndroid::RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask) {
-  RunLoadTask(aTargetNode, aTask, sNoop);
+  RunLoadTask(std::move(aTargetNode), aTask, sNoop);
 }
 
 void
 ModelLoaderAndroid::RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask, LoadFinishedCallback& aCallback) {
   MutexAutoLock lock(m.loadLock);
-  m.loadList.push_back(LoadInfo(aTargetNode, aTask,  aCallback));
+  m.loadList.emplace_back(LoadInfo(aTargetNode, aTask,  aCallback));
   m.loadLock.Signal();
 }
 
@@ -282,7 +282,7 @@ ModelLoaderAndroid::Run(void* data) {
         MutexAutoLock lock(m.loadLock);
         list.swap(m.loadList);
         done = m.done;
-        while (list.size() == 0 && !done) {
+        while (list.empty() && !done) {
           m.loadLock.Wait();
           list.swap(m.loadList);
           done = m.done;
