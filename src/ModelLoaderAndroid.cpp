@@ -246,7 +246,7 @@ ModelLoaderAndroid::RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask) {
 
 void
 ModelLoaderAndroid::RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask, LoadFinishedCallback& aCallback) {
-  MutexAutoLock(m.loadLock);
+  MutexAutoLock lock(m.loadLock);
   m.loadList.push_back(LoadInfo(aTargetNode, aTask,  aCallback));
   m.loadLock.Signal();
 }
@@ -319,7 +319,7 @@ ModelLoaderAndroid::Run(void* data) {
     m.jvm->DetachCurrentThread();
   }
   {
-    MutexAutoLock(m.loadLock);
+    MutexAutoLock lock(m.loadLock);
     m.quitting = true;
   }
   VRB_LOG("ModelLoaderAndroid load thread stopping");

@@ -66,13 +66,13 @@ ContextSynchronizer::BindToThread() {
 
 void
 ContextSynchronizer::RegisterObserver(ContextSynchronizerObserverPtr& aObserver) {
-  MutexAutoLock(m.observerLock);
+  MutexAutoLock lock(m.observerLock);
   m.observers.push_back(aObserver);
 }
 
 void
 ContextSynchronizer::ReleaseObserver(ContextSynchronizerObserverPtr& aObserver) {
-  MutexAutoLock(m.observerLock);
+  MutexAutoLock lock(m.observerLock);
   m.observers.erase(std::remove_if(m.observers.begin(), m.observers.end(),
                            [&aObserver](const ContextSynchronizerObserverPtr& value){ return aObserver.get() == value.get(); }),
                     m.observers.end());
@@ -154,7 +154,7 @@ ContextSynchronizer::Signal(bool& aIsActive) {
       m.context->GetUpdatableList().AppendAndAdoptList(*m.updatables);
     }
     {
-      MutexAutoLock(m.observerLock);
+      MutexAutoLock observerLock(m.observerLock);
 
       for (ContextSynchronizerObserverPtr& observer: m.observers) {
         observer->ContextsSynchronized(m.context);
