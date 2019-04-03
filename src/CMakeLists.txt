@@ -54,5 +54,6 @@ target_sources(
   SharedEGLContext.cpp
   SurfaceTextureFactory.cpp
   TextureSurface.cpp
+  ThreadUtils.cpp
 )
 endif()

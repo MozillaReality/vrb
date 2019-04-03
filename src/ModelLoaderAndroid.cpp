@@ -17,6 +17,7 @@
 #include "vrb/ParserObj.h"
 #include "vrb/SharedEGLContext.h"
 #include "vrb/RenderContext.h"
+#include "vrb/ThreadUtils.h"
 
 #include <pthread.h>
 #include <vector>
@@ -257,6 +258,7 @@ ModelLoaderAndroid::Run(void* data) {
   m.context->BindToThread();
   bool attached = false;
   if (m.jvm->AttachCurrentThread(&(m.env), nullptr) == 0) {
+    SetThreadName("VRB Loader");
     attached = true;
     const bool offRenderThreadContextCurrent = m.eglContext->MakeCurrent();
     if (!offRenderThreadContextCurrent) {
