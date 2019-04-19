@@ -11,6 +11,9 @@
 #include "vrb/Logger.h"
 
 #include <cmath>
+#include <cstdlib>
+
+#define VRB_IS_ZERO(value) (std::fabsf(value) < FLT_EPSILON)
 
 namespace vrb {
 
@@ -258,6 +261,13 @@ public:
     return *this;
   }
 
+  bool IsIdentity() const {
+    return VRB_IS_ZERO(m.m00 - 1.0f) && VRB_IS_ZERO(m.m01) && VRB_IS_ZERO(m.m02) && VRB_IS_ZERO(m.m03)
+        && VRB_IS_ZERO(m.m10) && VRB_IS_ZERO(m.m11 - 1.0f) && VRB_IS_ZERO(m.m12) && VRB_IS_ZERO(m.m13)
+        && VRB_IS_ZERO(m.m20) && VRB_IS_ZERO(m.m21) && VRB_IS_ZERO(m.m22 - 1.0f) && VRB_IS_ZERO(m.m23)
+        && VRB_IS_ZERO(m.m30) && VRB_IS_ZERO(m.m31) && VRB_IS_ZERO(m.m32) && VRB_IS_ZERO(m.m33 - 1.0f);
+  }
+
   Vector MultiplyPosition(const Vector& aPosition) const {
     Vector result;
     result.x() = m.m00 * aPosition.x() + m.m10 * aPosition.y() + m.m20 * aPosition.z() + m.m30;
@@ -380,7 +390,7 @@ public:
     const float c22 =   m.m00 * m.m11 - m.m01 * m.m10;
 
     const float det = m.m00*c00 + m.m10*c10 + m.m20 * c20;
-    if (std::fabsf(det) < 0.00001) {
+    if (VRB_IS_ZERO(det)) {
       return Matrix::Identity();
     }
     const float i00 = c00 / det,  i10 = c01 / det,  i20 = c02 / det;

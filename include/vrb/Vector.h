@@ -9,6 +9,7 @@
 #include "vrb/Logger.h"
 
 #include <cmath>
+#include <cstdlib>
 #include <string>
 
 namespace vrb {

@@ -22,7 +22,6 @@
 #  define VRB_LOG(format, ...) fprintf(stderr, "VRB: " format "\n", ##__VA_ARGS__);
 #  define VRB_WARN(format, ...) fprintf(stderr, "VRB WARNING: " format "\n", ##__VA_ARGS__);
 #  define VRB_ERROR(format, ...) fprintf(stderr, "VRB ERROR: " format "\n", ##__VA_ARGS__);
-#  define VRB_LINE VRB_LOG("%s:%s:%d", __FILE__, __FUNCTION__, __LINE__)
 #endif
 #define VRB_LINE VRB_DEBUG("%s:%s:%d", __FILE__, __FUNCTION__, __LINE__);
 
