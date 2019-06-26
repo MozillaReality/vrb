@@ -3,13 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vrb/GLExtensions.h"
 #include "vrb/ConcreteClass.h"
-
-#include "vrb/GLError.h"
 #include "vrb/Logger.h"
-#include <unordered_set>
+#include "vrb/GLError.h"
+#include "vrb/GLExtensions.h"
+
+#include <cstring>
 #include <string>
+#include <unordered_set>
 
 #if defined(ANDROID)
 #include <EGL/egl.h>

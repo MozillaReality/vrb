@@ -13,6 +13,7 @@
 #include "vrb/private/UpdatableState.h"
 
 #include <pthread.h>
+#include <algorithm>
 #include <vector>
 
 #define ASSERT_ON_CREATION_THREAD()                                          \
