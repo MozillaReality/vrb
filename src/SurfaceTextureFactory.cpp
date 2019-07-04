@@ -75,6 +75,7 @@ struct SurfaceTextureFactory::State : public Updatable::State, public ResourceGL
   jmethodID updateTexImageMethod;
   jmethodID attachToGLContextMethod;
   jmethodID detachFromGLContextMethod;
+  jmethodID isReleasedMethod;
   std::forward_list<SurfaceTextureRecord> textures;
   std::forward_list<SurfaceTextureObserverPtr> observers;
 
@@ -85,6 +86,7 @@ struct SurfaceTextureFactory::State : public Updatable::State, public ResourceGL
       , updateTexImageMethod(nullptr)
       , attachToGLContextMethod(nullptr)
       , detachFromGLContextMethod(nullptr)
+      , isReleasedMethod(nullptr)
   {}
 
   bool Contains(const std::string& aName);
@@ -139,6 +141,12 @@ SurfaceTextureFactory::State::Initialize(JNIEnv* aEnv) {
 
   if (!detachFromGLContextMethod) {
     VRB_ERROR("Failed finding SurfaceTexure.detachFromGLContext function");
+  }
+
+  isReleasedMethod = env->GetMethodID(surfaceTextureClass, "isReleased", "()Z");
+
+  if (!isReleasedMethod) {
+    VRB_ERROR("Failed finding SurfaceTexure.isReleasedMethod function");
   }
 }
 
@@ -271,7 +279,9 @@ SurfaceTextureFactory::UpdateResource(RenderContext& aContext) {
         }
       }
     }
-    if (record.surface && record.attached && m.updateTexImageMethod) {
+    bool isReleased = m.env->CallBooleanMethod(record.surface, m.isReleasedMethod);
+    VRB_CHECK_JNI_EXCEPTION(m.env);
+    if (record.surface && record.attached && m.updateTexImageMethod && !isReleased) {
       m.env->CallVoidMethod(record.surface, m.updateTexImageMethod);
       VRB_CHECK_JNI_EXCEPTION(m.env);
     }
@@ -302,7 +312,9 @@ void
 SurfaceTextureFactory::ShutdownGL() {
   VRB_LOG("SurfaceTextureFactory::ShutdownGL");
   for(SurfaceTextureRecord& record: m.textures) {
-    if (record.surface && record.attached) {
+    bool isReleased = m.env->CallBooleanMethod(record.surface, m.isReleasedMethod);
+    VRB_CHECK_JNI_EXCEPTION(m.env);
+    if (record.surface && record.attached && !isReleased) {
       m.env->CallVoidMethod(record.surface, m.detachFromGLContextMethod);
       VRB_CHECK_JNI_EXCEPTION(m.env);
       record.texture = 0;
