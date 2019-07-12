@@ -97,6 +97,12 @@ typedef std::shared_ptr<ParserObj> ParserObjPtr;
 class ParserObserverObj;
 typedef std::shared_ptr<ParserObserverObj> ParserObserverObjPtr;
 
+class PerformanceMonitor;
+typedef std::shared_ptr<PerformanceMonitor> PerformanceMonitorPtr;
+
+class PerformanceMonitorObserver;
+typedef std::shared_ptr<PerformanceMonitorObserver> PerformanceMonitorObserverPtr;
+
 class Program;
 typedef std::shared_ptr<Program> ProgramPtr;
 
