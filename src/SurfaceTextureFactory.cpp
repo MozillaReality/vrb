@@ -213,9 +213,8 @@ SurfaceTextureFactory::AddGlobalObserver(SurfaceTextureObserverPtr aObserver) {
 
 void
 SurfaceTextureFactory::RemoveGlobalObserver(const SurfaceTextureObserver& aObserver) {
-  const SurfaceTextureObserver* observer = &aObserver;
-  m.observers.remove_if([observer](SurfaceTextureObserverPtr& aObserver) -> bool {
-    return observer == aObserver.get();
+  m.observers.remove_if([&](SurfaceTextureObserverPtr& aObserverPtr) -> bool {
+    return &aObserver == aObserverPtr.get();
   });
 }
 

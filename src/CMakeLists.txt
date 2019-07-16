@@ -27,6 +27,7 @@ add_library(
   Node.cpp
   NodeFactoryObj.cpp
   ParserObj.cpp
+  PerformanceMonitor.cpp
   Quaternion.cpp
   RenderContext.cpp
   RenderState.cpp
