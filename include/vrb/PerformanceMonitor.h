@@ -29,8 +29,10 @@ protected:
 class PerformanceMonitor : protected Updatable {
 public:
   static PerformanceMonitorPtr Create(CreationContextPtr& aContext);
+  double GetMinFrameRate() const;
   void Pause();
   void Resume();
+  void Resample();
   void AddPerformanceMonitorObserver(PerformanceMonitorObserverPtr aObserver);
   void RemovePerformanceMonitorObserver(const PerformanceMonitorObserver& aObserver);
 

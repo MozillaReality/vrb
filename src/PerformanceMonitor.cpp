@@ -15,9 +15,14 @@
 #include <limits>
 
 namespace {
+const double kInvalidTimestamp = -1.0;
+const double kResumePauseDuration = 3.0;
 const int32_t kSampleCount = 5;
+const int32_t kMinBadSampleCount = 2;
 const double kMinFrameRate = 59.0;
 const double kFrameEpsilon = 2.0;
+const double kSampleTimeDelta = 1.0;
+const double kMaxSampleTimeDelta = 1.1;
 }
 
 namespace vrb {
@@ -27,8 +32,9 @@ struct PerformanceMonitor::State : public Updatable::State {
   bool slow = false;
   bool sampling = true;
   double minFrameRate = kMinFrameRate;
-  double timeStamp = -1.0;
+  double timeStamp = kInvalidTimestamp;
   double frameCount = 0.0;
+  double resumePause = kInvalidTimestamp;
   std::array<double, kSampleCount> samples = {};
   int32_t samplePlace = 0;
   std::forward_list<PerformanceMonitorObserverPtr> observers;
@@ -40,8 +46,9 @@ struct PerformanceMonitor::State : public Updatable::State {
     for (double& value: samples) {
       value = -1.0;
     }
-    timeStamp = -1.0;
+    timeStamp = kInvalidTimestamp;
     frameCount = 0.0;
+    resumePause = kInvalidTimestamp;
   }
 
   void Sample() {
@@ -61,7 +68,7 @@ struct PerformanceMonitor::State : public Updatable::State {
     }
     if ((max - min) < kFrameEpsilon) {
       sampling = false;
-      minFrameRate = (sum / kSampleCount) - 1.0;
+      minFrameRate = std::floor((sum / kSampleCount) - 1.0);
 
       if (minFrameRate < kMinFrameRate) {
         VRB_ERROR("Minimum sampled framerate: %fHz is too low setting to %fHz", minFrameRate, kMinFrameRate);
@@ -92,7 +99,7 @@ struct PerformanceMonitor::State : public Updatable::State {
       }
     }
     const double averageFrameRate = sum / totalCount;
-    if ((badCount >= 2) && !slow) {
+    if ((badCount >= kMinBadSampleCount) && !slow) {
       slow = true;
       VRB_ERROR("Render performance has dropped bellow acceptable levels.");
       for (PerformanceMonitorObserverPtr& observer: observers) {
@@ -113,15 +120,28 @@ PerformanceMonitor::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<PerformanceMonitor, PerformanceMonitor::State> >(aContext);
 }
 
+double
+PerformanceMonitor::GetMinFrameRate() const {
+  return m.minFrameRate;
+}
+
 void
 PerformanceMonitor::Pause() {
+  VRB_DEBUG("Pausing Performance Monitor");
   m.Clear();
   m.paused = true;
 }
 
 void
 PerformanceMonitor::Resume() {
+  VRB_DEBUG("Resuming Performance Monitor");
   m.paused = false;
+}
+
+void
+PerformanceMonitor::Resample() {
+  m.Clear();
+  m.sampling = true;
 }
 
 void
@@ -146,11 +166,24 @@ PerformanceMonitor::UpdateResource(RenderContext& aContext) {
     return;
   }
   const double ctime = aContext.GetTimestamp();
-  if (m.timeStamp < 0.0) {
+  if (m.resumePause < 0.0) {
+    m.resumePause = ctime + kResumePauseDuration;
+    return;
+  } else if (m.resumePause > ctime) {
+    return;
+  }
+  if (m.timeStamp <= 0.0) {
+      m.timeStamp = ctime;
+      m.frameCount++;
+    return;
+  }
+  const double delta = ctime - m.timeStamp;
+  if (delta > kMaxSampleTimeDelta) {
+    VRB_DEBUG("Discarding sample, frame delta was too large: %f", delta);
+    m.frameCount = 1.0;
     m.timeStamp = ctime;
-    m.frameCount++;
-  } else if ((ctime - m.timeStamp) > 1.0) {
-    m.samples[m.samplePlace] = m.frameCount / (ctime - m.timeStamp);
+  } else if (delta > kSampleTimeDelta) {
+    m.samples[m.samplePlace] = m.frameCount / delta;
     VRB_DEBUG("Average Frame Rate: %.0fHz", std::round(m.samples[m.samplePlace]));
     m.samplePlace = (m.samplePlace + 1) % kSampleCount;
     m.frameCount = 1.0;

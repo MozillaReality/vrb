@@ -30,6 +30,10 @@
 #include <time.h>
 #include <vector>
 
+namespace {
+const double kNanosecondsToSeconds = 1.0e9;
+}
+
 namespace vrb {
 
 struct RenderContext::State {
@@ -127,6 +131,14 @@ RenderContext::ShutdownGL() {
 
 void
 RenderContext::Update() {
+  timespec spec = {};
+  if (clock_gettime(CLOCK_MONOTONIC, &spec) == 0) {
+    double nextTimestamp = (double)spec.tv_sec + (spec.tv_nsec / kNanosecondsToSeconds);
+    if (m.timestamp != 0.0) {
+      m.frameDelta = nextTimestamp - m.timestamp;
+    }
+    m.timestamp = nextTimestamp;
+  }
   m.creationContext->Synchronize();
   for(auto iter = m.synchronizers.begin(); iter != m.synchronizers.end();) {
     bool active = true;
@@ -141,14 +153,6 @@ RenderContext::Update() {
     m.resources.AppendAndAdoptList(m.uninitializedResources);
   }
   m.updatables.UpdateResource(*this);
-  timespec spec;
-  if (clock_gettime(CLOCK_MONOTONIC, &spec) == 0) {
-    double nextTimestamp = (double)spec.tv_sec + (double)(spec.tv_nsec / 1.0e09);
-    if (m.timestamp != 0.0) {
-      m.frameDelta = nextTimestamp - m.frameDelta;
-    }
-    m.timestamp = nextTimestamp;
-  }
 }
 
 double
