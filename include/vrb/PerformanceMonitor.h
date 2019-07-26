@@ -29,7 +29,9 @@ protected:
 class PerformanceMonitor : protected Updatable {
 public:
   static PerformanceMonitorPtr Create(CreationContextPtr& aContext);
-  double GetMinFrameRate() const;
+  double GetAverageFrameRate() const;
+  double GetPerfomranceDelta() const;
+  void SetPerformanceDelta(const double aDelta);
   void Pause();
   void Resume();
   void Resample();
