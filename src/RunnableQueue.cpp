@@ -48,20 +48,15 @@ struct RunnableQueue::State {
       list[ix].clear();
     }
   }
-  void Init(JavaVM* aVM) {
-    vm = aVM;
-    JNIEnv* env = nullptr;
-    if (vm->AttachCurrentThread(&env, nullptr) != 0) {
-      VRB_ERROR("Failed to attach to current thread in %s:%s:%d", __FILE__, __FUNCTION__, __LINE__);
-      return;
-    }
-    jclass localRunnableClass = env->FindClass("java/lang/Runnable");
+  void Init(JNIEnv* aEnv) {
+
+    jclass localRunnableClass = aEnv->FindClass("java/lang/Runnable");
     if (!localRunnableClass) {
       VRB_ERROR("Failed to fine java class java/lang/Runnable in %s", __FILE__);
       return;
     }
-    runnableClass = (jclass)env->NewGlobalRef(localRunnableClass);
-    runMethod = env->GetMethodID(runnableClass, "run", "()V");
+    runnableClass = (jclass)aEnv->NewGlobalRef(localRunnableClass);
+    runMethod = aEnv->GetMethodID(runnableClass, "run", "()V");
     if (!runMethod) {
       VRB_ERROR("Failed to fine java/lang/Runnable.run() in %s", __FILE__);
     }
@@ -77,8 +72,20 @@ struct RunnableQueue::State {
 RunnableQueuePtr
 RunnableQueue::Create(JavaVM* aVM) {
   RunnableQueuePtr result = std::make_shared<ConcreteClass<RunnableQueue, RunnableQueue::State> >();
-  result->m.Init(aVM);
+  result->m.vm = aVM;
+  JNIEnv* env = nullptr;
+  if (aVM->AttachCurrentThread(&env, nullptr) != 0) {
+    VRB_ERROR("Failed to attach to current thread in %s:%s:%d", __FILE__, __FUNCTION__, __LINE__);
+    return nullptr;
+  }
+  result->m.Init(env);
   return result;
+}
+
+void
+RunnableQueue::InitializeJava(JNIEnv* aEnv) {
+  m.processEnv = nullptr;
+  m.Init(aEnv);
 }
 
 void
@@ -100,8 +107,9 @@ RunnableQueue::ProcessRunnables() {
   }
   if (!m.processEnv) {
     if (m.vm->AttachCurrentThread(&(m.processEnv), nullptr) != 0) {
-      return;}
+      return;
     }
+  }
   {
     MutexAutoLock lock(m.lock);
     // Switch lists
@@ -117,8 +125,5 @@ RunnableQueue::ProcessRunnables() {
 }
 
 RunnableQueue::RunnableQueue(State& aState) : m(aState) {}
-RunnableQueue::~RunnableQueue() {
-
-}
 
 } // namespace vrb
