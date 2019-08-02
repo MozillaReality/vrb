@@ -17,12 +17,13 @@ class RunnableQueue {
 public:
   static RunnableQueuePtr Create(JavaVM* aVM);
 
+  void InitializeJava(JNIEnv* aEnv);
   void AddRunnable(JNIEnv* aEnv, jobject aRunnable);
   void ProcessRunnables();
 protected:
   struct State;
   RunnableQueue(State& aState);
-  ~RunnableQueue();
+  ~RunnableQueue() = default;
 private:
   State& m;
   RunnableQueue() = delete;
