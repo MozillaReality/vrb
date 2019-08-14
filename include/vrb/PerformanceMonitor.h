@@ -23,7 +23,7 @@ protected:
   explicit PerformanceMonitorObserver() = default;
   ~PerformanceMonitorObserver() = default;
   VRB_NO_DEFAULTS(PerformanceMonitorObserver)
-
+  VRB_NO_NEW_DELETE
 };
 
 class PerformanceMonitor : protected Updatable {
@@ -49,6 +49,20 @@ protected:
 private:
   VRB_NO_DEFAULTS(PerformanceMonitor)
   State& m;
+};
+
+class PausePerformanceMonitor {
+private:
+  PerformanceMonitor& mMonitor;
+  VRB_NO_DEFAULTS(PausePerformanceMonitor)
+  PausePerformanceMonitor() = delete;
+public:
+  PausePerformanceMonitor(PerformanceMonitor& aMonitor) : mMonitor(aMonitor) {
+    mMonitor.Pause();
+  }
+  ~PausePerformanceMonitor() {
+    mMonitor.Resume();
+  }
 };
 
 }

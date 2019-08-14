@@ -17,7 +17,7 @@
 namespace {
 const double kInvalidTimestamp = -1.0;
 const double kResumePauseDuration = 3.0;
-const double kDefaultPerformanceDelta = 2.0;
+const double kDefaultPerformanceDelta = 10.0;
 const int32_t kSampleCount = 5;
 const int32_t kMinBadSampleCount = 2;
 const double kMinAverageFrameRate = 60.0;
