@@ -6,6 +6,7 @@
 #ifndef VRB_FORWARD_DOT_H
 #define VRB_FORWARD_DOT_H
 
+#include <functional>
 #include <memory>
 
 namespace vrb {
@@ -112,6 +113,8 @@ typedef std::shared_ptr<ProgramFactory> ProgramFactoryPtr;
 class RenderContext;
 typedef std::shared_ptr<RenderContext> RenderContextPtr;
 typedef std::weak_ptr<RenderContext> RenderContextWeak;
+
+using RenderLambda = std::function<void()>;
 
 class RenderState;
 typedef std::shared_ptr<RenderState> RenderStatePtr;

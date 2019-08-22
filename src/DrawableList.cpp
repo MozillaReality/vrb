@@ -81,13 +81,16 @@ void
 DrawableList::Draw(const Camera& aCamera) {
   State::DrawNode* current = m.drawables;
   while (current) {
-    const uint32_t id = current->lights ? current->lights->id : 0;
-    if (id != current->drawable->GetRenderState()->GetLightId()) {
-      current->drawable->GetRenderState()->ResetLights(id);
-      State::LightSnapshot* snapshot = current->lights;
-      while (snapshot) {
-        current->drawable->GetRenderState()->AddLight(snapshot->direction, snapshot->ambient, snapshot->diffuse, snapshot->specular);
-        snapshot = snapshot->next;
+    if (current->drawable->GetRenderState()) {
+      const uint32_t id = current->lights ? current->lights->id : 0;
+      if (id != current->drawable->GetRenderState()->GetLightId()) {
+        current->drawable->GetRenderState()->ResetLights(id);
+        State::LightSnapshot* snapshot = current->lights;
+        while (snapshot) {
+          current->drawable->GetRenderState()->AddLight(snapshot->direction, snapshot->ambient,
+                                                        snapshot->diffuse, snapshot->specular);
+          snapshot = snapshot->next;
+        }
       }
     }
     current->drawable->Draw(aCamera, current->transform);

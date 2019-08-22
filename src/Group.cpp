@@ -5,16 +5,70 @@
 
 #include "vrb/Group.h"
 #include "vrb/private/GroupState.h"
+#include "vrb/private/DrawableState.h"
 
 #include "vrb/ConcreteClass.h"
 #include "vrb/DrawableList.h"
 #include "vrb/Light.h"
-#include <algorithm>
 #include "vrb/Logger.h"
+#include "vrb/Matrix.h"
 
+#include <algorithm>
 #include <memory>
 
 namespace vrb {
+
+
+
+class LambdaDrawable : public Drawable {
+public:
+  static LambdaDrawablePtr Create(CreationContextPtr& aContext, const RenderLambda& aLambda);
+  RenderStatePtr& GetRenderState() override;
+  void SetRenderState(const RenderStatePtr& aRenderState) override {}
+  void Draw(const Camera& aCamera, const Matrix& aModelTransform) override;
+protected:
+  struct State;
+  LambdaDrawable(State& aState, CreationContextPtr& aContext);
+  ~LambdaDrawable() = default;
+private:
+  State& m;
+};
+
+struct LambdaDrawable::State : public Drawable::State {
+  RenderLambda lambda;
+  RenderStatePtr state;
+};
+
+LambdaDrawablePtr
+LambdaDrawable::Create(CreationContextPtr& aContext, const RenderLambda& aLambda) {
+  LambdaDrawablePtr result = std::make_shared<ConcreteClass<LambdaDrawable, LambdaDrawable::State> >(aContext);
+  result->m.lambda = aLambda;
+  return result;
+}
+
+RenderStatePtr&
+LambdaDrawable::GetRenderState() {
+  return m.state;
+}
+
+
+LambdaDrawable::LambdaDrawable(State& aState, CreationContextPtr& aContext) : m(aState), Drawable(aState, aContext) {}
+
+
+void
+LambdaDrawable::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
+  m.lambda();
+}
+
+LambdaDrawablePtr
+Group::State::createLambdaDrawable(const RenderLambda& aLambda) {
+  if (aLambda) {
+    if (CreationContextPtr context = create.lock()) {
+      return LambdaDrawable::Create(context, aLambda);
+    }
+  }
+  return nullptr;
+}
 
 bool
 Group::State::Contains(const Node& aNode) {
@@ -40,6 +94,7 @@ GroupPtr
 Group::Create(CreationContextPtr& aContext) {
   GroupPtr group = std::make_shared<ConcreteClass<Group, Group::State> >(aContext);
   group->m.self = group;
+  group->m.create = aContext;
   return group;
 }
 
@@ -48,10 +103,17 @@ Group::Cull(CullVisitor& aVisitor, DrawableList& aDrawables) {
   for (LightPtr& light: m.lights) {
     aDrawables.PushLight(*light);
   }
+  // Lambdas are added post first and pre last because the DrawablesList is FILO.
+  if (m.postRenderLambda) {
+    aDrawables.AddDrawable(m.postRenderLambda, Matrix());
+  }
   for (NodePtr& node: m.children) {
     if (m.IsEnabled(*node)) {
       node->Cull(aVisitor, aDrawables);
     }
+  }
+  if (m.preRenderLambda) {
+    aDrawables.AddDrawable(m.preRenderLambda, Matrix());
   }
   aDrawables.PopLights(m.lights.size());
 }
@@ -121,6 +183,16 @@ Group::TakeChildren(GroupPtr& aSource) {
     m.children.push_back(child);
   }
   aSource->m.Clear();
+}
+
+void
+Group::SetPreRenderLambda(const RenderLambda& aLambda) {
+  m.preRenderLambda = m.createLambdaDrawable(aLambda);
+}
+
+void
+Group::SetPostRenderLambda(const RenderLambda& aLambda) {
+  m.postRenderLambda = m.createLambdaDrawable(aLambda);
 }
 
 bool
