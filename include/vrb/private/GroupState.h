@@ -16,6 +16,8 @@ struct Group::State : public Node::State {
   std::vector<NodePtr> children;
   std::vector<LightPtr> lights;
   GroupWeak self;
+  RenderLambda preRenderLambda;
+  RenderLambda postRenderLambda;
   bool Contains(const Node& aNode);
   bool Contains(const Light& aLight);
   virtual bool IsEnabled(const Node&) { return true; }

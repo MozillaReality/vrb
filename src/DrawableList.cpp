@@ -73,8 +73,24 @@ DrawableList::AddDrawable(DrawablePtr&& aDrawable, const Matrix& aTransform) {
   node->drawable = aDrawable;
   node->transform = aTransform;
   node->lights = m.currentLights;
+  node->lambdas = m.currentLambdas;
   node->next = m.drawables;
   m.drawables = node;
+}
+
+void
+DrawableList::PushLambdas(const Lambda& aPreRender, const Lambda& aPostRender) {
+  State::LambdaSnapshot* lambdas = new State::LambdaSnapshot(aPreRender, aPostRender);
+  lambdas->next = m.currentLambdas;
+  m.currentLambdas = lambdas;
+  m.lambdas = lambdas;
+}
+
+void
+DrawableList::PopLambdas() {
+  if (m.currentLambdas) {
+    m.currentLambdas = m.currentLambdas->next;
+  }
 }
 
 void
@@ -90,8 +106,17 @@ DrawableList::Draw(const Camera& aCamera) {
         snapshot = snapshot->next;
       }
     }
+    State::LambdaSnapshot* lambdas = current->lambdas;
+    if (lambdas && lambdas->preRender) {
+      lambdas->preRender();
+      lambdas->preRender = nullptr;
+    }
     current->drawable->Draw(aCamera, current->transform);
     current = current->next;
+    if (lambdas && lambdas->postRender && (current == nullptr || lambdas != current->lambdas)) {
+      lambdas->postRender();
+      lambdas->postRender = nullptr;
+    }
   }
 }
 

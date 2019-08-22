@@ -48,10 +48,16 @@ Group::Cull(CullVisitor& aVisitor, DrawableList& aDrawables) {
   for (LightPtr& light: m.lights) {
     aDrawables.PushLight(*light);
   }
+  if (m.preRenderLambda || m.postRenderLambda) {
+    aDrawables.PushLambdas(m.preRenderLambda, m.postRenderLambda);
+  }
   for (NodePtr& node: m.children) {
     if (m.IsEnabled(*node)) {
       node->Cull(aVisitor, aDrawables);
     }
+  }
+  if (m.preRenderLambda || m.postRenderLambda) {
+    aDrawables.PopLambdas();
   }
   aDrawables.PopLights(m.lights.size());
 }
@@ -121,6 +127,16 @@ Group::TakeChildren(GroupPtr& aSource) {
     m.children.push_back(child);
   }
   aSource->m.Clear();
+}
+
+void
+Group::SetPreRenderLambda(const RenderLambda& aLambda) {
+  m.preRenderLambda = aLambda;
+}
+
+void
+Group::SetPostRenderLambda(const RenderLambda& aLambda) {
+  m.postRenderLambda = aLambda;
 }
 
 bool

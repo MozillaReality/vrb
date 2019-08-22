@@ -34,22 +34,33 @@ struct DrawableList::State {
       , specular(aLight.GetSpecularColor()) {}
     ~LightSnapshot() {}
   };
+  struct LambdaSnapshot {
+    LambdaSnapshot(const Lambda& aPreRender, const Lambda& aPostRender)
+      : next(nullptr)
+      , preRender(aPreRender)
+      , postRender(aPostRender) {}
+    LambdaSnapshot* next;
+    Lambda preRender;
+    Lambda postRender;
+  };
   struct DrawNode {
     DrawNode* next;
     LightSnapshot* lights;
+    LambdaSnapshot* lambdas;
     DrawablePtr drawable;
     Matrix transform;
-
-    DrawNode() : next(nullptr), lights(nullptr) {}
+    DrawNode() : next(nullptr), lights(nullptr), lambdas(nullptr) {}
   };
 
   DrawNode* drawables;
   LightSnapshot* currentLights;
   LightSnapshot* lights;
+  LambdaSnapshot* lambdas;
+  LambdaSnapshot* currentLambdas;
   uint32_t idCount;
   int depth;
 
-  State() : drawables(nullptr), currentLights(nullptr), lights(nullptr), idCount(0), depth(0) {}
+  State() : drawables(nullptr), currentLights(nullptr), lights(nullptr), lambdas(nullptr), currentLambdas(nullptr), idCount(0), depth(0) {}
   ~State() { Reset(); }
   void Reset();
 };

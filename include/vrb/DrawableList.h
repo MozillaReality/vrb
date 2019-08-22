@@ -8,6 +8,7 @@
 
 #include "vrb/Forward.h"
 #include "vrb/MacroUtils.h"
+#include <functional>
 
 namespace vrb {
 
@@ -19,6 +20,9 @@ public:
   void PushLight(const Light& aLight);
   void PopLights(const int aCount);
   void AddDrawable(DrawablePtr&& aDrawable, const Matrix& aTransform);
+  using Lambda = std::function<void()>;
+  void PushLambdas(const Lambda& aPreRender, const Lambda& aPostRender);
+  void PopLambdas();
   void Draw(const Camera& aCamera);
 
 protected:
