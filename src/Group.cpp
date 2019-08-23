@@ -18,8 +18,6 @@
 
 namespace vrb {
 
-
-
 class LambdaDrawable : public Drawable {
 public:
   static LambdaDrawablePtr Create(CreationContextPtr& aContext, const RenderLambda& aLambda);
@@ -61,11 +59,9 @@ LambdaDrawable::Draw(const Camera& aCamera, const Matrix& aModelTransform) {
 }
 
 LambdaDrawablePtr
-Group::State::createLambdaDrawable(const RenderLambda& aLambda) {
+Group::State::createLambdaDrawable(CreationContextPtr& aContext, const RenderLambda& aLambda) {
   if (aLambda) {
-    if (CreationContextPtr context = create.lock()) {
-      return LambdaDrawable::Create(context, aLambda);
-    }
+    return LambdaDrawable::Create(aContext, aLambda);
   }
   return nullptr;
 }
@@ -94,7 +90,6 @@ GroupPtr
 Group::Create(CreationContextPtr& aContext) {
   GroupPtr group = std::make_shared<ConcreteClass<Group, Group::State> >(aContext);
   group->m.self = group;
-  group->m.create = aContext;
   return group;
 }
 
@@ -186,13 +181,13 @@ Group::TakeChildren(GroupPtr& aSource) {
 }
 
 void
-Group::SetPreRenderLambda(const RenderLambda& aLambda) {
-  m.preRenderLambda = m.createLambdaDrawable(aLambda);
+Group::SetPreRenderLambda(CreationContextPtr& aContext, const RenderLambda& aLambda) {
+  m.preRenderLambda = m.createLambdaDrawable(aContext, aLambda);
 }
 
 void
-Group::SetPostRenderLambda(const RenderLambda& aLambda) {
-  m.postRenderLambda = m.createLambdaDrawable(aLambda);
+Group::SetPostRenderLambda(CreationContextPtr& aContext, const RenderLambda& aLambda) {
+  m.postRenderLambda = m.createLambdaDrawable(aContext, aLambda);
 }
 
 bool

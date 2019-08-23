@@ -21,8 +21,7 @@ struct Group::State : public Node::State {
   GroupWeak self;
   LambdaDrawablePtr preRenderLambda;
   LambdaDrawablePtr postRenderLambda;
-  CreationContextWeak create;
-  LambdaDrawablePtr createLambdaDrawable(const RenderLambda& aLambda);
+  LambdaDrawablePtr createLambdaDrawable(CreationContextPtr& aContext, const RenderLambda& aLambda);
   bool Contains(const Node& aNode);
   bool Contains(const Light& aLight);
   virtual bool IsEnabled(const Node&) { return true; }
