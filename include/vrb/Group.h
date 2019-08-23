@@ -29,6 +29,8 @@ public:
   int32_t GetNodeCount() const;
   void SortNodes(const std::function<bool(const vrb::NodePtr&, const vrb::NodePtr&)>& aFunction);
   void TakeChildren(GroupPtr& aGroup);
+  void SetPreRenderLambda(const RenderLambda& aLambda);
+  void SetPostRenderLambda(const RenderLambda& aLambda);
 
 protected:
   bool Traverse(const GroupPtr& aParent, const Node::TraverseFunction& aTraverseFunction) override;
