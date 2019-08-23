@@ -206,7 +206,9 @@ Group::Traverse(const GroupPtr& aParent, const Node::TraverseFunction& aTraverse
   return false;
 }
 
-Group::Group(State& aState, CreationContextPtr& aContext) : Node(aState, aContext), m(aState) {}
+Group::Group(State& aState, CreationContextPtr& aContext) : Node(aState, aContext), m(aState) {
+  m.create = aContext;
+}
 Group::~Group() {
   for (NodePtr& child: m.children) {
     RemoveFromParents(*this, *child);
