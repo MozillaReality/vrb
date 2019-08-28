@@ -470,7 +470,12 @@ RenderState::SetVertexColorEnabled(bool aEnabled) {
 
 void
 RenderState::SetCustomFragmentShader(const std::string &aFragment) {
+  const bool recreate = m.program && aFragment != m.customFragmentShader;
   m.customFragmentShader = aFragment;
+  if (recreate) {
+    ShutdownGL();
+    InitializeGL();
+  }
 }
 
 RenderState::RenderState(State& aState, CreationContextPtr& aContext) : ResourceGL(aState, aContext), m(aState) {}
@@ -516,7 +521,7 @@ RenderState::InitializeGL() {
     }
 #endif // defined(ANDROID)
     if (!m.customFragmentShader.empty()) {
-      frag = m.customFragmentShader;
+      frag = m.GetFragmentShader(m.customFragmentShader);
     }
     m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, frag.c_str());
   } else {
@@ -586,6 +591,21 @@ RenderState::InitializeGL() {
 }
 
 void
-RenderState::ShutdownGL() {}
+RenderState::ShutdownGL() {
+  if (m.program) {
+    VRB_GL_CHECK(glDeleteProgram(m.program));
+    m.program = 0;
+  }
+
+  if (m.vertexShader) {
+    VRB_GL_CHECK(glDeleteShader(m.vertexShader));
+    m.vertexShader = 0;
+  }
+
+  if (m.fragmentShader) {
+    VRB_GL_CHECK(glDeleteShader(m.fragmentShader));
+    m.fragmentShader = 0;
+  }
+}
 
 } // namespace vrb
