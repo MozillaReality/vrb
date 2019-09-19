@@ -531,7 +531,7 @@ RenderState::InitializeGL() {
     m.vertexShader = LoadShader(GL_VERTEX_SHADER, vertexShaderSource.c_str());
     std::string frag = m.GetFragmentShader(sFragmentShaderSource);
     if (!m.customFragmentShader.empty()) {
-      frag = m.customFragmentShader;
+      frag = m.GetFragmentShader(m.customFragmentShader);
     }
     m.fragmentShader = LoadShader(GL_FRAGMENT_SHADER, frag.c_str());
   }
