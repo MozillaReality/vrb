@@ -5,7 +5,7 @@ if (APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fexceptions -frtti -Werror -Wno-int-to-void-pointer-cast")
 endif ()
 
-include_directories("../include")
+include_directories("../include", "../thirdparty")
 add_library(
         #library name
         vrb
