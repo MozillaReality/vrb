@@ -21,6 +21,7 @@ add_library(
         DataCache.cpp
         Drawable.cpp
         DrawableList.cpp
+        FileReaderBasic.cpp
         FBO.cpp
         GLError.cpp
         GLExtensions.cpp
@@ -31,6 +32,7 @@ add_library(
         Math.cpp
         Node.cpp
         NodeFactoryObj.cpp
+        ObjectCounter.cpp
         ParserObj.cpp
         PerformanceMonitor.cpp
         Program.cpp
@@ -45,6 +47,7 @@ add_library(
         TextureCache.cpp
         TextureCubeMap.cpp
         TextureGL.cpp
+        ThreadIdentity.cpp
         Toggle.cpp
         Transform.cpp
         Updatable.cpp

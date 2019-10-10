@@ -68,7 +68,7 @@ DataCache::CacheData(std::unique_ptr<uint8_t[]>& aData, const size_t aDataSize) 
     MutexAutoLock lock(m.cacheLock);
     root = m.cachePath;
     if (root.empty()) {
-      VRB_ERROR("Failed to cache data, root path, not set");
+      VRB_ERROR("Failed to cache data, root path not set");
       return 0;
     }
     m.handleCount++;

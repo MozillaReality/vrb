@@ -44,7 +44,7 @@ LoadShader(GLenum aType, const char* aSrc) {
   GLuint shader = VRB_GL_CHECK(glCreateShader(aType));
 
   if (shader == 0) {
-    VRB_ERROR("FAILDED to create shader of type: %s", (aType == GL_VERTEX_SHADER ? "vertex shader" : "fragment shader"));
+    VRB_ERROR("FAILED to create shader of type: %s", (aType == GL_VERTEX_SHADER ? "vertex shader" : "fragment shader"));
   }
 
   VRB_GL_CHECK(glShaderSource(shader, 1, &aSrc, nullptr));

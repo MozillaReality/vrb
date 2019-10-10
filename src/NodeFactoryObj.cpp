@@ -136,6 +136,8 @@ NodeFactoryObj::SetGroupNames(const std::vector<std::string>& aNames) {
   m.currentGeometry->SetVertexArray(m.vertices);
   if (!m.defaultRenderState) {
     m.defaultRenderState = RenderState::Create(creation);
+    ProgramPtr program = creation->GetProgramFactory()->CreateProgram(creation, 0);
+    m.defaultRenderState->SetProgram(program);
   }
   m.currentGeometry->SetRenderState(m.defaultRenderState);
 }

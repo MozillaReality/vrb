@@ -8,6 +8,7 @@
 #include "vrb/ConditionVariable.h"
 #include "vrb/Logger.h"
 #include "vrb/RenderContext.h"
+#include "vrb/ThreadIdentity.h"
 
 #include "vrb/private/ResourceGLState.h"
 #include "vrb/private/UpdatableState.h"
@@ -25,11 +26,11 @@
 namespace vrb {
 
 struct ContextSynchronizer::State {
-  pthread_t threadSelf;
+  RenderContextWeak renderContext;
+  ThreadIdentityPtr renderThread;
+  ThreadIdentityPtr threadSelf;
   Mutex observerLock;
   std::vector<ContextSynchronizerObserverPtr> observers;
-  bool onRenderThread;
-  RenderContextPtr context;
   ConditionVariable cond;
   bool active;
   bool waiting;
@@ -39,7 +40,6 @@ struct ContextSynchronizer::State {
 
   State()
       : threadSelf(0)
-      , onRenderThread(false)
       , active(true)
       , waiting(false)
       , uninitializedResources(nullptr)
@@ -47,22 +47,22 @@ struct ContextSynchronizer::State {
       , updatables(nullptr)
   {}
   bool IsOnCreationThread() {
-    return pthread_equal(threadSelf, pthread_self()) > 0;
+    return threadSelf->IsOnInitializationThread();
   }
 };
 
 ContextSynchronizerPtr
 ContextSynchronizer::Create(RenderContextPtr& aContext) {
   ContextSynchronizerPtr result = std::make_shared<ConcreteClass<ContextSynchronizer, ContextSynchronizer::State> >();
-  result->m.context = aContext;
+  result->m.renderThread = aContext->GetRenderThreadIdentity();
+  result->m.renderContext = aContext;
   aContext->RegisterContextSynchronizer(result);
   return result;
 }
 
 void
 ContextSynchronizer::BindToThread() {
-  m.onRenderThread = m.context->IsOnRenderThread();
-  m.threadSelf = pthread_self();
+  m.threadSelf = ThreadIdentity::Create();
 }
 
 void
@@ -85,19 +85,23 @@ ContextSynchronizer::AdoptLists(
     ResourceGLList& aResources,
     UpdatableList& aUpdatables) {
   ASSERT_ON_CREATION_THREAD();
-  if (!m.context) {
+  if (!m.renderThread) {
     VRB_ERROR("ContextSynchronizer failed, no RenderContext defined");
     return;
   }
-  if (m.context->IsOnRenderThread()) {
+  if (m.renderThread->IsOnInitializationThread()) {
+    RenderContextPtr context = m.renderContext.lock();
+    if (!context) {
+      return;
+    }
     if (aUninitializedResources.IsDirty()) {
-      m.context->GetUninitializedResourceGLList().AppendAndAdoptList(aUninitializedResources);
+      context->GetUninitializedResourceGLList().AppendAndAdoptList(aUninitializedResources);
     }
     if (aResources.IsDirty()) {
-      m.context->GetResourceGLList().AppendAndAdoptList(aResources);
+      context->GetResourceGLList().AppendAndAdoptList(aResources);
     }
     if (aUpdatables.IsDirty()) {
-      m.context->GetUpdatableList().AppendAndAdoptList(aUpdatables);
+      context->GetUpdatableList().AppendAndAdoptList(aUpdatables);
     }
   } else {
     MutexAutoLock lock(m.cond);
@@ -127,16 +131,16 @@ ContextSynchronizer::AdoptLists(
 
 void
 ContextSynchronizer::Signal(bool& aIsActive) {
-  if (m.onRenderThread) {
-    aIsActive = m.active;
-    return;
-  }
-  if (!m.context) {
-    VRB_ERROR("ContextSynchronizer::Signal() failed. RenderContext not defined.");
+  if (!m.renderThread) {
+    VRB_ERROR("ContextSynchronizer::Signal() failed. Render thread not defined.");
     aIsActive = false;
     return;
   }
-  if (!m.context->IsOnRenderThread()) {
+  if (m.threadSelf->IsSameThread(*m.renderThread)) {
+    aIsActive = m.active;
+    return;
+  }
+  if (!m.renderThread->IsOnInitializationThread()) {
     VRB_ERROR("ContextSynchronizer::Signal() failed. Must be called on main render thread");
     aIsActive = false;
     return;
@@ -145,20 +149,24 @@ ContextSynchronizer::Signal(bool& aIsActive) {
   aIsActive = m.active;
   if (m.waiting) {
     m.waiting = false;
+    RenderContextPtr context = m.renderContext.lock();
+    if (!context) {
+      return;
+    }
     if (m.uninitializedResources) {
-      m.context->GetUninitializedResourceGLList().AppendAndAdoptList(*m.uninitializedResources);
+      context->GetUninitializedResourceGLList().AppendAndAdoptList(*m.uninitializedResources);
     }
     if (m.resources) {
-      m.context->GetResourceGLList().AppendAndAdoptList(*m.resources);
+      context->GetResourceGLList().AppendAndAdoptList(*m.resources);
     }
     if (m.updatables) {
-      m.context->GetUpdatableList().AppendAndAdoptList(*m.updatables);
+      context->GetUpdatableList().AppendAndAdoptList(*m.updatables);
     }
     {
       MutexAutoLock observerLock(m.observerLock);
 
       for (ContextSynchronizerObserverPtr& observer: m.observers) {
-        observer->ContextsSynchronized(m.context);
+        observer->ContextsSynchronized(context);
       }
     }
     m.cond.Signal();

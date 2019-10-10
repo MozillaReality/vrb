@@ -1,6 +1,7 @@
 namespace vrb {
 
 static const char* sVertexShaderSource = R"SHADER(
+#version 100
 
 #define MAX_LIGHTS 2
 #define VRB_USE_TEXTURE VRB_TEXTURE_STATE
@@ -98,6 +99,7 @@ void main(void) {
 )SHADER";
 
 static const char* sFragmentShaderSource = R"SHADER(
+#version 100
 precision VRB_FRAGMENT_PRECISION float;
 
 varying vec4 v_color;
@@ -109,6 +111,7 @@ void main() {
 )SHADER";
 
 static const char* sFragmentTextureShaderSource = R"SHADER(
+#version 100
 precision VRB_FRAGMENT_PRECISION float;
 
 uniform sampler2D u_texture0;
@@ -122,6 +125,7 @@ void main() {
 )SHADER";
 
 static const char* sFragmentSurfaceTextureShaderSource = R"SHADER(
+#version 100
 #extension GL_OES_EGL_image_external : require
 precision VRB_FRAGMENT_PRECISION float;
 
@@ -136,6 +140,7 @@ void main() {
 )SHADER";
 
 static const char* sFragmentCubeMapTextureShaderSource = R"SHADER(
+#version 100
 precision VRB_FRAGMENT_PRECISION float;
 
 uniform samplerCube u_texture0;

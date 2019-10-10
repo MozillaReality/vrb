@@ -62,6 +62,9 @@ typedef std::shared_ptr<FileHandler> FileHandlerPtr;
 class FileReader;
 typedef std::shared_ptr<FileReader> FileReaderPtr;
 
+class FileReaderBasic;
+typedef std::shared_ptr<FileReaderBasic> FileReaderBasicPtr;
+
 #if defined(ANDROID)
 class FileReaderAndroid;
 typedef std::shared_ptr<FileReaderAndroid> FileReaderAndroidPtr;
@@ -168,6 +171,9 @@ typedef std::shared_ptr<TextureGL> TextureGLPtr;
 class TextureSurface;
 typedef std::shared_ptr<TextureSurface> TextureSurfacePtr;
 #endif // defined(ANDROID)
+
+class ThreadIdentity;
+typedef std::shared_ptr<ThreadIdentity> ThreadIdentityPtr;
 
 class Toggle;
 typedef std::shared_ptr<Toggle> TogglePtr;
