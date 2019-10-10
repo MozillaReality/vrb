@@ -16,6 +16,7 @@ namespace vrb {
 
 class Vector {
 public:
+  static const Vector& Zero();
   Vector() {}
   Vector(const float aX, const float aY, const float aZ) : m(aX, aY, aZ) {}
   Vector(const Vector& aValue) : m(aValue.m) {}

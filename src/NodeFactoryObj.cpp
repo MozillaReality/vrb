@@ -104,6 +104,9 @@ NodeFactoryObj::StartModel(const std::string& aFileName) {
 
 void
 NodeFactoryObj::FinishModel() {
+  if (m.vertices && m.vertices->GetUVCount() > 0) {
+    m.vertices->SetUVLength(2);
+  }
   m.Reset();
 }
 
@@ -138,7 +141,7 @@ NodeFactoryObj::SetObjectName(const std::string& aName) {
 
 void
 NodeFactoryObj::SetMaterialName(const std::string& aName) {
-  std::unordered_map<std::string, Material>::iterator it = m.materials.find(aName);
+  auto it = m.materials.find(aName);
   if (it == m.materials.end()) {
     VRB_WARN("Failed to find material: '%s'", aName.c_str());
     return;
@@ -150,7 +153,7 @@ NodeFactoryObj::SetMaterialName(const std::string& aName) {
 
   if (!m.currentGeometry) {
     std::vector<std::string> name;
-    name.push_back(std::string(""));
+    name.emplace_back(std::string(""));
     SetGroupNames(name);
   }
 
@@ -183,7 +186,7 @@ NodeFactoryObj::AddFace(
     const std::vector<int>& aNormals) {
   if (!m.currentGeometry) {
     std::vector<std::string> names;
-    names.push_back("");
+    names.emplace_back("");
     SetGroupNames(names);
   }
   m.currentGeometry->AddFace(aVerticies, aUVs, aNormals);
@@ -272,7 +275,7 @@ NodeFactoryObj::SetSpecularTexture(const std::string& aFileName) {
 // NodeFactoryObj interface
 void
 NodeFactoryObj::SetModelRoot(GroupPtr aGroup) {
-  m.root = aGroup;
+  m.root = std::move(aGroup);
 }
 
 GroupPtr&

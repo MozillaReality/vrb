@@ -22,6 +22,9 @@ public:
 
   void SetNormalCount(const int aCount);
 
+  int GetUVLength() const;
+  void SetUVLength(const int aLength);
+
   const Vector& GetVertex(const int aIndex) const;
   const Vector& GetNormal(const int aIndex) const;
   const Vector& GetUV(const int aIndex) const;
@@ -42,7 +45,7 @@ public:
 protected:
   struct State;
   VertexArray(State& aState, CreationContextPtr& aContext);
-  ~VertexArray();
+  ~VertexArray() = default;
 
 private:
   State& m;

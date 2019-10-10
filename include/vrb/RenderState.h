@@ -12,7 +12,7 @@
 
 #include "vrb/gl.h"
 
-namespace vrb{
+namespace vrb {
 
 class RenderState : protected ResourceGL {
 public:
@@ -29,6 +29,7 @@ public:
   void SetAmbient(const Color& aColor);
   void SetDiffuse(const Color& aColor);
   void GetMaterial(Color& aAmbient, Color& aDiffuse, Color& aSpecular, float& aSpecularExponent) const;
+  GLint UVLength() const;
   TexturePtr GetTexture() const;
   void SetTexture(const TexturePtr& aTexture);
   bool HasTexture() const;
