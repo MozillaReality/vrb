@@ -6,6 +6,8 @@
 #ifndef VRB_MACRO_UTILS_DOT_H
 #define VRB_MACRO_UTILS_DOT_H
 
+#include <stddef.h>
+
 #define VRB_NO_COPY(Class)                 \
   Class(const Class&) = delete;            \
   Class& operator=(const Class&) = delete;

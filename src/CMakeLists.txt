@@ -10,6 +10,7 @@ add_library(
         #library name
         vrb
         STATIC
+        BlockTimer.cpp
         CameraEye.cpp
         CameraSimple.cpp
         ContextSynchronizer.cpp
