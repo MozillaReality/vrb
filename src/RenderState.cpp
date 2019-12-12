@@ -370,6 +370,14 @@ RenderState::GetMaterial(Color& aAmbient, Color& aDiffuse, Color& aSpecular, flo
   aSpecularExponent = m.specularExponent;
 }
 
+GLint
+RenderState::UVLength() const {
+  if (!m.texture) {
+    return 0;
+  }
+  return m.texture->GetTarget() == GL_TEXTURE_CUBE_MAP ? 3 : 2;
+}
+
 TexturePtr
 RenderState::GetTexture() const {
   return m.texture;

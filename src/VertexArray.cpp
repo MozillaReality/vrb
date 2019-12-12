@@ -13,16 +13,16 @@
 
 namespace vrb {
 
-static const vrb::Vector cZeroVector;
-static const vrb::Color cZeroColor;
+const int DEFAULT_UV_LENGTH = 2;
 
 struct VertexArray::State {
   struct NormalState {
     Vector normal;
     float count;
     NormalState() : count(0.0f) {}
-    NormalState(const Vector& aNormal) : normal(aNormal), count(1.0f) {}
+    explicit NormalState(const Vector& aNormal) : normal(aNormal), count(1.0f) {}
   };
+  int uvLength = 0;
   std::vector<Vector> vertices;
   std::vector<NormalState> normals;
   std::vector<Vector> uvs;
@@ -61,10 +61,32 @@ VertexArray::SetNormalCount(const int aCount) {
   }
 }
 
+int
+VertexArray::GetUVLength() const {
+  if ((GetUVCount() > 0) && (m.uvLength == 0)) {
+    VRB_WARN("Normal size is not set when normals defined. Defaulting to %d.", DEFAULT_UV_LENGTH);
+    return DEFAULT_UV_LENGTH;
+  }
+  return m.uvLength;
+}
+
+void
+VertexArray::SetUVLength(const int aLength) {
+  int length = aLength;
+  if (length > 3) {
+    length = 3;
+    VRB_ERROR("UV Length can not be larger than 3. Size requested: %d", aLength);
+  } else if (length < 2) {
+    length = 2;
+    VRB_ERROR("UV length can not be smaller than 2. Size requested: %d", aLength);
+  }
+  m.uvLength = length;
+}
+
 const Vector&
 VertexArray::GetVertex(const int aIndex) const {
   if (aIndex >= m.vertices.size()) {
-    return cZeroVector;
+    return Vector::Zero();
   }
   return m.vertices[aIndex];
 }
@@ -72,7 +94,7 @@ VertexArray::GetVertex(const int aIndex) const {
 const Vector&
 VertexArray::GetNormal(const int aIndex) const {
   if (aIndex >= m.normals.size()) {
-    return cZeroVector;
+    return Vector::Zero();
   }
   return m.normals[aIndex].normal;
 }
@@ -80,7 +102,7 @@ VertexArray::GetNormal(const int aIndex) const {
 const Vector&
 VertexArray::GetUV(const int aIndex) const {
   if (aIndex >= m.uvs.size()) {
-    return cZeroVector;
+    return Vector::Zero();
   }
   return m.uvs[aIndex];
 }
@@ -89,7 +111,7 @@ VertexArray::GetUV(const int aIndex) const {
 const Color&
 VertexArray::GetColor(const int aIndex) const {
   if (aIndex >= m.colors.size()) {
-    return cZeroColor;
+    return Color::Zero();
   }
   return m.colors[aIndex];
 }
@@ -107,7 +129,7 @@ VertexArray::SetNormal(const int aIndex, const Vector& aNormal) {
   if (m.normals.size() < (aIndex + 1)) {
     m.normals.resize(aIndex + 1);
   }
-  m.normals[aIndex] = aNormal;
+  m.normals[aIndex].normal = aNormal;
 }
 
 void
@@ -134,7 +156,7 @@ VertexArray::AppendVertex(const Vector& aPoint) {
 
 int
 VertexArray::AppendNormal(const Vector& aNormal) {
-  m.normals.push_back(State::NormalState(aNormal));
+  m.normals.emplace_back(State::NormalState(aNormal));
   return m.normals.size() - 1;
 }
 
@@ -163,7 +185,6 @@ VertexArray::AppendColor(const Color& aColor) {
 }
 
 VertexArray::VertexArray(State& aState, CreationContextPtr& aContext) : m(aState) {}
-VertexArray::~VertexArray() {}
 
 }
 

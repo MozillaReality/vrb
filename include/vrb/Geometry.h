@@ -8,8 +8,7 @@
 
 #include "vrb/Forward.h"
 #include "vrb/MacroUtils.h"
-#include "vrb/Drawable.h"
-#include "vrb/Node.h"
+#include "vrb/GeometryDrawable.h"
 #include "vrb/ResourceGL.h"
 #include "vrb/gl.h"
 
@@ -17,7 +16,7 @@
 
 namespace vrb {
 
-class Geometry : public Node, public Drawable, protected ResourceGL {
+class Geometry : public GeometryDrawable, protected ResourceGL {
 public:
   static GeometryPtr Create(CreationContextPtr& aContext);
   struct Face {
@@ -26,20 +25,10 @@ public:
     std::vector<GLushort> normals;
   };
 
-  // Node interface
-  void Cull(CullVisitor& aVisitor, DrawableList& aDrawables) override;
-
-  // From Drawable
-  RenderStatePtr& GetRenderState() override;
-  void SetRenderState(const RenderStatePtr& aRenderState) override;
-  void Draw(const Camera& aCamera, const Matrix& aModelTransform) override;
-
   // Geometry interface
   VertexArrayPtr GetVertexArray() const;
   void SetVertexArray(const VertexArrayPtr& aVertexArray);
   void UpdateBuffers();
-  void SetRenderRange(uint32_t aStartIndex, uint32_t aLength);
-  int32_t TriangleCount() const;
 
   void AddFace(
     const std::vector<int> &aVerticies,
@@ -62,6 +51,7 @@ protected:
 private:
   State& m;
   Geometry() = delete;
+
   VRB_NO_DEFAULTS(Geometry)
 };
 

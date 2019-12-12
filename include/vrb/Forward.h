@@ -67,6 +67,9 @@ typedef std::shared_ptr<FileReaderAndroid> FileReaderAndroidPtr;
 class Geometry;
 typedef std::shared_ptr<Geometry> GeometryPtr;
 
+class GeometryDrawable;
+typedef std::shared_ptr<GeometryDrawable> GeometryDrawablePtr;
+
 class GLExtensions;
 typedef std::shared_ptr<GLExtensions> GLExtensionsPtr;
 
@@ -109,6 +112,9 @@ typedef std::shared_ptr<Program> ProgramPtr;
 
 class ProgramFactory;
 typedef std::shared_ptr<ProgramFactory> ProgramFactoryPtr;
+
+class RenderBuffer;
+typedef std::shared_ptr<RenderBuffer> RenderBufferPtr;
 
 class RenderContext;
 typedef std::shared_ptr<RenderContext> RenderContextPtr;

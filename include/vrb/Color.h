@@ -13,6 +13,7 @@ namespace vrb {
 
 class Color {
 public:
+  static const Color& Zero();
   Color() {}
   Color(const Color& aColor) : m(aColor.m) {}
   Color(const float aRed, const float aGreen, const float aBlue, const float aAlpha) : m(aRed, aGreen, aBlue, aAlpha) {}
