@@ -34,6 +34,7 @@ add_library(
         ObjectCounter.cpp
         ParserObj.cpp
         PerformanceMonitor.cpp
+        Profiler.cpp
         Program.cpp
         ProgramFactory.cpp
         Quaternion.cpp
