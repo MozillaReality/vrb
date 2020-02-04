@@ -28,8 +28,8 @@ struct GeometryDrawable::State : public Node::State, public Drawable::State {
       return false;
     }
     if (renderState->UVLength() != renderBuffer->UVLength()) {
-      VRB_WARN("RenderState UVLength(%d) != RenderBuffer UVLength(%d)", renderState->UVLength(),
-               renderBuffer->UVLength());
+      //VRB_WARN("RenderState UVLength(%d) != RenderBuffer UVLength(%d)", renderState->UVLength(),
+      //         renderBuffer->UVLength());
       return false;
     }
     return renderState->HasTexture() && (renderBuffer->UVLength() > 0);

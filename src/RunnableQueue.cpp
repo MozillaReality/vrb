@@ -21,25 +21,42 @@ namespace vrb {
 struct RunnableQueue::State {
   Mutex lock;
   JavaVM* vm;
-  JNIEnv* processEnv;
-  jclass runnableClass;
+  JNIEnv* threadEnv;
   jmethodID runMethod;
   std::vector<jobject> list[2];
   uint32_t count;
   State()
       : vm(nullptr)
-      , processEnv(nullptr)
-      , runnableClass(nullptr)
+      , threadEnv(nullptr)
       , runMethod(nullptr)
       , count(0)
   {}
   ~State() {
+    Shutdown();
+  }
+  void Initialize(JNIEnv* aEnv) {
+    jclass localRunnableClass = aEnv->FindClass("java/lang/Runnable");
+    if (!localRunnableClass) {
+      VRB_ERROR("Failed to fine java class java/lang/Runnable in %s", __FILE__);
+      return;
+    }
+    runMethod = aEnv->GetMethodID(localRunnableClass, "run", "()V");
+    if (!runMethod) {
+      VRB_ERROR("Failed to fine java/lang/Runnable.run() in %s", __FILE__);
+    }
+    aEnv->DeleteLocalRef(localRunnableClass);
+    threadEnv = aEnv;
+  }
+  uint32_t AddPlace() {
+    return ~count & 0x01;
+  }
+  uint32_t ProcessPlace() {
+    return count & 0x01;
+  }
+  void Shutdown() {
     if (!vm) { return; }
     JNIEnv* env = nullptr;
     if (!vm->AttachCurrentThread(&env, nullptr)) { return; }
-    if (runnableClass) {
-      env->DeleteGlobalRef(runnableClass);
-    }
     for (int ix = 0; ix < 2; ix++) {
       for (jobject& runnable: list[ix]) {
         env->DeleteGlobalRef(runnable);
@@ -47,25 +64,7 @@ struct RunnableQueue::State {
       }
       list[ix].clear();
     }
-  }
-  void Init(JNIEnv* aEnv) {
-
-    jclass localRunnableClass = aEnv->FindClass("java/lang/Runnable");
-    if (!localRunnableClass) {
-      VRB_ERROR("Failed to fine java class java/lang/Runnable in %s", __FILE__);
-      return;
-    }
-    runnableClass = (jclass)aEnv->NewGlobalRef(localRunnableClass);
-    runMethod = aEnv->GetMethodID(runnableClass, "run", "()V");
-    if (!runMethod) {
-      VRB_ERROR("Failed to fine java/lang/Runnable.run() in %s", __FILE__);
-    }
-  }
-  uint32_t AddPlace() {
-    return ~count & 0x01;
-  }
-  uint32_t ProcessPlace() {
-    return count & 0x01;
+    threadEnv = nullptr;
   }
 };
 
@@ -78,14 +77,27 @@ RunnableQueue::Create(JavaVM* aVM) {
     VRB_ERROR("Failed to attach to current thread in %s:%s:%d", __FILE__, __FUNCTION__, __LINE__);
     return nullptr;
   }
-  result->m.Init(env);
+  result->m.Initialize(env);
   return result;
 }
 
+bool
+RunnableQueue::AttachToThread() {
+  if (!m.vm) {
+    return false;
+  }
+
+  JNIEnv* env = nullptr;
+  if (m.vm->AttachCurrentThread(&env, nullptr) != 0) {
+    return false;
+  }
+  m.Initialize(env);
+  return true;
+}
+
 void
-RunnableQueue::InitializeJava(JNIEnv* aEnv) {
-  m.processEnv = nullptr;
-  m.Init(aEnv);
+RunnableQueue::Clear() {
+  m.Shutdown();
 }
 
 void
@@ -101,14 +113,14 @@ RunnableQueue::ProcessRunnables() {
     VRB_ERROR("Unable to process Runnables, JavaVM is a nullptr in %s", __FILE__);
     return;
   }
+  if (!m.threadEnv) {
+    if (!AttachToThread()) {
+      return;
+    }
+  }
   if (!m.runMethod) {
     VRB_ERROR("Unable to process Runnables, runMethod is a nullptr in %s", __FILE__);
     return;
-  }
-  if (!m.processEnv) {
-    if (m.vm->AttachCurrentThread(&(m.processEnv), nullptr) != 0) {
-      return;
-    }
   }
   {
     MutexAutoLock lock(m.lock);
@@ -117,8 +129,8 @@ RunnableQueue::ProcessRunnables() {
   }
   const uint32_t place = m.ProcessPlace();
   for (jobject& runnable: m.list[place]) {
-    m.processEnv->CallVoidMethod(runnable, m.runMethod);
-    m.processEnv->DeleteGlobalRef(runnable);
+    m.threadEnv->CallVoidMethod(runnable, m.runMethod);
+    m.threadEnv->DeleteGlobalRef(runnable);
     runnable = nullptr;
   }
   m.list[place].clear();
