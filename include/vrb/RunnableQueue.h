@@ -17,7 +17,8 @@ class RunnableQueue {
 public:
   static RunnableQueuePtr Create(JavaVM* aVM);
 
-  void InitializeJava(JNIEnv* aEnv);
+  bool AttachToThread();
+  void Clear();
   void AddRunnable(JNIEnv* aEnv, jobject aRunnable);
   void ProcessRunnables();
 protected:
