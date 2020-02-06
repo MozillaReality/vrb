@@ -14,6 +14,7 @@
 #include "vrb/Texture.h"
 #include "vrb/TextureGL.h"
 
+#include <cstring>
 #include <unordered_map>
 
 namespace vrb {

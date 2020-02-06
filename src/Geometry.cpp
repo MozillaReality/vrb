@@ -22,6 +22,7 @@
 #include "vrb/VertexArray.h"
 #include "vrb/Vector.h"
 
+#include <limits>
 #include <vector>
 
 namespace {

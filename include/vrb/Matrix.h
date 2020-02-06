@@ -10,10 +10,11 @@
 #include "vrb/Quaternion.h"
 #include "vrb/Logger.h"
 
+#include <cfloat>
 #include <cmath>
 #include <cstdlib>
 
-#define VRB_IS_ZERO(value) (std::fabsf(value) < FLT_EPSILON)
+#define VRB_IS_ZERO(value) (std::fabs(value) < FLT_EPSILON)
 
 namespace vrb {
 
@@ -77,8 +78,8 @@ public:
     const float x = normalized.x();
     const float y = normalized.y();
     const float z = normalized.z();
-    const float angleSin = std::sinf(aRotation);
-    const float angleCos = std::cosf(aRotation);
+    const float angleSin = std::sin(aRotation);
+    const float angleCos = std::cos(aRotation);
     const float oneMinusAngleCos(1.0f - angleCos);
     result.m.m[0][0] =      (angleCos) + (x * x * oneMinusAngleCos);
     result.m.m[1][0] = (-z * angleSin) + (x * y * oneMinusAngleCos);
@@ -155,10 +156,10 @@ public:
 
     Matrix result;
 
-    const float left = -std::tanf(aLeft) * aNear;
-    const float right = std::tanf(aRight) * aNear;
-    const float bottom = -std::tanf(aBottom) * aNear;
-    const float top = std::tanf(aTop) * aNear;
+    const float left = -std::tan(aLeft) * aNear;
+    const float right = std::tan(aRight) * aNear;
+    const float bottom = -std::tan(aBottom) * aNear;
+    const float top = std::tan(aTop) * aNear;
     //VRB_LOG("left=%f right=%f bottom=%f top=%f",left,right,bottom,top);
 
     if ((left < right) && (bottom < top) &&
@@ -202,9 +203,9 @@ public:
       else { fovY = 60.0f; }
     }
     if (fovY <= 0.0f) {
-      fovY = 2.0f * std::atanf(std::tanf(fovX * 0.5f) * (aHeight / aWidth));
+      fovY = 2.0f * std::atan(std::tan(fovX * 0.5f) * (aHeight / aWidth));
     } else if (fovX <= 0.0f) {
-      fovX = 2.0f * std::atanf(std::tanf(fovY * 0.5f) * (aWidth / aHeight));
+      fovX = 2.0f * std::atan(std::tan(fovY * 0.5f) * (aWidth / aHeight));
     }
     fovX *= 0.5f;
     fovY *= 0.5f;
