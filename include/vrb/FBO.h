@@ -27,7 +27,7 @@ public:
   void SetTextureHandle(const GLuint aHandle,
                         const int32_t aWidth,
                         const int32_t aHeight,
-                        const FBO::Attributes& aAttributtes = {});
+                        const FBO::Attributes& aAttributes = {});
   void Bind(GLenum target = GL_FRAMEBUFFER);
   void Unbind();
   const FBO::Attributes& GetAttributes() const;

@@ -83,6 +83,11 @@ public:
     mTarget = aTarget;
     mCallback = aCallback;
   }
+
+  void AddFinishedCallbacks(std::vector<LoadFinishedCallback>& aCallbacks) {
+    finishCallbacks.swap(aCallbacks);
+  }
+
   void ContextsSynchronized(RenderContextPtr& aRenderContext) override {
     if (mTarget && mSource) {
       mTarget->TakeChildren(mSource);
@@ -90,12 +95,20 @@ public:
     mCallback(mTarget);
     mTarget = mSource = nullptr;
     mCallback = sNoop;
+    GroupPtr nullGroup;
+    for (LoadFinishedCallback& cb : finishCallbacks) {
+      if (cb) {
+        cb(nullGroup);
+      }
+    }
+    finishCallbacks.clear();
   }
   ModelLoaderAndroidSynchronizerObserver() {}
 protected:
   GroupPtr mSource;
   GroupPtr mTarget;
   LoadFinishedCallback mCallback;
+  std::vector<LoadFinishedCallback> finishCallbacks;
 private:
   VRB_NO_DEFAULTS(ModelLoaderAndroidSynchronizerObserver)
 };
@@ -115,6 +128,7 @@ struct ModelLoaderAndroid::State {
   bool done;
   bool quitting;
   std::vector<LoadInfo> loadList;
+  std::vector<LoadFinishedCallback> finishCallbacks;
   State()
       : running(false)
       , jvm(nullptr)
@@ -164,6 +178,11 @@ struct ModelLoaderAndroid::State {
       VRB_ERROR("ModelLoaderAndroid load thread failed to stop");
     }
     running = false;
+  }
+
+  bool
+  IsOnLoaderThread() const {
+    return running && (pthread_equal(child, pthread_self()) > 0);
   }
 };
 
@@ -303,6 +322,7 @@ ModelLoaderAndroid::Run(void* data) {
             m.context->UpdateResourceGL();
             VRB_DEBUG("TIMER Update GL resources: %f sec", timer.Sample());
           }
+          finalizer->AddFinishedCallbacks(m.finishCallbacks);
           timer.Start();
           m.context->Synchronize();
           const float thisLoad = total.Sample();
@@ -327,6 +347,20 @@ ModelLoaderAndroid::Run(void* data) {
   VRB_LOG("ModelLoaderAndroid load thread stopping");
   return nullptr;
 }
+
+void
+ModelLoaderAndroid::AddFinishedCallback(LoadFinishedCallback& aCallback) {
+  if (!m.IsOnLoaderThread()) {
+    VRB_ERROR("ModelLoaderAndroid::AddFinisedhCallback must be called on the loading thread");
+  }
+  m.finishCallbacks.emplace_back(aCallback);
+}
+
+bool
+ModelLoaderAndroid::IsOnLoaderThread() const {
+  return m.IsOnLoaderThread();
+}
+
 
 ModelLoaderAndroid::ModelLoaderAndroid(State& aState, RenderContextPtr& aContext)
     : m(aState) {

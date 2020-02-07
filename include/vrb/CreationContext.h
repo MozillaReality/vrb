@@ -22,6 +22,7 @@ public:
   void SetFileReader(FileReaderPtr aFileReader);
   DataCachePtr GetDataCache();
   FileReaderPtr GetFileReader();
+  ProgramFactoryPtr GetProgramFactory();
   TextureGLPtr LoadTexture(const std::string& TextureName, const bool aUseCache = true);
   void UpdateResourceGL();
   void AddResourceGL(ResourceGL* aResource);

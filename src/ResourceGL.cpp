@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "vrb/ResourceGL.h"
+#include "vrb/private/ResourceGLState.h"
 
 #include "vrb/CreationContext.h"
 

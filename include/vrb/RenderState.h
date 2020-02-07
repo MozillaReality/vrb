@@ -17,7 +17,7 @@ namespace vrb {
 class RenderState : protected ResourceGL {
 public:
   static RenderStatePtr Create(CreationContextPtr& aContext);
-  GLuint Program() const;
+  void SetProgram(ProgramPtr& aProgram);
   GLint AttributePosition() const;
   GLint AttributeNormal() const;
   GLint AttributeUV() const;
@@ -38,15 +38,11 @@ public:
   bool Enable(const Matrix& aPerspective, const Matrix& aView, const Matrix& aModel);
   void Disable();
   void SetLightsEnabled(bool aEnabled);
-  void SetFragmentPrecision(const GLenum aPrecision);
-  void SetUVTransformEnabled(bool aEnabled);
   void SetUVTransform(const vrb::Matrix& aMatrix);
-  void SetVertexColorEnabled(bool aEnabled);
-  void SetCustomFragmentShader(const std::string& aFragment);
 protected:
   struct State;
   RenderState(State& aState, CreationContextPtr& aContext);
-  ~RenderState();
+  ~RenderState() = default;
 
   // ResourceGL interface
   void InitializeGL() override;

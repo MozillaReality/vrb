@@ -81,6 +81,7 @@ struct CreationContext::State {
   ResourceGLList resources;
   UpdatableList updatables;
   FileReaderPtr fileReader;
+  ProgramFactoryPtr programFactory;
   DataCachePtr dataCache;
   TextureCachePtr textureCache;
   pthread_t threadSelf;
@@ -97,6 +98,7 @@ CreationContext::Create(RenderContextPtr& aContext) {
   CreationContextPtr result = std::make_shared<ConcreteClass<CreationContext, CreationContext::State> >();
   result->m.self = result;
   result->m.sync = ContextSynchronizer::Create(aContext);
+  result->m.programFactory = aContext->GetProgramFactory();
   result->m.dataCache = aContext->GetDataCache();
   result->m.textureCache = aContext->GetTextureCache();
   return result;
@@ -140,6 +142,11 @@ CreationContext::GetDataCache() {
 FileReaderPtr
 CreationContext::GetFileReader() {
   return m.fileReader;
+}
+
+ProgramFactoryPtr
+CreationContext::GetProgramFactory() {
+  return m.programFactory;
 }
 
 TextureGLPtr

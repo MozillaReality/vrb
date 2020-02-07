@@ -7,6 +7,7 @@
 #define VRB_MODEL_LOADER_ANDROID_DOT_H
 
 #include "vrb/Forward.h"
+#include "vrb/LoaderThread.h"
 #include "vrb/MacroUtils.h"
 #include "vrb/ResourceGL.h"
 #include <functional>
@@ -15,10 +16,7 @@
 
 namespace vrb {
 
-typedef std::function<void(GroupPtr&)> LoadFinishedCallback;
-typedef std::function<GroupPtr(CreationContextPtr&)> LoadTask;
-
-class ModelLoaderAndroid {
+class ModelLoaderAndroid : public LoaderThread {
 public:
   static ModelLoaderAndroidPtr Create(RenderContextPtr& aContext);
   void InitializeJava(JNIEnv* eEnv, jobject aActivity, jobject aAssets);
@@ -27,8 +25,11 @@ public:
   void ShutdownGL();
   void LoadModel(const std::string& aModelName, GroupPtr aTargetNode);
   void LoadModel(const std::string& aModelName, GroupPtr aTargetNode, LoadFinishedCallback& aCallback);
-  void RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask);
-  void RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask, LoadFinishedCallback& aCallback);
+  // LoaderThread Interface
+  void RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask) override;
+  void RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask, LoadFinishedCallback& aCallback) override;
+  void AddFinishedCallback(LoadFinishedCallback& aCallback) override;
+  bool IsOnLoaderThread() const override;
 protected:
   struct State;
   ModelLoaderAndroid(State& aState, RenderContextPtr& aContext);

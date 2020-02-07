@@ -11,14 +11,25 @@
 
 namespace vrb {
 
+const uint32_t FeatureTexture = 0x1;
+const uint32_t FeatureCubeTexture = 0x1 << 1;
+const uint32_t FeatureSurfaceTexture = 0x1 << 2;
+const uint32_t FeatureUVTransform = 0x1 << 3;
+const uint32_t FeatureVertexColor = 0x1 << 4;
+// Defaults to medium precision
+const uint32_t FeatureHighPrecision = 0x01 << 5;
+const uint32_t FeatureLowPrecision = 0x01 << 6;
+
+
 class ProgramFactory {
 public:
-  static ProgramFactorPtr Create(CreationContextPtr& aContext);
-  ProgramPtr CreatePhongProgram(const bool aEnableTexturing);
-  // TODO: Add PBR Program.
+  static ProgramFactoryPtr Create();
+  void SetLoaderThread(LoaderThreadPtr aLoader);
+  ProgramPtr CreateProgram(CreationContextPtr& aContext, const uint32_t aFeatureMask);
+  ProgramPtr CreateProgram(CreationContextPtr& aContext, const uint32_t aFeatureMask, const std::string& aCustomFragShader);
 protected:
   struct State;
-  ProgramFactory(CreationContextPtr& aContext);
+  ProgramFactory(State& aState);
 private:
   State& m;
   ProgramFactory() = delete;

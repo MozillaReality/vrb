@@ -80,6 +80,10 @@ typedef std::shared_ptr<Group> GroupPtr;
 class Light;
 typedef std::shared_ptr<Light> LightPtr;
 
+class LoaderThread;
+typedef std::shared_ptr<LoaderThread> LoaderThreadPtr;
+typedef std::weak_ptr<LoaderThread> LoaderThreadWeak;
+
 class Matrix;
 
 #if defined(ANDROID)
@@ -109,9 +113,12 @@ typedef std::shared_ptr<PerformanceMonitorObserver> PerformanceMonitorObserverPt
 
 class Program;
 typedef std::shared_ptr<Program> ProgramPtr;
+typedef std::weak_ptr<Program> ProgramWeak;
 
 class ProgramFactory;
 typedef std::shared_ptr<ProgramFactory> ProgramFactoryPtr;
+typedef std::weak_ptr<ProgramFactory> ProgramFactoryWeak;
+
 
 class RenderBuffer;
 typedef std::shared_ptr<RenderBuffer> RenderBufferPtr;
