@@ -10,6 +10,7 @@ add_library(
         #library name
         vrb
         STATIC
+        BasicShaders.cpp
         BlockTimer.cpp
         CameraEye.cpp
         CameraSimple.cpp
@@ -31,6 +32,8 @@ add_library(
         NodeFactoryObj.cpp
         ParserObj.cpp
         PerformanceMonitor.cpp
+        Program.cpp
+        ProgramFactory.cpp
         Quaternion.cpp
         RenderBuffer.cpp
         RenderContext.cpp

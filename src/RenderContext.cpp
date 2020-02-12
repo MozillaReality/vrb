@@ -17,6 +17,7 @@
 #include "vrb/DataCache.h"
 #include "vrb/GLExtensions.h"
 #include "vrb/Logger.h"
+#include "vrb/ProgramFactory.h"
 #include "vrb/ResourceGL.h"
 #if defined(ANDROID)
 #include "vrb/SurfaceTextureFactory.h"
@@ -39,6 +40,7 @@ namespace vrb {
 struct RenderContext::State {
   pthread_t threadSelf;
   TextureCachePtr textureCache;
+  ProgramFactoryPtr programFactory;
   DataCachePtr dataCache;
   CreationContextPtr creationContext;
   GLExtensionsPtr glExtensions;
@@ -64,6 +66,7 @@ RenderContext::State::State()
 #endif // defined(ANDROID)
     , dataCache(DataCache::Create())
     , textureCache(TextureCache::Create())
+    , programFactory(ProgramFactory::Create())
     , timestamp(0.0)
     , frameDelta(0.0)
 {}
@@ -174,6 +177,12 @@ TextureCachePtr&
 RenderContext::GetTextureCache() {
   return m.textureCache;
 }
+
+ProgramFactoryPtr&
+RenderContext::GetProgramFactory() {
+  return m.programFactory;
+}
+
 
 CreationContextPtr&
 RenderContext::GetRenderThreadCreationContext() {

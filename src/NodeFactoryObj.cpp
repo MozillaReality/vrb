@@ -11,6 +11,8 @@
 #include "vrb/Geometry.h"
 #include "vrb/Group.h"
 #include "vrb/Mutex.h"
+#include "vrb/Program.h"
+#include "vrb/ProgramFactory.h"
 #include "vrb/RenderState.h"
 #include "vrb/Texture.h"
 #include "vrb/TextureGL.h"
@@ -72,9 +74,15 @@ NodeFactoryObj::State::CreateRenderState(Material& aMaterial) {
 
   CreationContextPtr creation = context.lock();
   if (creation) {
-    aMaterial.state = RenderState::Create(creation);
+    TexturePtr texture;
     if (!aMaterial.diffuseTextureName.empty()) {
-      TexturePtr texture = creation->LoadTexture(aMaterial.diffuseTextureName);
+      texture = creation->LoadTexture(aMaterial.diffuseTextureName);
+    }
+    uint32_t features = texture ? FeatureTexture : 0;
+    ProgramPtr program = creation->GetProgramFactory()->CreateProgram(creation, features);
+    aMaterial.state = RenderState::Create(creation);
+    aMaterial.state->SetProgram(program);
+    if (texture) {
       aMaterial.state->SetTexture(texture);
     }
   }

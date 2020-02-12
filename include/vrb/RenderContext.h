@@ -31,6 +31,7 @@ public:
 
   DataCachePtr& GetDataCache();
   TextureCachePtr& GetTextureCache();
+  ProgramFactoryPtr& GetProgramFactory();
   CreationContextPtr& GetRenderThreadCreationContext();
   GLExtensionsPtr GetGLExtensions() const;
 #if defined(ANDROID)
