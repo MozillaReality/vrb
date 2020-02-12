@@ -20,7 +20,7 @@ public:
   // Transform interface
   const Matrix GetWorldTransform() const;
   const Matrix& GetTransform() const;
-  void SetTransform(const Matrix& aTransform);
+  virtual void SetTransform(const Matrix& aTransform);
 protected:
   struct State;
   Transform(State& aState, CreationContextPtr& aContext);

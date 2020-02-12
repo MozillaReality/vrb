@@ -10,6 +10,7 @@ add_library(
         #library name
         vrb
         STATIC
+        AnimatedTransform.cpp
         BasicShaders.cpp
         BlockTimer.cpp
         CameraEye.cpp

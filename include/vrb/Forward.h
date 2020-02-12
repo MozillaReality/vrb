@@ -11,6 +11,9 @@
 
 namespace vrb {
 
+class AnimatedTransform;
+typedef  std::shared_ptr<AnimatedTransform> AnimatedTransformPtr;
+
 class Camera;
 typedef std::shared_ptr<Camera> CameraPtr;
 
