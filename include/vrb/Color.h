@@ -83,7 +83,7 @@ public:
   void SetRGB(const float aRed, const float aGreen, const float aBlue) {
     m.red = aRed;
     m.green = aGreen;
-    m.blue = aGreen;
+    m.blue = aBlue;
     m.alpha = 1.0f;
     m.Clip();
   }
@@ -91,7 +91,7 @@ public:
   void SetRGBA(const float aRed, const float aGreen, const float aBlue, const float aAlpha) {
     m.red = aRed;
     m.green = aGreen;
-    m.blue = aGreen;
+    m.blue = aBlue;
     m.alpha = aAlpha;
     m.Clip();
   }
