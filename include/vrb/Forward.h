@@ -113,11 +113,9 @@ typedef std::shared_ptr<PerformanceMonitorObserver> PerformanceMonitorObserverPt
 
 class Program;
 typedef std::shared_ptr<Program> ProgramPtr;
-typedef std::weak_ptr<Program> ProgramWeak;
 
 class ProgramFactory;
 typedef std::shared_ptr<ProgramFactory> ProgramFactoryPtr;
-typedef std::weak_ptr<ProgramFactory> ProgramFactoryWeak;
 
 
 class RenderBuffer;

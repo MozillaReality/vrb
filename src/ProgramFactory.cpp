@@ -196,7 +196,6 @@ ProgramBuilder::ProgramBuilder(State& aState) : ResourceGL(aState), m(aState) {}
 
 struct ProgramFactory::State {
   Mutex lock;
-  ProgramFactoryWeak self;
   std::unordered_map<std::string, ProgramBuilderPtr> programs;
   LoaderThreadWeak loader;
 };
@@ -204,7 +203,6 @@ struct ProgramFactory::State {
 ProgramFactoryPtr
 ProgramFactory::Create() {
   ProgramFactoryPtr result = std::make_shared<ConcreteClass<ProgramFactory, ProgramFactory::State> >();
-  result->m.self = result;
   return result;
 }
 
