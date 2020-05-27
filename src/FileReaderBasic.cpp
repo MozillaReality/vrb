@@ -8,18 +8,20 @@
 
 #include "vrb/ConcreteClass.h"
 
+#include <assert.h>
+#include <cstring>
 #include <fstream>
 #include <vector>
+#define GLIML_NO_DDS
+#define GLIML_NO_PVR
+#include "gliml/gliml.h"
 
 namespace vrb {
 
 struct FileReaderBasic::State {
   int trackingHandleCount;
-  int imageTargetHandle;
-  FileHandlerPtr imageTarget;
   State()
       : trackingHandleCount(0)
-      , imageTargetHandle(0)
   {}
 
   int nextHandle() {
@@ -67,38 +69,37 @@ FileReaderBasic::ReadImageFile(const std::string& aFileName, FileHandlerPtr aHan
   if (!aHandler) {
     return;
   }
-  m.imageTarget = aHandler;
-  m.imageTargetHandle = m.nextHandle();
-  m.imageTarget->BindFileHandle(aFileName, m.imageTargetHandle);
+  const int imageTargetHandle = m.nextHandle();
+  aHandler->BindFileHandle(aFileName, imageTargetHandle);
 
-  ImageFileLoadFailed(m.imageTargetHandle, "No Image Loader");
-}
-
-void
-FileReaderBasic::ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]> &aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat) {
-  if (m.imageTargetHandle != aFileHandle) {
+  std::ifstream input(aFileName, std::ios::binary);
+  if (!input) {
+    std::string message("Unable to load file: ");
+    aHandler->LoadFailed(imageTargetHandle, message + aFileName);
     return;
   }
 
-  m.imageTargetHandle = 0;
-  if (!m.imageTarget) {
+  std::vector<char> buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+  if (buffer.size() == 0) {
+    std::string message("File is empty: ");
+    aHandler->LoadFailed(imageTargetHandle, message + aFileName);
     return;
   }
 
-  m.imageTarget->ProcessImageFile(aFileHandle, aImage, aImageLength, aWidth, aHeight, aFormat);
-  m.imageTarget = nullptr;
-}
+  gliml::context loader;
+  loader.enable_etc2(true);
 
-
-void
-FileReaderBasic::ImageFileLoadFailed(const int aFileHandle, const std::string& aReason) {
-  if (!m.imageTarget || (m.imageTargetHandle != aFileHandle)) {
+  if (!loader.load_ktx(buffer.data(), buffer.size())) {
+    std::string message("Failed to parse file: ");
+    VRB_ERROR("Error code: %d", loader.error());
+    aHandler->LoadFailed(imageTargetHandle, message + aFileName);
     return;
   }
 
-  m.imageTarget->LoadFailed(aFileHandle, aReason);
-  m.imageTargetHandle = 0;
-  m.imageTarget = nullptr;
+  const size_t length = loader.image_size(0, 0);
+  std::unique_ptr<uint8_t[]> image = std::make_unique<uint8_t[]>(length);
+  memcpy(image.get(), loader.image_data(0, 0), length);
+  aHandler->ProcessImageFile(imageTargetHandle, image, (uint64_t)length, loader.image_width(0, 0), loader.image_height(0, 0), (GLenum)loader.image_internal_format());
 }
 
 FileReaderBasic::FileReaderBasic(State& aState) : m(aState) {}

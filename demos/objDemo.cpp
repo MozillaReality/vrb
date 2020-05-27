@@ -123,7 +123,7 @@ main(int argc, char* argv[]) {
     VRB_GL_CHECK(glClearColor(0.f, 0.f, 0.f, 0.f));
     VRB_GL_CHECK(glEnable(GL_BLEND));
     VRB_GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-    camera->SetTransform(vrb::Matrix::Translation(vrb::Vector(0.0f, 1.0f, 8.0f)));
+    camera->SetTransform(vrb::Matrix::Translation(vrb::Vector(0.0f, 0.0f, 0.2f)));
     render->Update();
     drawList->Reset();
     root->Cull(*cullVisitor, *drawList);

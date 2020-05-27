@@ -20,8 +20,6 @@ public:
   static FileReaderBasicPtr Create();
   void ReadRawFile(const std::string& aFileName, FileHandlerPtr aHandler) override;
   void ReadImageFile(const std::string& aFileName, FileHandlerPtr aHandler) override;
-  void ProcessImageFile(const int aFileHandle, std::unique_ptr<uint8_t[]>& aImage, const uint64_t aImageLength, const int aWidth, const int aHeight, const GLenum aFormat);
-  void ImageFileLoadFailed(const int aFileHandle, const std::string& aReason);
 protected:
   struct State;
   FileReaderBasic(State& aState);
