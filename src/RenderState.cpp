@@ -15,9 +15,6 @@
 #include "vrb/Program.h"
 #include "vrb/ShaderUtil.h"
 #include "vrb/Texture.h"
-#if defined(ANDROID)
-#include "vrb/TextureSurface.h"
-#endif // defined(ANDROID)
 #include "vrb/Vector.h"
 
 #include "vrb/gl.h"

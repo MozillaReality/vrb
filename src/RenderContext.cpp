@@ -11,8 +11,10 @@
 #include "vrb/ContextSynchronizer.h"
 #include "vrb/CreationContext.h"
 #if defined(ANDROID)
-#include "vrb/ClassLoaderAndroid.h"
-#include "vrb/FileReaderAndroid.h"
+#  include "vrb/ClassLoaderAndroid.h"
+#  include "vrb/FileReaderAndroid.h"
+#else
+#  include "vrb/FileReaderBasic.h"
 #endif // defined(ANDROID)
 #include "vrb/DataCache.h"
 #include "vrb/GLExtensions.h"
@@ -20,12 +22,13 @@
 #include "vrb/ProgramFactory.h"
 #include "vrb/ResourceGL.h"
 #if defined(ANDROID)
-#include "vrb/SurfaceTextureFactory.h"
+#  include "vrb/SurfaceTextureFactory.h"
 #endif // defined(ANDROID)
 #include "vrb/TextureCache.h"
+#include "vrb/ThreadTest.h"
 #include "vrb/Updatable.h"
 #if defined(ANDROID)
-#include <EGL/egl.h>
+#  include <EGL/egl.h>
 #endif // defined(ANDROID)
 #include <pthread.h>
 #include <time.h>
@@ -38,7 +41,7 @@ const double kNanosecondsToSeconds = 1.0e9;
 namespace vrb {
 
 struct RenderContext::State {
-  pthread_t threadSelf;
+  ThreadTestPtr threadSelf;
   TextureCachePtr textureCache;
   ProgramFactoryPtr programFactory;
   DataCachePtr dataCache;
@@ -49,6 +52,8 @@ struct RenderContext::State {
   FileReaderAndroidPtr fileReader;
   SurfaceTextureFactoryPtr surfaceTextureFactory;
   ClassLoaderAndroidPtr classLoader;
+#else
+  FileReaderBasicPtr fileReader;
 #endif // defined(ANDROID)
   UpdatableList updatables;
   ResourceGLList uninitializedResources;
@@ -60,7 +65,7 @@ struct RenderContext::State {
 };
 
 RenderContext::State::State()
-    : threadSelf(pthread_self())
+    : threadSelf(ThreadTest::Create())
 #if defined(ANDROID)
     , eglContext(EGL_NO_CONTEXT)
 #endif // defined(ANDROID)
@@ -81,10 +86,11 @@ RenderContext::Create() {
 #if defined(ANDROID)
   result->m.surfaceTextureFactory = SurfaceTextureFactory::Create(result->m.creationContext);
   result->m.fileReader = FileReaderAndroid::Create();
-  FileReaderPtr fileReader = result->m.fileReader;
-  result->m.creationContext->SetFileReader(fileReader);
   result->m.classLoader = ClassLoaderAndroid::Create();
+#else
+  result->m.fileReader = FileReaderBasic::Create();
 #endif // defined(ANDROID)
+  result->m.creationContext->SetFileReader(result->m.fileReader);
   return result;
 }
 
@@ -105,7 +111,7 @@ RenderContext::ShutdownJava() {
 
 bool
 RenderContext::IsOnRenderThread() {
-  return pthread_equal(m.threadSelf, pthread_self()) > 0;
+  return m.threadSelf->IsOnInitializationThread();
 }
 
 bool
@@ -168,6 +174,11 @@ RenderContext::GetFrameDelta() {
   return m.frameDelta;
 }
 
+ThreadTestPtr&
+RenderContext::GetRenderThreadTest() {
+  return m.threadSelf;
+}
+
 DataCachePtr&
 RenderContext::GetDataCache() {
   return m.dataCache;
@@ -224,6 +235,6 @@ RenderContext::RegisterContextSynchronizer(ContextSynchronizerPtr& aSynchronizer
 }
 
 RenderContext::RenderContext(State& aState) : m(aState) {}
-RenderContext::~RenderContext() {}
+RenderContext::~RenderContext() { VRB_ERROR("DELETE RenderContext!"); }
 
 } // namespace vrb
