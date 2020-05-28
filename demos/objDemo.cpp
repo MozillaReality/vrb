@@ -4,16 +4,19 @@
 #include "vrb/CullVisitor.h"
 #include "vrb/DataCache.h"
 #include "vrb/DrawableList.h"
+#include "vrb/Geometry.h"
 #include "vrb/GLError.h"
 #include "vrb/Group.h"
 #include "vrb/Light.h"
 #include "vrb/Logger.h"
 #include "vrb/Matrix.h"
+#include "vrb/Node.h"
 #include "vrb/NodeFactoryObj.h"
 #include "vrb/ObjectCounter.h"
 #include "vrb/ParserObj.h"
 #include "vrb/RenderContext.h"
 #include "vrb/Vector.h"
+#include "vrb/VertexArray.h"
 
 #include "vrb/gl.h"
 
@@ -92,6 +95,31 @@ main(int argc, char* argv[]) {
   factory->SetModelRoot(root);
   parser->LoadModel(argv[1]);
 
+  vrb::Vector min = vrb::Vector::Max();
+  vrb::Vector max = vrb::Vector::Min();
+  vrb::NodePtr node = root;
+  vrb::Node::Traverse(node, [&min, &max](const vrb::NodePtr& aNode, const vrb::GroupPtr& aTraversingFrom) -> bool {
+    const vrb::GeometryPtr geo = std::dynamic_pointer_cast<vrb::Geometry>(aNode);
+    if (geo) {
+      vrb::VertexArrayPtr verts = geo->GetVertexArray();
+      if (verts) {
+        const int size = verts->GetVertexCount();
+        for (int index = 0; index < size; index++) {
+           const vrb::Vector& vertex = verts->GetVertex(index);
+           min.ContractInPlace(vertex);
+           max.ExpandInPlace(vertex);
+        }
+      }
+    }
+
+    return false;
+  });
+
+  static const float kNearClip = 0.1f;
+
+  vrb::Vector cameraOffset(0.0f, ((max.y() - min.y()) * 0.5f) + min.y(), max.Magnitude() + min.Magnitude());
+  VRB_LOG("Min: %s Max: %s Offset: %s", min.ToString().c_str(), max.ToString().c_str(), cameraOffset.ToString().c_str());
+
   vrb::CameraSimplePtr camera = vrb::CameraSimple::Create(create);
   vrb::CullVisitorPtr cullVisitor = vrb::CullVisitor::Create(create);
   vrb::DrawableListPtr drawList = vrb::DrawableList::Create(create);
@@ -103,11 +131,9 @@ main(int argc, char* argv[]) {
   VRB_GL_CHECK(glEnable(GL_BLEND));
   VRB_GL_CHECK(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
 
-  camera->SetClipRange(0.1f, 100.0f);
+  camera->SetClipRange(kNearClip, 100.0f);
 
-  bool running = true;
-  while (running) {
-    running = PollEvents(sdlWindow, sdlWindowFlags);
+  while (PollEvents(sdlWindow, sdlWindowFlags)) {
 
     int width = 0, height = 0;
     SDL_GetWindowSize(sdlWindow, &width, &height);
@@ -123,7 +149,7 @@ main(int argc, char* argv[]) {
     VRB_GL_CHECK(glClearColor(0.f, 0.f, 0.f, 0.f));
     VRB_GL_CHECK(glEnable(GL_BLEND));
     VRB_GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-    camera->SetTransform(vrb::Matrix::Translation(vrb::Vector(0.0f, 0.0f, 0.2f)));
+    camera->SetTransform(vrb::Matrix::Translation(cameraOffset));
     render->Update();
     drawList->Reset();
     root->Cull(*cullVisitor, *drawList);
