@@ -15,6 +15,8 @@ class VertexArray {
 public:
   static VertexArrayPtr Create(CreationContextPtr& aContext);
 
+  const Vector& GetMin() const;
+  const Vector& GetMax() const;
   int GetVertexCount() const;
   int GetNormalCount() const;
   int GetUVCount() const;

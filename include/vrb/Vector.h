@@ -8,6 +8,7 @@
 
 #include "vrb/Logger.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <string>
@@ -17,6 +18,8 @@ namespace vrb {
 class Vector {
 public:
   static const Vector& Zero();
+  static const Vector& Min();
+  static const Vector& Max();
   Vector() {}
   Vector(const float aX, const float aY, const float aZ) : m(aX, aY, aZ) {}
   Vector(const Vector& aValue) : m(aValue.m) {}
@@ -123,6 +126,30 @@ public:
         (m.mY * aValue.m.mZ) - (m.mZ * aValue.m.mY),
         (m.mZ * aValue.m.mX) - (m.mX * aValue.m.mZ),
         (m.mX * aValue.m.mY) - (m.mY * aValue.m.mX));
+  }
+
+  Vector& ContractInPlace(const Vector& aPoint) {
+    m.mX = std::min(m.mX, aPoint.x());
+    m.mY = std::min(m.mY, aPoint.y());
+    m.mZ = std::min(m.mZ, aPoint.z());
+    return *this;
+  }
+
+  Vector& ExpandInPlace(const Vector& aPoint) {
+    m.mX = std::max(m.mX, aPoint.x());
+    m.mY = std::max(m.mY, aPoint.y());
+    m.mZ = std::max(m.mZ, aPoint.z());
+    return *this;
+  }
+
+  Vector Contract(const Vector& aPoint) {
+    Vector result(*this);
+    return result.ContractInPlace(aPoint);
+  }
+
+  Vector Expand(const Vector& aPoint) {
+    Vector result(*this);
+    return result.ExpandInPlace(aPoint);
   }
 
   float* Data() { return &m.mV[0]; }

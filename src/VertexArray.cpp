@@ -9,6 +9,8 @@
 #include "vrb/Color.h"
 #include "vrb/Vector.h"
 
+#include <algorithm>
+#include <limits>
 #include <vector>
 
 namespace vrb {
@@ -23,15 +25,32 @@ struct VertexArray::State {
     explicit NormalState(const Vector& aNormal) : normal(aNormal), count(1.0f) {}
   };
   int uvLength = 0;
+  Vector min = Vector::Max();
+  Vector max = Vector::Min();
   std::vector<Vector> vertices;
   std::vector<NormalState> normals;
   std::vector<Vector> uvs;
   std::vector<Color> colors;
+
+  void UpdateBoundingBox(const Vector& aPoint) {
+    max.ExpandInPlace(aPoint);
+    min.ContractInPlace(aPoint);
+  }
 };
 
 VertexArrayPtr
 VertexArray::Create(CreationContextPtr& aContext) {
   return std::make_shared<ConcreteClass<VertexArray, VertexArray::State> >(aContext);
+}
+
+const Vector&
+VertexArray::GetMin() const {
+  return m.min;
+}
+
+const Vector&
+VertexArray::GetMax() const {
+  return m.max;
 }
 
 int
@@ -121,6 +140,7 @@ VertexArray::SetVertex(const int aIndex, const Vector& aPoint) {
   if (m.vertices.size() < (aIndex + 1)) {
     m.vertices.resize(aIndex + 1);
   }
+  m.UpdateBoundingBox(aPoint);
   m.vertices[aIndex] = aPoint;
 }
 
@@ -151,6 +171,7 @@ VertexArray::SetColor(const int aIndex, const Color& aColor) {
 int
 VertexArray::AppendVertex(const Vector& aPoint) {
   m.vertices.push_back(aPoint);
+  m.UpdateBoundingBox(aPoint);
   return m.vertices.size() - 1;
 }
 
