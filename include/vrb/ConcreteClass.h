@@ -8,14 +8,19 @@
 
 #include "vrb/Forward.h"
 
+// VRB_COUNT_OBJECTS enables leak detection.
+//#define VRB_COUNT_OBJECTS
+#include "vrb/ObjectCounter.h"
+
 namespace vrb {
 
 template<class Base, class State>
 class ConcreteClass : private State, public Base {
 public:
-  ConcreteClass() : Base(*(State*)this) {}
-  ConcreteClass(CreationContextPtr& aContext) : Base(*(State*)this, aContext) {}
-  ConcreteClass(RenderContextPtr& aContext) : Base(*(State*)this, aContext) {}
+  ConcreteClass() : Base(*(State*)this) { VRB_ADD_TO_OBJECT_COUNT; }
+  ConcreteClass(CreationContextPtr& aContext) : Base(*(State*)this, aContext) { VRB_ADD_TO_OBJECT_COUNT; }
+  ConcreteClass(RenderContextPtr& aContext) : Base(*(State*)this, aContext) { VRB_ADD_TO_OBJECT_COUNT; }
+  ~ConcreteClass() { VRB_REMOVE_FROM_OBJECT_COUNT; }
 };
 
 } // namespace vrb

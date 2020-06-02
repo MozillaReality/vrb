@@ -5,11 +5,12 @@ if (APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fexceptions -frtti -Werror -Wno-int-to-void-pointer-cast")
 endif ()
 
-include_directories("../include")
+include_directories("../include" "../third_party")
 add_library(
         #library name
         vrb
         STATIC
+        AnimatedTransform.cpp
         BasicShaders.cpp
         BlockTimer.cpp
         CameraEye.cpp
@@ -20,6 +21,7 @@ add_library(
         DataCache.cpp
         Drawable.cpp
         DrawableList.cpp
+        FileReaderBasic.cpp
         FBO.cpp
         GLError.cpp
         GLExtensions.cpp
@@ -30,6 +32,7 @@ add_library(
         Math.cpp
         Node.cpp
         NodeFactoryObj.cpp
+        ObjectCounter.cpp
         ParserObj.cpp
         PerformanceMonitor.cpp
         Program.cpp
@@ -44,6 +47,7 @@ add_library(
         TextureCache.cpp
         TextureCubeMap.cpp
         TextureGL.cpp
+        ThreadIdentity.cpp
         Toggle.cpp
         Transform.cpp
         Updatable.cpp

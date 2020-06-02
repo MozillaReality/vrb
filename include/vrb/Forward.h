@@ -11,6 +11,9 @@
 
 namespace vrb {
 
+class AnimatedTransform;
+typedef  std::shared_ptr<AnimatedTransform> AnimatedTransformPtr;
+
 class Camera;
 typedef std::shared_ptr<Camera> CameraPtr;
 
@@ -58,6 +61,9 @@ typedef std::shared_ptr<FileHandler> FileHandlerPtr;
 
 class FileReader;
 typedef std::shared_ptr<FileReader> FileReaderPtr;
+
+class FileReaderBasic;
+typedef std::shared_ptr<FileReaderBasic> FileReaderBasicPtr;
 
 #if defined(ANDROID)
 class FileReaderAndroid;
@@ -165,6 +171,9 @@ typedef std::shared_ptr<TextureGL> TextureGLPtr;
 class TextureSurface;
 typedef std::shared_ptr<TextureSurface> TextureSurfacePtr;
 #endif // defined(ANDROID)
+
+class ThreadIdentity;
+typedef std::shared_ptr<ThreadIdentity> ThreadIdentityPtr;
 
 class Toggle;
 typedef std::shared_ptr<Toggle> TogglePtr;

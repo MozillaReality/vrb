@@ -29,6 +29,7 @@ public:
   double GetTimestamp();
   double GetFrameDelta();
 
+  ThreadIdentityPtr& GetRenderThreadIdentity();
   DataCachePtr& GetDataCache();
   TextureCachePtr& GetTextureCache();
   ProgramFactoryPtr& GetProgramFactory();

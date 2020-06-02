@@ -262,6 +262,14 @@ public:
     return *this;
   }
 
+  Matrix& SetIdentity() {
+    m.m00 = 1.0f; m.m01 = 0.0f; m.m02 = 0.0f; m.m03 = 0.0f;
+    m.m10 = 0.0f; m.m11 = 1.0f; m.m12 = 0.0f; m.m13 = 0.0f;
+    m.m20 = 0.0f; m.m21 = 0.0f; m.m22 = 1.0f; m.m23 = 0.0f;
+    m.m30 = 0.0f; m.m31 = 0.0f; m.m32 = 0.0f; m.m33 = 1.0f;
+    return *this;
+  }
+
   bool IsIdentity() const {
     return VRB_IS_ZERO(m.m00 - 1.0f) && VRB_IS_ZERO(m.m01) && VRB_IS_ZERO(m.m02) && VRB_IS_ZERO(m.m03)
         && VRB_IS_ZERO(m.m10) && VRB_IS_ZERO(m.m11 - 1.0f) && VRB_IS_ZERO(m.m12) && VRB_IS_ZERO(m.m13)
