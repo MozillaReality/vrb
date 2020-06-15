@@ -6,6 +6,8 @@
 #include "vrb/Color.h"
 #include "vrb/Vector.h"
 
+#include <limits>
+
 namespace vrb {
 
 const Color&
@@ -17,6 +19,18 @@ Color::Zero() {
 const Vector&
 Vector::Zero() {
   static const Vector result;
+  return result;
+}
+
+const Vector&
+Vector::Min() {
+  static const Vector result(std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min());
+  return result;
+}
+
+const Vector&
+Vector::Max() {
+  static const Vector result(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
   return result;
 }
 
