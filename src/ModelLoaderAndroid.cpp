@@ -146,6 +146,7 @@ struct ModelLoaderAndroid::State {
     if (!renderThreadEnv || !eglContext) {
       return;
     }
+    done = false;
     pthread_create(&child, nullptr, &ModelLoaderAndroid::Run, this);
     running = true;
   }
