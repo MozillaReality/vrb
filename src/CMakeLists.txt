@@ -21,7 +21,6 @@ add_library(
         DataCache.cpp
         Drawable.cpp
         DrawableList.cpp
-        FileReaderBasic.cpp
         FBO.cpp
         GLError.cpp
         GLExtensions.cpp
@@ -67,5 +66,11 @@ if (ANDROID)
             SurfaceTextureFactory.cpp
             TextureSurface.cpp
             ThreadUtils.cpp
+    )
+else ()
+    target_sources(
+            vrb
+            PRIVATE
+            FileReaderBasic.cpp
     )
 endif ()

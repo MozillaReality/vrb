@@ -62,12 +62,12 @@ typedef std::shared_ptr<FileHandler> FileHandlerPtr;
 class FileReader;
 typedef std::shared_ptr<FileReader> FileReaderPtr;
 
-class FileReaderBasic;
-typedef std::shared_ptr<FileReaderBasic> FileReaderBasicPtr;
-
 #if defined(ANDROID)
 class FileReaderAndroid;
 typedef std::shared_ptr<FileReaderAndroid> FileReaderAndroidPtr;
+#else
+class FileReaderBasic;
+typedef std::shared_ptr<FileReaderBasic> FileReaderBasicPtr;
 #endif // defined(ANDROID)
 
 class Geometry;
