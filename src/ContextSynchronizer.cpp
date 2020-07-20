@@ -136,6 +136,9 @@ ContextSynchronizer::Signal(bool& aIsActive) {
     aIsActive = false;
     return;
   }
+  if (!m.threadSelf) {
+    return;
+  }
   if (m.threadSelf->IsSameThread(*m.renderThread)) {
     aIsActive = m.active;
     return;
