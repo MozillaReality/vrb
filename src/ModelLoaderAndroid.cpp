@@ -243,6 +243,11 @@ ModelLoaderAndroid::LoadModel(const std::string& aModelName, GroupPtr aTargetNod
 }
 
 void
+ModelLoaderAndroid::LoadModel(vrb::LoadTask aLoadTask, GroupPtr aTargetNode) {
+  RunLoadTask(std::move(aTargetNode), aLoadTask, sNoop);
+}
+
+void
 ModelLoaderAndroid::LoadModel(const std::string& aModelName, GroupPtr aTargetNode, LoadFinishedCallback& aCallback) {
   LoadTask task = [aModelName](CreationContextPtr& aContext) -> GroupPtr {
     LoadTimer timer;

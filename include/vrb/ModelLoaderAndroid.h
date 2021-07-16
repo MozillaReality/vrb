@@ -24,6 +24,7 @@ public:
   void InitializeGL();
   void ShutdownGL();
   void LoadModel(const std::string& aModelName, GroupPtr aTargetNode);
+  void LoadModel(vrb::LoadTask aLoadTask, GroupPtr aTargetNode);
   void LoadModel(const std::string& aModelName, GroupPtr aTargetNode, LoadFinishedCallback& aCallback);
   // LoaderThread Interface
   void RunLoadTask(GroupPtr aTargetNode, LoadTask& aTask) override;
