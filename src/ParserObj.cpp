@@ -11,7 +11,6 @@
 
 #include <string>
 #include <vector>
-#include <iostream>
 
 namespace {
 
@@ -88,7 +87,6 @@ TokenizeWhiteSpace(const std::string& aBuffer, std::vector<std::string>& aTokens
 
 static std::string
 TokenizeBuffer(std::string& aBuffer, std::vector<std::string>& aTokens) {
-  // VRB_LOG("line: %s", aBuffer.c_str());
   size_t end = aBuffer.find("#");
   if (end != std::string::npos) { aBuffer.erase(end); }
   return TokenizeWhiteSpace(aBuffer, aTokens);
@@ -356,8 +354,10 @@ ParserObj::State::ParseObj(FileHandler& aFileHandler) {
       if (value == "off") { value = "0"; }
       int group = LocalStoi(value);
       observer->SetSmoothingGroup(group);
+    } else if (type.empty()) {
+      // Ignore empty lines
     } else {
-      std::cout << "Unknown type: " << type << std::endl;
+      VRB_WARN("Unknown OBJ type: '%s'", type.c_str());
     }
 
     if (currentParser) {
