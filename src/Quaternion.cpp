@@ -60,4 +60,42 @@ Quaternion::SetFromEulerAngles(float aX, float aY, float aZ) {
   m.mZ = sy * cr * cp - cy * sr * sp;
 }
 
+// Spherical linear interpolation for quaternions based on https://github.com/vrpn/vrpn/blob/master/quat/quat.c
+// This methods interpolates from the current quaternion to endQuat. The parameter t goes from 0
+// to 1 and so the returned quaternion goes from this to endQuat.
+Quaternion
+Quaternion::Slerp(const Quaternion& startQuat, const Quaternion& endQuat, float t) {
+  const float Q_EPSILON = 1e-10;
+  auto startQ = startQuat;
+  float startScale;
+  float endScale;
+
+  auto cosOmega = startQ.DotProduct(endQuat);
+  if (cosOmega < 0.0) {
+    cosOmega *= -1;
+    startQ *= -1;
+  }
+
+  if ((1.0 + cosOmega) > Q_EPSILON) {
+    if ((1.0 - cosOmega) > Q_EPSILON ) {
+      // usual case
+      auto omega = acos(cosOmega);
+      auto sinOmega = sin(omega);
+      startScale = sin((1.0 - t) * omega) / sinOmega;
+      endScale = sin(t * omega) / sinOmega;
+    } else {
+      // ends very close
+      startScale = 1.0 - t;
+      endScale = t;
+    }
+    return startQ * startScale + endQuat * endScale;
+  }
+
+  // ends nearly opposite
+  auto q = vrb::Quaternion(-startQ.y(), startQ.x(), -startQ.w(), startQ.z());
+  startScale = sin((0.5 - t) * M_PI);
+  endScale = sin(t * M_PI);
+  return startQ * startScale + q * endScale;
+};
+
 }

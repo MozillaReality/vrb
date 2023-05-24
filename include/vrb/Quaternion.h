@@ -56,6 +56,10 @@ public:
     return *this;
   }
 
+  Quaternion operator+(const Quaternion &aQuat) const {
+      return Quaternion(this->x() + aQuat.x(), this->y() + aQuat.y(), this->z() + aQuat.z(), this->w() + aQuat.w());
+  }
+
   Quaternion& operator*=(const Quaternion &aQuat) {
     *this = *this * aQuat;
     return *this;
@@ -104,6 +108,13 @@ public:
   Quaternion Inverse() const {
     return Conjugate().Normalize();
   }
+
+  float DotProduct(const Quaternion& aQuat) {
+    return this->x() * aQuat.x() + this->y() * aQuat.y() + this->z() * aQuat.z() + this->w() + aQuat.w();
+  }
+
+  // SLERP: Spherical Linear Interpolation
+  static Quaternion Slerp(const Quaternion& startQuat, const Quaternion& endQuat, float t);
 
   void ToEulerAngles(float& aX, float& aY, float& aZ) const;
   void SetFromEulerAngles(float aX, float aY, float aZ);
